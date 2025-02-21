@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+        }
+        .store-logo {
+            max-width: 200px;
+            height: auto;
+        }
+        .product-section {
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .product-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            border-radius: 4px;
+        }
+        .product-title {
+            font-size: 24px;
+            color: #333;
+            margin: 15px 0;
+        }
+        .product-price {
+            font-size: 28px;
+            color: #e44d26;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .product-description {
+            color: #666;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Store Header -->
+        <div class="header">
+            <img src="{{store_logo}}" alt="{{store_name}}" class="store-logo">
+        </div>
+
+        <!-- Personalized Greeting -->
+        <p>Hi {{first_name}},</p>
+        
+        <!-- Product Showcase -->
+        <div class="product-section">
+            <img src="{{product_image}}" alt="{{product_name}}" class="product-image">
+            <h2 class="product-title">{{product_name}}</h2>
+            <div class="product-price">${{product_price}}</div>
+            <p class="product-description">{{product_description}}</p>
+            <center>
+                <a href="{{product_url}}" class="cta-button">
+                    Shop Now
+                </a>
+            </center>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>You're receiving this email because you've shown interest in {{store_name}}.</p>
+            <p>
+                <a href="{{store_url}}">Visit Our Store</a> | 
+                <a href="{{unsubscribe_url}}">Unsubscribe</a>
+            </p>
+            <img src="{{tracking_pixel}}" alt="" width="1" height="1" />
+        </div>
+    </div>
+</body>
+</html> 
