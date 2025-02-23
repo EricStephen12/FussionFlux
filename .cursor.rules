@@ -1,0 +1,47 @@
+# .cursor.rules
+
+## Task Tracking
+
+- [ ] Optimize Database Queries: Ensure queries handle high email & lead volumes efficiently.
+- [ ] Upgrade Email Analytics & AI Insights:
+  - [ ] Show real-time campaign performance (open rates, click rates, revenue).
+  - [ ] Implement heatmaps for high-engagement tracking.
+  - [ ] Add AI-powered insights & recommendations to improve campaign results.
+- [ ] Improve Campaign Management & AI Automation:
+  - [ ] Display active campaigns & real-time performance updates.
+  - [ ] Add AI-suggested optimizations for better engagement.
+  - [ ] Allow bulk actions to pause, duplicate, or edit campaigns instantly.
+- [ ] Enhance Billing & Referral System:
+  - [ ] Show detailed billing history with downloadable invoices.
+  - [ ] Support NowPayments, PayPal, Flutterwave for flexible payments.
+  - [ ] Allow users to upgrade/downgrade their plans seamlessly.
+- [ ] Modify Free Trial & Subscription Tiers:
+  - [ ] Set up trial limits & subscription plans.
+  - [ ] Implement a dynamic paywall to restrict features based on user tier.
+- [ ] Improve Email Deliverability & Testing System:
+  - [ ] Implement Smart Cold Email Warm-Up to avoid spam filters.
+  - [ ] Add an Inbox Rotation System for better deliverability.
+  - [ ] Ensure test emails display the exact HTML template before sending.
+  - [ ] Allow users to preview & approve test emails before finalizing.
+- [ ] Social Media Marketing Integration:
+  - [ ] Add "Social Media Leads" section in the dashboard.
+  - [ ] Capture leads from social media DMs and link clicks.
+  - [ ] Automate social media follow-ups with AI messaging.
+  - [ ] Link social media accounts in user settings.
+  - [ ] Adjust pricing to include social media features.
+
+## AI Lead Selection
+
+- [ ] Implement AI Model to Identify High-Potential Leads:
+  - [ ] Analyze lead data from Apollo to determine high-target leads.
+  - [ ] Use machine learning algorithms to score leads based on engagement and conversion potential.
+  - [ ] Integrate lead scoring into the platform for prioritization.
+
+## Platform Improvement Checklist
+
+- [ ] Refactor & Optimize Codebase
+  - [ ] Modularize code into smaller, reusable components.
+  - [ ] Document all functions and modules.
+  - [ ] Optimize database queries for efficiency.
+
+# Add entries here as changes are made.
