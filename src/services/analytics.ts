@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import type { Campaign } from './firestore';
 
@@ -30,42 +30,44 @@ export class AnalyticsService {
   private usersRef = collection(db, 'users');
   private analyticsRef = collection(db, 'analytics');
 
-  async getDashboardStats(userId: string) {
+  async getDashboardStats(userId: string, callback: (stats: any) => void) {
     try {
-      // Get campaign stats
+      // Listen for real-time updates
       const campaignQuery = query(
         this.campaignsRef,
         where('userId', '==', userId)
       );
-      const campaigns = await getDocs(campaignQuery);
-      
-      const stats = {
-        totalCampaigns: campaigns.size,
-        activeCampaigns: 0,
-        totalEmails: 0,
-        openRate: 0,
-        clickRate: 0,
-        revenue: 0,
-        revenueGrowth: 0,
-      };
+      const unsubscribe = onSnapshot(campaignQuery, (snapshot) => {
+        const stats = {
+          totalCampaigns: snapshot.size,
+          activeCampaigns: 0,
+          totalEmails: 0,
+          openRate: 0,
+          clickRate: 0,
+          revenue: 0,
+          revenueGrowth: 0,
+        };
 
-      let totalOpens = 0;
-      let totalClicks = 0;
-      let totalSent = 0;
+        let totalOpens = 0;
+        let totalClicks = 0;
+        let totalSent = 0;
 
-      campaigns.forEach(doc => {
-        const campaign = doc.data();
-        if (campaign.status === 'active') stats.activeCampaigns++;
-        if (campaign.sentCount) totalSent += campaign.sentCount;
-        if (campaign.openCount) totalOpens += campaign.openCount;
-        if (campaign.clickCount) totalClicks += campaign.clickCount;
+        snapshot.forEach(doc => {
+          const campaign = doc.data();
+          if (campaign.status === 'active') stats.activeCampaigns++;
+          if (campaign.sentCount) totalSent += campaign.sentCount;
+          if (campaign.openCount) totalOpens += campaign.openCount;
+          if (campaign.clickCount) totalClicks += campaign.clickCount;
+        });
+
+        stats.totalEmails = totalSent;
+        stats.openRate = totalSent > 0 ? (totalOpens / totalSent) * 100 : 0;
+        stats.clickRate = totalOpens > 0 ? (totalClicks / totalOpens) * 100 : 0;
+
+        callback(stats);
       });
 
-      stats.totalEmails = totalSent;
-      stats.openRate = totalSent > 0 ? (totalOpens / totalSent) * 100 : 0;
-      stats.clickRate = totalOpens > 0 ? (totalClicks / totalOpens) * 100 : 0;
-
-      return stats;
+      return unsubscribe;
     } catch (error) {
       console.error('Error getting dashboard stats:', error);
       throw error;

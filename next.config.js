@@ -65,9 +65,6 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['undici'],
   },
-  // Completely suppress build warnings and errors in production
-  onError: () => {},
-  onWarning: () => {},
   // Disable React DevTools in production
   reactStrictMode: false,
   // Disable source maps in production
@@ -86,21 +83,6 @@ const nextConfig = {
   compiler: {
     // Remove console.logs in production
     removeConsole: process.env.NODE_ENV === 'production',
-  },
-  // Configure SWC for proper JSX and TypeScript handling
-  swc: {
-    jsc: {
-      parser: {
-        syntax: 'typescript',
-        tsx: true,
-        decorators: true,
-      },
-      transform: {
-        react: {
-          runtime: 'automatic',
-        },
-      },
-    },
   },
 };
 

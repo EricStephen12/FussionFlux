@@ -442,8 +442,118 @@ interface TemplateEditorProps {
   onCancel: () => void;
 }
 
+// Enhance default templates with high-conversion elements
+const defaultTemplates = [
+  {
+    id: 'welcome',
+    name: 'Welcome Email',
+    category: 'Engagement',
+    description: 'A warm welcome email to new subscribers.',
+    blocks: [
+      {
+        id: 'hero',
+        type: 'hero',
+        content: {
+          title: 'Welcome to Our Community!',
+          subtitle: 'We are thrilled to have you here.',
+          imageUrl: 'https://source.unsplash.com/random/800x400?welcome',
+          button: {
+            text: 'Explore Now',
+            style: 'primary',
+            url: 'https://yourwebsite.com/explore',
+          },
+          overlay: { opacity: 0.3 },
+        },
+      },
+      {
+        id: 'testimonial',
+        type: 'testimonial',
+        content: {
+          quote: 'This is the best service I have ever used!',
+          author: 'Jane Doe',
+          role: 'Happy Customer',
+          avatar: 'https://source.unsplash.com/random/100x100?avatar',
+          rating: 5,
+        },
+      },
+      {
+        id: 'cta',
+        type: 'promotion',
+        content: {
+          title: 'Special Offer Just for You!',
+          discount: '20% OFF',
+          code: 'WELCOME20',
+          expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+      },
+    ],
+  },
+  // Add more templates as needed
+];
+
+// Enhance default templates with advanced design and content strategies
+const advancedTemplates = [
+  {
+    id: 'product-launch',
+    name: 'Product Launch',
+    category: 'Promotion',
+    description: 'Announce a new product with style.',
+    blocks: [
+      {
+        id: 'hero',
+        type: 'hero',
+        content: {
+          title: 'Introducing Our Latest Innovation!',
+          subtitle: 'Experience the future of technology today.',
+          imageUrl: 'https://source.unsplash.com/random/800x400?product',
+          button: {
+            text: 'Shop Now',
+            style: 'gradient',
+            url: 'https://yourwebsite.com/shop',
+          },
+          overlay: { opacity: 0.4 },
+        },
+      },
+      {
+        id: 'social-proof',
+        type: 'testimonial',
+        content: {
+          quote: 'This product changed my life!',
+          author: 'John Smith',
+          role: 'Verified Buyer',
+          avatar: 'https://source.unsplash.com/random/100x100?avatar',
+          rating: 5,
+        },
+      },
+      {
+        id: 'urgency',
+        type: 'countdown',
+        content: {
+          title: 'Limited Time Offer!',
+          showDays: true,
+          showHours: true,
+          showMinutes: true,
+          showSeconds: true,
+        },
+      },
+      {
+        id: 'cta',
+        type: 'promotion',
+        content: {
+          title: 'Exclusive Discount Just for You!',
+          discount: '30% OFF',
+          code: 'LAUNCH30',
+          expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+      },
+    ],
+  },
+  // Add more advanced templates as needed
+];
+
+// Update the TemplateEditor to use advanced templates
 const TemplateEditor: React.FC<TemplateEditorProps> = ({
-  template: initialTemplate,
+  template: initialTemplate = advancedTemplates[0], // Use the first advanced template as a fallback
   onSave,
   onCancel,
 }) => {
@@ -1470,8 +1580,46 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
     }
   };
 
-  // Update the renderBlock function to properly handle button colors
+  // Add error handling for template rendering
+  if (!template) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900">Template not found</h2>
+          <p className="mt-2 text-gray-600">The template you're trying to edit doesn't exist.</p>
+          <button
+            onClick={onCancel}
+            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Add design options for colors, fonts, and layouts
+  const designOptions = {
+    colors: ['#4F46E5', '#F59E0B', '#10B981', '#EF4444'],
+    fonts: ['Arial', 'Helvetica', 'Georgia', 'Times New Roman'],
+    layouts: ['single-column', 'two-column', 'three-column'],
+  };
+
+  // Add a function to apply selected design options
+  template.blocks.forEach(block => {
+    block.content.color = designOptions.colors[0]; // Default color
+    block.content.fontSize = '16px'; // Default font size
+    block.content.layout = designOptions.layouts[0]; // Default layout
+  });
+
+  // Implement dynamic content insertion for personalization
+  const personalizeContent = (content: string, user: any) => {
+    return content.replace(/{{name}}/g, user.name).replace(/{{product}}/g, user.product);
+  };
+
+  // Update the renderBlock function to use personalized content
   const renderBlock = (block: Block) => {
+    const personalizedText = personalizeContent(block.content.text || '', { name: 'John Doe', product: 'Awesome Product' });
     const getColumnClass = (columns: number = 2) => {
       switch (columns) {
         case 1: return 'grid-cols-1';
@@ -1703,24 +1851,6 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
         return null;
     }
   };
-
-  // Add error handling for template rendering
-  if (!template) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900">Template not found</h2>
-          <p className="mt-2 text-gray-600">The template you're trying to edit doesn't exist.</p>
-          <button
-            onClick={onCancel}
-            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-screen bg-gray-100">

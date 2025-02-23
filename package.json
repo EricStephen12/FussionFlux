@@ -19,6 +19,7 @@
     "@headlessui/react": "^1.7.18",
     "@hello-pangea/dnd": "^18.0.1",
     "@heroicons/react": "^2.2.0",
+    "@paypal/paypal-js": "^8.2.0",
     "@sentry/nextjs": "^7.91.0",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@types/react-responsive": "^9.0.0",
