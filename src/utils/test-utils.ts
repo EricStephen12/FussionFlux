@@ -134,11 +134,6 @@ export const mockRedis = {
   exec: jest.fn(),
 };
 
-export const mockSendGrid = {
-  send: jest.fn(),
-  setApiKey: jest.fn(),
-};
-
 export const mockNOWPayments = {
   createPayment: jest.fn(),
   getPaymentStatus: jest.fn(),

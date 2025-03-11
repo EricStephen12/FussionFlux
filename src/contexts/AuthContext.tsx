@@ -5,6 +5,7 @@ import { User, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/utils/firebase';
 import { db } from '@/utils/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { referralService } from '@/services/referral';
 
 interface AuthContextType {
   user: User | null;
@@ -12,6 +13,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<any>;
   signOut: () => Promise<void>;
   isNewUser: boolean;
+  hasCompletedOnboarding: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -20,12 +22,14 @@ const AuthContext = createContext<AuthContextType>({
   signInWithGoogle: async () => {},
   signOut: async () => {},
   isNewUser: false,
+  hasCompletedOnboarding: false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [authInitialized, setAuthInitialized] = useState(false);
 
   useEffect(() => {
@@ -36,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Check if user needs onboarding whenever auth state changes
           const isNew = await checkUserOnboarding(currentUser.uid);
           setIsNewUser(isNew);
+          setHasCompletedOnboarding(!isNew);
           
           // Get the ID token and set it as a cookie
           const idToken = await currentUser.getIdToken();
@@ -47,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
           setUser(null);
           setIsNewUser(false);
+          setHasCompletedOnboarding(false);
         }
       } catch (error) {
         console.error('Error in auth state change:', error);
@@ -65,12 +71,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userDoc = await getDoc(userDocRef);
       
       if (!userDoc.exists()) {
-        // New user - create initial user document with onboarding status
+        // Set trial end date to 14 days from now
+        const trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + 14);
+
+        // Generate referral code for new user
+        const referralCode = await referralService.generateReferralCode(userId);
+
+        // Check for referral code in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const referrerCode = urlParams.get('ref');
+
+        // Track referral if code exists
+        if (referrerCode) {
+          await referralService.trackReferralSignup(referrerCode, userId);
+        }
+
+        // New user - create initial user document with trial status
         await setDoc(userDocRef, {
           email: auth.currentUser?.email,
           displayName: auth.currentUser?.displayName,
           photoURL: auth.currentUser?.photoURL,
           createdAt: new Date(),
+          trialEndDate: trialEndDate,
+          subscriptionStatus: 'trial',
+          usedLeads: 0,
+          totalLeads: 100,
+          usedEmails: 0,
+          totalEmails: 500,
           onboarding: {
             completed: false,
             currentStep: 0,
@@ -99,7 +127,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             emailNotifications: true,
             marketingEmails: true
           },
-          lastLoginAt: new Date()
+          lastLoginAt: new Date(),
+          referralStats: {
+            totalReferrals: 0,
+            activeReferrals: 0,
+            pendingCommission: 0,
+            totalEarned: 0
+          },
+          referralCode: referralCode.code // Store the referral code in user document
         });
         return true;
       }
@@ -127,6 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Wait for the onboarding check to complete
         const isNew = await checkUserOnboarding(result.user.uid);
         setIsNewUser(isNew);
+        setHasCompletedOnboarding(!isNew);
         
         // Set the session cookie
         const idToken = await result.user.getIdToken();
@@ -150,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
       setUser(null);
       setIsNewUser(false);
+      setHasCompletedOnboarding(false);
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -168,7 +205,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, isNewUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signInWithGoogle,
+        signOut,
+        isNewUser,
+        hasCompletedOnboarding,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

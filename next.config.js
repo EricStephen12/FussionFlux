@@ -26,6 +26,7 @@ const nextConfig = {
         tls: false,
         fs: false,
         child_process: false,
+        crypto: false,
       }
     };
 

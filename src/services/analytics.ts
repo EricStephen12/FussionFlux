@@ -30,43 +30,31 @@ export class AnalyticsService {
   private usersRef = collection(db, 'users');
   private analyticsRef = collection(db, 'analytics');
 
-  async getDashboardStats(userId: string, callback: (stats: any) => void) {
+  async getDashboardStats(userId: string, callback: (stats: CampaignMetrics) => void) {
     try {
-      // Listen for real-time updates
       const campaignQuery = query(
         this.campaignsRef,
         where('userId', '==', userId)
       );
       const unsubscribe = onSnapshot(campaignQuery, (snapshot) => {
-        const stats = {
-          totalCampaigns: snapshot.size,
-          activeCampaigns: 0,
+        const stats: CampaignMetrics = {
           totalEmails: 0,
+          sentEmails: 0,
           openRate: 0,
           clickRate: 0,
-          revenue: 0,
-          revenueGrowth: 0,
+          bounceRate: 0,
         };
 
-        let totalOpens = 0;
-        let totalClicks = 0;
-        let totalSent = 0;
-
         snapshot.forEach(doc => {
-          const campaign = doc.data();
-          if (campaign.status === 'active') stats.activeCampaigns++;
-          if (campaign.sentCount) totalSent += campaign.sentCount;
-          if (campaign.openCount) totalOpens += campaign.openCount;
-          if (campaign.clickCount) totalClicks += campaign.clickCount;
+          const campaign = doc.data() as Campaign;
+          if (campaign.status === 'active') stats.sentEmails += campaign.sentCount || 0;
+          stats.totalEmails += campaign.totalEmails || 0;
+          // Calculate open and click rates
         });
 
-        stats.totalEmails = totalSent;
-        stats.openRate = totalSent > 0 ? (totalOpens / totalSent) * 100 : 0;
-        stats.clickRate = totalOpens > 0 ? (totalClicks / totalOpens) * 100 : 0;
-
+        stats.openRate = stats.totalEmails > 0 ? (stats.sentEmails / stats.totalEmails) * 100 : 0;
         callback(stats);
       });
-
       return unsubscribe;
     } catch (error) {
       console.error('Error getting dashboard stats:', error);
@@ -112,11 +100,9 @@ export class AnalyticsService {
 
   async getCampaignMetrics(campaignId: string): Promise<CampaignMetrics> {
     const campaignDoc = await getDocs(query(this.campaignsRef, where('id', '==', campaignId)));
-    
     if (campaignDoc.empty) {
-      throw new Error('Campaign not found');
+        throw new Error('Campaign not found');
     }
-
     const campaign = campaignDoc.docs[0].data() as Campaign;
     const sentEmails = campaign.sentCount || 0;
     const openCount = campaign.openCount || 0;
@@ -124,11 +110,11 @@ export class AnalyticsService {
     const bounceCount = campaign.bounceCount || 0;
 
     return {
-      totalEmails: campaign.totalEmails,
-      sentEmails,
-      openRate: sentEmails > 0 ? (openCount / sentEmails) * 100 : 0,
-      clickRate: sentEmails > 0 ? (clickCount / sentEmails) * 100 : 0,
-      bounceRate: sentEmails > 0 ? (bounceCount / sentEmails) * 100 : 0,
+        totalEmails: campaign.totalEmails,
+        sentEmails,
+        openRate: sentEmails > 0 ? (openCount / sentEmails) * 100 : 0,
+        clickRate: sentEmails > 0 ? (clickCount / sentEmails) * 100 : 0,
+        bounceRate: sentEmails > 0 ? (bounceCount / sentEmails) * 100 : 0,
     };
   }
 

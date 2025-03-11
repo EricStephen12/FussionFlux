@@ -14,16 +14,21 @@ export default function TrialStatus() {
     totalFeatures: 0,
     trialProgress: 0
   });
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadTrialData() {
       if (!user) return;
-      
+      setLoading(true);
       try {
         const data = await firestoreService.getTrialStatus(user.uid);
         setTrialData(data);
       } catch (error) {
         console.error('Error loading trial data:', error);
+        setError('Failed to load your trial status. Please try again later.');
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -42,7 +47,7 @@ export default function TrialStatus() {
               Trial Status
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {trialData.daysRemaining} days remaining in your trial
+              {loading ? 'Loading...' : `${trialData.daysRemaining} days remaining in your trial`}
             </p>
           </div>
         </div>

@@ -22,6 +22,7 @@ export default function CampaignList({ campaigns, onStatusChange, onDelete }: Ca
   const [sortField, setSortField] = useState<keyof Campaign>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filter, setFilter] = useState<Campaign['status'] | 'all'>('all');
+  const userTier = getUserSubscriptionTier(); // Assume this function retrieves the user's subscription tier
 
   const sortedAndFilteredCampaigns = campaigns
     .filter(campaign => filter === 'all' || campaign.status === filter)
@@ -78,6 +79,22 @@ export default function CampaignList({ campaigns, onStatusChange, onDelete }: Ca
       default:
         return null;
     }
+  };
+
+  const handleDelete = (campaignId: string) => {
+    if (userTier !== 'premium') {
+      alert('This action is only available for premium users. Please upgrade to access this feature.');
+      return;
+    }
+    onDelete(campaignId);
+  };
+
+  const handleEdit = (campaignId: string) => {
+    if (userTier !== 'premium') {
+      alert('This action is only available for premium users. Please upgrade to access this feature.');
+      return;
+    }
+    // Logic to edit the campaign
   };
 
   return (
@@ -218,7 +235,7 @@ export default function CampaignList({ campaigns, onStatusChange, onDelete }: Ca
                     )}
                     {['draft', 'completed', 'failed'].includes(campaign.status) && (
                       <button
-                        onClick={() => onDelete(campaign.id!)}
+                        onClick={() => handleDelete(campaign.id!)}
                         className="text-red-600 hover:text-red-900"
                       >
                         <TrashIcon className="h-5 w-5" />

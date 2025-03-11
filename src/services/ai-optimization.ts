@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { cacheService } from '@/utils/cache';
+import { ApolloContact } from '@/services/apollo';
+import { Template, BlockContent } from '@/types/template';
+import { firestoreService } from '@/services/firestore';
 
 interface OptimizationResult {
   subject: string;
@@ -14,7 +17,33 @@ interface EmailMetrics {
   conversionRate: number;
 }
 
-class AIOptimizationService {
+export interface AIOptimizationMetrics {
+  leadScore: number;
+  contentScore: number;
+  sendTimeScore: number;
+  recommendations: string[];
+  optimizationDate: string;
+}
+
+interface TextOptimizationParams {
+  text: string;
+  type: 'title' | 'description' | 'quote' | 'button' | 'feature';
+  context?: {
+    industry?: string;
+    tone?: 'professional' | 'casual' | 'friendly' | 'formal';
+    purpose?: string;
+    targetAudience?: string;
+  };
+}
+
+interface TextOptimizationResult {
+  optimizedText: string;
+  alternatives: string[];
+  score: number;
+  suggestions: string[];
+}
+
+export class AIOptimizationService {
   private readonly CACHE_TTL = 3600; // 1 hour
 
   async optimizeSubjectLine(subject: string, niche: string): Promise<OptimizationResult> {
@@ -25,35 +54,20 @@ class AIOptimizationService {
       const cached = await cacheService.get<OptimizationResult>(cacheKey);
       if (cached) return cached;
 
-      // Use OpenAI API for optimization
-      const response = await axios.post(
-        'https://api.openai.com/v1/completions',
-        {
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert in email marketing optimization for e-commerce.'
-            },
-            {
-              role: 'user',
-              content: `Optimize this email subject line for ${niche} niche: "${subject}"`
-            }
-          ]
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      // Use API route for optimization
+      const response = await axios.post('/api/ai/optimize', {
+        text: subject,
+        type: 'subject',
+        niche
+      });
+
+      const optimizedSubject = response.data.optimizedText;
 
       const result: OptimizationResult = {
-        subject: response.data.choices[0].message.content,
-        score: this.calculateOptimizationScore(response.data.choices[0].message.content),
-        improvements: this.analyzeImprovements(subject, response.data.choices[0].message.content),
-        sentiment: this.analyzeSentiment(response.data.choices[0].message.content)
+        subject: optimizedSubject,
+        score: this.calculateOptimizationScore(optimizedSubject),
+        improvements: this.analyzeImprovements(subject, optimizedSubject),
+        sentiment: this.analyzeSentiment(optimizedSubject)
       };
 
       // Cache the result
@@ -71,38 +85,20 @@ class AIOptimizationService {
     }
   }
 
-  async optimizeEmailContent(content: string, metrics: EmailMetrics): Promise<string> {
+  async optimizeEmailContent(template: Template, contact: ApolloContact): Promise<{
+    optimizedTemplate: Template;
+    metrics: AIOptimizationMetrics;
+  }> {
     try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/completions',
-        {
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: `You are an expert in email marketing optimization. Current metrics:
-                Open Rate: ${metrics.openRate}%
-                Click Rate: ${metrics.clickRate}%
-                Conversion Rate: ${metrics.conversionRate}%`
-            },
-            {
-              role: 'user',
-              content: `Optimize this email content for better engagement: "${content}"`
-            }
-          ]
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await axios.post('/api/ai/optimize-email', {
+        template,
+        contact
+      });
 
-      return response.data.choices[0].message.content;
+      return response.data;
     } catch (error) {
-      console.error('Error optimizing email content:', error);
-      return content;
+      console.error('AI optimization error:', error);
+      throw error;
     }
   }
 
@@ -110,33 +106,16 @@ class AIOptimizationService {
     product: { name: string; price: number; features: string[] }
   ): Promise<string> {
     try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/completions',
-        {
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert e-commerce copywriter.'
-            },
-            {
-              role: 'user',
-              content: `Write a compelling product description for:
-                Name: ${product.name}
-                Price: $${product.price}
-                Features: ${product.features.join(', ')}`
-            }
-          ]
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
+      const response = await axios.post('/api/ai/optimize', {
+        text: `${product.name}\n${product.features.join('\n')}`,
+        type: 'product',
+        context: {
+          price: product.price,
+          features: product.features
         }
-      );
+      });
 
-      return response.data.choices[0].message.content;
+      return response.data.optimizedText;
     } catch (error) {
       console.error('Error generating product description:', error);
       return `${product.name} - $${product.price}`;
@@ -145,34 +124,91 @@ class AIOptimizationService {
 
   async generateEmailCopyVariation(content: string, niche: string): Promise<string> {
     try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/completions',
-        {
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert in email marketing copywriting for e-commerce.'
-            },
-            {
-              role: 'user',
-              content: `Generate a variation of this email content for the ${niche} niche: "${content}"`
-            }
-          ]
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await axios.post('/api/ai/optimize', {
+        text: content,
+        type: 'variation',
+        niche
+      });
 
-      return response.data.choices[0].message.content;
+      return response.data.optimizedText;
     } catch (error) {
       console.error('Error generating email copy variation:', error);
       return content;
     }
+  }
+
+  async optimizeBlockText(params: TextOptimizationParams): Promise<TextOptimizationResult> {
+    const cacheKey = `block_text_optimization:${params.text}:${params.type}:${JSON.stringify(params.context)}`;
+    
+    try {
+      // Check cache first
+      const cached = await cacheService.get<TextOptimizationResult>(cacheKey);
+      if (cached) return cached;
+
+      const prompt = this.generateOptimizationPrompt(params);
+      
+      const response = await axios.post('/api/ai/optimize-text', {
+        text: params.text,
+        type: params.type,
+        context: params.context
+      });
+
+      const result: TextOptimizationResult = {
+        optimizedText: response.data.optimizedText,
+        alternatives: response.data.alternatives || [],
+        score: response.data.score || 0,
+        suggestions: response.data.suggestions || []
+      };
+
+      // Cache the result
+      await cacheService.set(cacheKey, result, this.CACHE_TTL);
+
+      return result;
+    } catch (error) {
+      console.error('Error optimizing block text:', error);
+      return {
+        optimizedText: params.text,
+        alternatives: [],
+        score: 0,
+        suggestions: ['Failed to optimize text']
+      };
+    }
+  }
+
+  private generateOptimizationPrompt(params: TextOptimizationParams): string {
+    const contextInfo = params.context ? `
+      Industry: ${params.context.industry || 'General'}
+      Tone: ${params.context.tone || 'professional'}
+      Purpose: ${params.context.purpose || 'Not specified'}
+      Target Audience: ${params.context.targetAudience || 'General'}
+    ` : '';
+
+    const typeSpecificInstructions = {
+      title: 'Create a compelling, concise headline that grabs attention',
+      description: 'Write clear, engaging copy that explains the value proposition',
+      quote: 'Create an authentic, impactful testimonial or quote',
+      button: 'Write action-oriented, clickable button text',
+      feature: 'Highlight key benefits and features in a compelling way'
+    };
+
+    return `
+      Optimize the following ${params.type} text for maximum engagement:
+
+      Original Text:
+      ${params.text}
+
+      Context:
+      ${contextInfo}
+
+      Instructions:
+      ${typeSpecificInstructions[params.type]}
+
+      Please provide:
+      1. Optimized version
+      2. 2-3 alternative versions
+      3. Improvement suggestions
+      4. Engagement score (0-100)
+    `;
   }
 
   private calculateOptimizationScore(subject: string): number {
@@ -240,4 +276,4 @@ class AIOptimizationService {
 }
 
 export const aiOptimizationService = new AIOptimizationService();
-export type { OptimizationResult, EmailMetrics }; 
+export type { OptimizationResult, EmailMetrics, AIOptimizationMetrics }; 

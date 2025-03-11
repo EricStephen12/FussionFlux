@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/utils/firebase';
 import { firestoreService } from '@/services/firestore';
+import { creditsService } from '@/services/trial';
 
 interface VerifyPaymentRequest {
   transactionId: string;
-  paymentMethod: 'flutterwave' | 'paypal';
+  paymentMethod: 'flutterwave' | 'paypal' | 'nowpayments';
   planId: string;
 }
 
@@ -59,6 +60,17 @@ export async function POST(request: Request) {
       );
       const data = await response.json();
       isVerified = data.status === 'COMPLETED';
+    } else if (paymentMethod === 'nowpayments') {
+      const response = await fetch(
+        `https://api.nowpayments.io/v1/payment/${transactionId}`,
+        {
+          headers: {
+            'x-api-key': process.env.NOWPAYMENTS_API_KEY!,
+          },
+        }
+      );
+      const data = await response.json();
+      isVerified = data.payment_status === 'finished';
     }
 
     if (!isVerified) {
@@ -70,17 +82,19 @@ export async function POST(request: Request) {
 
     // Get credits from plan
     const plans = [
-      { id: 'basic', credits: 1000 },
-      { id: 'pro', credits: 5000 },
-      { id: 'enterprise', credits: 15000 },
+      { id: 'starter', emailCredits: 150, smsCredits: 100, price: 29 },
+      { id: 'growth', emailCredits: 500, smsCredits: 500, price: 79 },
+      { id: 'pro', emailCredits: 1500, smsCredits: 1500, price: 149 }
     ];
+    
     const plan = plans.find((p) => p.id === planId);
     if (!plan) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 
-    // Update user credits in Firestore
-    await firestoreService.updateUserCredits(decodedToken.uid, plan.credits);
+    // Add both email and SMS credits
+    await creditsService.addCredits(decodedToken.uid, 'email', plan.emailCredits);
+    await creditsService.addCredits(decodedToken.uid, 'sms', plan.smsCredits);
 
     // Record the transaction
     await firestoreService.recordTransaction({
@@ -88,13 +102,16 @@ export async function POST(request: Request) {
       transactionId,
       paymentMethod,
       planId,
-      credits: plan.credits,
+      emailCredits: plan.emailCredits,
+      smsCredits: plan.smsCredits,
+      amount: plan.price,
       timestamp: new Date(),
     });
 
     return NextResponse.json({
       success: true,
-      credits: plan.credits,
+      emailCredits: plan.emailCredits,
+      smsCredits: plan.smsCredits,
     });
   } catch (error: any) {
     console.error('Payment verification error:', error);

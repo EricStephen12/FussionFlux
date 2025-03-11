@@ -26,10 +26,6 @@ export async function POST(request: Request) {
       status: 'new'
     });
 
-    // Here you would typically also send an email notification to your team
-    // and/or set up an auto-responder email to the user
-    // This would be integrated with your email service (SendGrid)
-
     return NextResponse.json(
       { message: 'Contact form submitted successfully' },
       { status: 200 }

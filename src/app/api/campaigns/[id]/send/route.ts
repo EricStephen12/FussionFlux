@@ -1,28 +1,24 @@
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
 import { db } from '@/utils/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { firestoreService } from '@/services/firestore';
 
-const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY);
+export async function POST(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params;
-    const { to, subject, template } = await request.json();
-
-    // Send email using Resend
-    const { data, error } = await resend.emails.send({
-      from: 'noreply@yourdomain.com',
-      to,
-      subject,
-      html: template,
-    });
-
-    if (error) {
-      throw error;
+    // Get campaign data
+    const campaign = await firestoreService.getCampaign(id);
+    if (!campaign) {
+      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
     // Update campaign status in database
-    await db.collection('campaigns').doc(id).update({
+    const campaignRef = doc(db, 'campaigns', id);
+    await updateDoc(campaignRef, {
       status: 'sent',
       sentAt: new Date(),
     });

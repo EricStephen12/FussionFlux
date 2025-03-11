@@ -8,6 +8,15 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
 } from '@heroicons/react/24/outline';
+import { useSubscription } from '@/hooks/useSubscription';
+
+// Template categories based on subscription tiers
+const templateTiers = {
+  free: ['Welcome Series', 'Basic Promotional'],
+  starter: ['Welcome Series', 'Basic Promotional', 'Abandoned Cart', 'Order Confirmation'],
+  growth: ['Welcome Series', 'Advanced Promotional', 'Abandoned Cart', 'Order Confirmation', 'Customer Feedback', 'Re-engagement'],
+  pro: ['Welcome Series', 'Advanced Promotional', 'Abandoned Cart', 'Order Confirmation', 'Customer Feedback', 'Re-engagement', 'VIP Customer', 'Custom Templates']
+};
 
 // This would typically come from your backend
 const sampleTemplates = [
@@ -15,6 +24,7 @@ const sampleTemplates = [
     id: '1',
     name: 'Welcome Series - First Email',
     category: 'Welcome Series',
+    tier: 'free',
     description: 'First email in the welcome series for new subscribers',
     status: 'active',
     performance: { openRate: 45, clickRate: 12 },
@@ -25,28 +35,59 @@ const sampleTemplates = [
     id: '2',
     name: 'Abandoned Cart Recovery',
     category: 'Abandoned Cart',
+    tier: 'starter',
     description: 'Reminder email for customers who left items in their cart',
     status: 'active',
     performance: { openRate: 38, clickRate: 15 },
     lastModified: '2024-03-14',
     thumbnail: '/templates/cart-recovery.png',
   },
+  {
+    id: '3',
+    name: 'VIP Customer Appreciation',
+    category: 'VIP Customer',
+    tier: 'pro',
+    description: 'Exclusive offers for VIP customers',
+    status: 'active',
+    performance: { openRate: 52, clickRate: 18 },
+    lastModified: '2024-03-13',
+    thumbnail: '/templates/vip-customer.png',
+  },
   // Add more sample templates as needed
 ];
 
 export default function TemplatesPage() {
   const router = useRouter();
+  const { subscription } = useSubscription();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const filteredTemplates = sampleTemplates.filter(template => {
+  // Filter templates based on subscription tier
+  const accessibleTemplates = sampleTemplates.filter(template => {
+    if (!subscription) return template.tier === 'free';
+    
+    switch (subscription.tier) {
+      case 'pro':
+        return true; // Pro users can access all templates
+      case 'growth':
+        return template.tier !== 'pro';
+      case 'starter':
+        return template.tier === 'free' || template.tier === 'starter';
+      default:
+        return template.tier === 'free';
+    }
+  });
+
+  // Filter templates based on search and category
+  const filteredTemplates = accessibleTemplates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      template.description.toLowerCase().includes(searchQuery.toLowerCase());
+                         template.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const categories = ['all', ...new Set(sampleTemplates.map(t => t.category))];
+  // Get available categories based on subscription tier
+  const availableCategories = subscription ? templateTiers[subscription.tier] : templateTiers.free;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -90,7 +131,7 @@ export default function TemplatesPage() {
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
-            {categories.map((category) => (
+            {availableCategories.map((category) => (
               <option key={category} value={category}>
                 {category.charAt(0).toUpperCase() + category.slice(1)}
               </option>

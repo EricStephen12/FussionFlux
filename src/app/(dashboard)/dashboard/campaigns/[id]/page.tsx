@@ -11,7 +11,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { firestoreService, type Campaign } from '@/services/firestore';
-import { useResend } from '@/hooks/useResend';
+import LineChart from '@/components/LineChart';
+import AIInsights from '@/components/campaigns/AIInsights';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
@@ -19,14 +20,10 @@ function classNames(...classes: string[]) {
 
 export default function CampaignPage({ params }: { params: { id: string } }) {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
   const { user } = useAuth();
-  const { sendEmail } = useResend();
 
   useEffect(() => {
     if (user) {
@@ -37,60 +34,18 @@ export default function CampaignPage({ params }: { params: { id: string } }) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [campaignData, templateData] = await Promise.all([
-        firestoreService.getCampaign(params.id),
-        sendEmail({
-          to: 'example@example.com',
-          subject: 'Your Subject',
-          template: {}, // Replace with actual template data
-        }),
-      ]);
+      const campaignData = await firestoreService.getCampaign(params.id);
 
       if (!campaignData) {
         throw new Error('Campaign not found');
       }
 
       setCampaign(campaignData);
-      setTemplates(templateData);
     } catch (error: any) {
       setError(error.message || 'Failed to load campaign');
       console.error('Error loading campaign:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSendCampaign = async () => {
-    if (!selectedTemplate) {
-      setError('Please select an email template');
-      return;
-    }
-
-    try {
-      setSending(true);
-      const token = await user?.getIdToken();
-      const response = await fetch(`/api/campaigns/${params.id}/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          templateId: selectedTemplate,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to send campaign');
-      }
-
-      await loadData(); // Reload campaign data
-    } catch (error: any) {
-      setError(error.message || 'Failed to send campaign');
-      console.error('Error sending campaign:', error);
-    } finally {
-      setSending(false);
     }
   };
 
@@ -125,30 +80,38 @@ export default function CampaignPage({ params }: { params: { id: string } }) {
         </p>
       </div>
 
+      <div className="mb-8">
+        <AIInsights campaignId={params.id} />
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-4 mb-8">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <dt className="text-sm font-medium text-gray-500 truncate">Emails Sent</dt>
-            <dd className="mt-1 text-3xl font-semibold text-indigo-600">5</dd>
+            <dd className="mt-1 text-3xl font-semibold text-indigo-600">{campaign.sentCount || 0}</dd>
           </div>
         </div>
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <dt className="text-sm font-medium text-gray-500 truncate">Opens</dt>
-            <dd className="mt-1 text-3xl font-semibold text-indigo-600">2</dd>
+            <dd className="mt-1 text-3xl font-semibold text-indigo-600">{campaign.openCount || 0}</dd>
           </div>
         </div>
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <dt className="text-sm font-medium text-gray-500 truncate">Clicks</dt>
-            <dd className="mt-1 text-3xl font-semibold text-indigo-600">1</dd>
+            <dd className="mt-1 text-3xl font-semibold text-indigo-600">{campaign.clickCount || 0}</dd>
           </div>
         </div>
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
-            <dt className="text-sm font-medium text-gray-500 truncate">Estimated ROI</dt>
-            <dd className="mt-1 text-3xl font-semibold text-green-600">124%</dd>
+            <dt className="text-sm font-medium text-gray-500 truncate">Conversion Rate</dt>
+            <dd className="mt-1 text-3xl font-semibold text-green-600">
+              {campaign.clickCount && campaign.sentCount 
+                ? `${((campaign.clickCount / campaign.sentCount) * 100).toFixed(1)}%` 
+                : '0%'}
+            </dd>
           </div>
         </div>
       </div>
@@ -165,45 +128,64 @@ export default function CampaignPage({ params }: { params: { id: string } }) {
           <div className="relative flex justify-between">
             <div>
               <span className="bg-white px-2 text-sm text-gray-500">Sent</span>
-              <div className="mt-2 text-indigo-600">9:00 AM</div>
+              <div className="mt-2 text-indigo-600">
+                {campaign.createdAt ? new Date(campaign.createdAt).toLocaleTimeString() : 'Not sent'}
+              </div>
             </div>
             <div>
               <span className="bg-white px-2 text-sm text-gray-500">First Open</span>
-              <div className="mt-2 text-indigo-600">9:15 AM</div>
+              <div className="mt-2 text-indigo-600">
+                {campaign.firstOpenAt ? new Date(campaign.firstOpenAt).toLocaleTimeString() : 'No opens yet'}
+              </div>
             </div>
             <div>
               <span className="bg-white px-2 text-sm text-gray-500">First Click</span>
-              <div className="mt-2 text-indigo-600">9:30 AM</div>
+              <div className="mt-2 text-indigo-600">
+                {campaign.firstClickAt ? new Date(campaign.firstClickAt).toLocaleTimeString() : 'No clicks yet'}
+              </div>
             </div>
             <div>
               <span className="bg-white px-2 text-sm text-gray-500">Latest Activity</span>
-              <div className="mt-2 text-indigo-600">10:00 AM</div>
+              <div className="mt-2 text-indigo-600">
+                {campaign.lastActivityAt ? new Date(campaign.lastActivityAt).toLocaleTimeString() : 'No activity'}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Engagement Graph */}
+        {campaign.engagementData && campaign.engagementData.length > 0 ? (
         <div className="mt-8">
           <h3 className="text-sm font-medium text-gray-900">Engagement Over Time</h3>
-          <div className="mt-3 h-96 bg-gray-50 rounded-lg p-4">
-            [Engagement Graph Will Render Here]
+            <div className="mt-3 h-96">
+              <LineChart
+                data={campaign.engagementData}
+                categories={['Opens', 'Clicks', 'Conversions']}
+              />
+            </div>
           </div>
+        ) : (
+          <div className="mt-8 text-center text-gray-500">
+            No engagement data available yet
         </div>
+        )}
 
         {/* Action Items */}
         <div className="mt-8">
           <h3 className="text-sm font-medium text-gray-900">Recommended Actions</h3>
+          {campaign.recommendedActions && campaign.recommendedActions.length > 0 ? (
           <ul className="mt-3 space-y-3">
-            <li className="text-sm text-gray-600">
-              ✓ Send follow-up to 3 opens without clicks
+              {campaign.recommendedActions.map((action, index) => (
+                <li key={index} className="text-sm text-gray-600">
+                  ✓ {action}
             </li>
-            <li className="text-sm text-gray-600">
-              ✓ A/B test subject line for tomorrow's batch
-            </li>
-            <li className="text-sm text-gray-600">
-              ✓ Review click patterns for optimization
-            </li>
+              ))}
           </ul>
+          ) : (
+            <p className="mt-3 text-sm text-gray-500">
+              No recommended actions at this time
+            </p>
+          )}
         </div>
       </div>
     </div>

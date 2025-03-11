@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import ClientLayout from '@/components/ClientLayout';
 import React from 'react';
 import * as Sentry from "@sentry/react";
+import { AuthProvider } from '@/contexts/AuthContext';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 
 
 const inter = Inter({ 
@@ -28,11 +30,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} font-sans h-full`}>
       <body className="h-full bg-gradient-to-br from-gray-50 to-gray-100">
-        <ClientLayout>
-          <main className="min-h-screen flex flex-col">
-            {children}
-          </main>
-        </ClientLayout>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <ClientLayout>
+              <main className="min-h-screen flex flex-col">
+                {children}
+              </main>
+            </ClientLayout>
+          </SubscriptionProvider>
+        </AuthProvider>
       </body>
     </html>
   );

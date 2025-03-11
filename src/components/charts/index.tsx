@@ -41,55 +41,85 @@ const defaultOptions: ChartOptions<'line'> = {
 
 interface ChartProps {
   data: any[];
-  height?: number;
-  categories: string[];
+  xKey: string;
+  series: Array<{
+    key: string;
+    name: string;
+    color: string;
+  }>;
 }
 
-export function LineChart({ data, height = 300, categories }: ChartProps) {
+export const LineChart = ({ data = [], xKey, series = [] }: ChartProps) => {
+  if (!data || !series || data.length === 0 || series.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500">No data available</p>
+      </div>
+    );
+  }
+
   const chartData: ChartData<'line'> = {
-    labels: data.map(d => d.date),
-    datasets: categories.map((category, index) => ({
-      label: category,
-      data: data.map(d => d[category.toLowerCase()]),
-      borderColor: [
-        'rgb(99, 102, 241)',
-        'rgb(168, 85, 247)',
-        'rgb(236, 72, 153)',
-      ][index],
+    labels: data.map(d => d[xKey] || ''),
+    datasets: series.map((s) => ({
+      label: s.name,
+      data: data.map(d => d[s.key] || 0),
+      borderColor: s.color,
+      backgroundColor: s.color,
       tension: 0.4,
+      fill: false,
     })),
   };
 
-  return (
-    <div style={{ height }}>
-      <Line options={defaultOptions} data={chartData} />
-    </div>
-  );
-}
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
 
-export function BarChart({ data, height = 300, categories }: ChartProps) {
+  return <Line data={chartData} options={options} />;
+};
+
+export const BarChart = ({ data = [], xKey, series = [] }: ChartProps) => {
+  if (!data || !series || data.length === 0 || series.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500">No data available</p>
+      </div>
+    );
+  }
+
   const chartData: ChartData<'bar'> = {
-    labels: data.map(d => d.date),
-    datasets: categories.map((category, index) => ({
-      label: category,
-      data: data.map(d => d[category.toLowerCase()]),
-      backgroundColor: [
-        'rgba(99, 102, 241, 0.5)',
-        'rgba(168, 85, 247, 0.5)',
-        'rgba(236, 72, 153, 0.5)',
-      ][index],
-      borderColor: [
-        'rgb(99, 102, 241)',
-        'rgb(168, 85, 247)',
-        'rgb(236, 72, 153)',
-      ][index],
-      borderWidth: 1,
+    labels: data.map(d => d[xKey] || ''),
+    datasets: series.map((s) => ({
+      label: s.name,
+      data: data.map(d => d[s.key] || 0),
+      backgroundColor: s.color,
     })),
   };
 
-  return (
-    <div style={{ height }}>
-      <Bar options={defaultOptions} data={chartData} />
-    </div>
-  );
-} 
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
+
+  return <Bar data={chartData} options={options} />;
+}; 

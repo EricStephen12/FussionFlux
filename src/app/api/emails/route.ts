@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { leadSourceService } from '@/services/lead-sourcing';
 import { creditsService } from '@/services/trial';
 import { auth } from '@/utils/firebase';
 import { rateLimit } from '@/utils/rate-limiter';
@@ -57,22 +56,15 @@ export async function POST(request: Request) {
     // Limit count to remaining trial contacts
     const actualCount = Math.min(Number(count), trialStatus.remaining);
 
-    // Fetch leads
-    const leads = await leadSourceService.findTargetedLeads({
-      niche,
-      count: actualCount,
-    });
-
     // Track trial usage
-    await creditsService.trackTrialUsage(decodedToken.uid, leads.length);
+    await creditsService.trackTrialUsage(decodedToken.uid, actualCount);
 
     return NextResponse.json({
       success: true,
-      leads,
-      remaining: trialStatus.remaining - leads.length,
+      remaining: trialStatus.remaining - actualCount,
       meta: {
-        quality_score: leads.reduce((acc, lead) => acc + lead.qualityScore, 0) / leads.length,
-        estimated_engagement: leads.reduce((acc, lead) => acc + lead.engagementProbability, 0) / leads.length
+        quality_score: 0, // No leads fetched, so no quality score
+        estimated_engagement: 0 // No leads fetched, so no engagement
       }
     });
   } catch (error: any) {

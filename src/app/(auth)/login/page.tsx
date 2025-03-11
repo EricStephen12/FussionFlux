@@ -25,7 +25,7 @@ export default function LoginPage() {
           }
 
           // Otherwise, redirect to the requested page or dashboard
-          const redirectPath = searchParams.get('redirect') || '/dashboard';
+          const redirectPath = searchParams?.get('redirect') || '/dashboard';
           router.push(redirectPath);
         } catch (error) {
           console.error('Redirect error:', error);

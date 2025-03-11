@@ -1,26 +1,36 @@
+'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '@/utils/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 interface Subscription {
-  tier: 'free' | 'starter' | 'grower' | 'pro' | 'enterprise';
-  credits: number;
+  userId: string;
+  tier: 'free' | 'starter' | 'growth' | 'pro';
+  limits: number;
   maxEmails: number;
   maxContacts: number;
+  maxSMS: number;
   features: {
     followUpEmails: boolean;
     abTesting: boolean;
     aiOptimization: boolean;
     analytics: boolean;
     customDomain: boolean;
+    previewLeads: boolean;
+    importContacts: boolean;
+    fullLeadAccess: boolean;
+    bulkOperations: boolean;
   };
-  expiresAt?: string;
+  expiresAt: string | null;
 }
 
-interface SubscriptionTier {
+export interface SubscriptionTier {
   name: string;
   price: number;
-  credits: number;
+  limits: number;
   maxEmails: number;
+  maxSMS: number;
   maxContacts: number;
   features: {
     followUpEmails: boolean;
@@ -28,71 +38,94 @@ interface SubscriptionTier {
     aiOptimization: boolean;
     analytics: boolean;
     customDomain: boolean;
+    previewLeads: boolean;
+    importContacts: boolean;
+    fullLeadAccess: boolean;
+    bulkOperations: boolean;
+  };
+  popular?: boolean;
+  description?: string;
+  cta?: string;
+  extraEmailPrice?: number;
+  extraSMSPrice?: number;
+  extraLeadsPrice?: number;
+  trialDuration?: number;
+  specialOffer?: {
+    enabled: boolean;
+    discountPercentage: number;
+    durationMonths: number;
+    bonusAmount: number;
+    bonusFeatures: string[];
+    expiryDate: string;
   };
 }
 
-const subscriptionTiers: Record<string, SubscriptionTier> = {
+export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
   free: {
-    name: 'Free',
+    name: '14-Day Trial',
     price: 0,
-    credits: 0,
-    maxEmails: 5,
-    maxContacts: 5,
-    features: {
-      followUpEmails: false,
-      abTesting: false,
-      aiOptimization: false,
-      analytics: false,
-      customDomain: false,
-    },
-  },
-  starter: {
-    name: 'Starter',
-    price: 19,
-    credits: 100,
-    maxEmails: 1000,
+    limits: 100,
+    maxEmails: 250,
+    maxSMS: 50,
     maxContacts: 100,
-    features: {
-      followUpEmails: true,
-      abTesting: false,
-      aiOptimization: true,
-      analytics: true,
-      customDomain: false,
-    },
-  },
-  grower: {
-    name: 'Grower',
-    price: 29,
-    credits: 500,
-    maxEmails: 2000,
-    maxContacts: 500,
     features: {
       followUpEmails: true,
       abTesting: true,
       aiOptimization: true,
       analytics: true,
-      customDomain: true,
+      customDomain: false,
+      previewLeads: true,
+      importContacts: true,
+      fullLeadAccess: false,
+      bulkOperations: false,
     },
+    description: 'Try all features free for 14 days',
+    extraEmailPrice: 0.004,
+    extraSMSPrice: 0.03,
+    extraLeadsPrice: 0.06,
+    trialDuration: 14 // days
   },
-  pro: {
-    name: 'Pro',
-    price: 99,
-    credits: 1000,
-    maxEmails: 4000,
+  starter: {
+    name: 'Starter',
+    price: 39,
+    specialOffer: {
+      enabled: true,
+      discountPercentage: 50,
+      durationMonths: 3,
+      bonusAmount: 500,
+      bonusFeatures: [
+        'Unlimited Email Templates',
+        'AI Copywriting Credits',
+        'Priority Support'
+      ],
+      expiryDate: '2024-05-01' // Set this to your desired expiry date
+    },
+    limits: 1000,
+    maxEmails: 5000,
+    maxSMS: 500,
     maxContacts: 1000,
     features: {
       followUpEmails: true,
       abTesting: true,
       aiOptimization: true,
       analytics: true,
-      customDomain: true,
+      customDomain: false,
+      previewLeads: true,
+      importContacts: true,
+      fullLeadAccess: true,
+      bulkOperations: false,
     },
+    description: 'Perfect for growing businesses',
+    extraEmailPrice: 0.003,
+    extraSMSPrice: 0.02,
+    extraLeadsPrice: 0.05,
   },
-  enterprise: {
-    name: 'Enterprise',
-    price: 249,
-    credits: 5000,
-    maxEmails: 20000,
+  grower: {
+    name: 'Grower',
+    price: 99,
+    limits: 5000,
+    maxEmails: 15000,
+    maxSMS: 1500,
     maxContacts: 5000,
     features: {
       followUpEmails: true,
@@ -100,7 +133,39 @@ const subscriptionTiers: Record<string, SubscriptionTier> = {
       aiOptimization: true,
       analytics: true,
       customDomain: true,
+      previewLeads: true,
+      importContacts: true,
+      fullLeadAccess: true,
+      bulkOperations: true,
     },
+    description: 'Perfect for growing businesses',
+    extraEmailPrice: 0.002, // $2 per 1000 emails
+    extraSMSPrice: 0.015,   // 1.5 cents per SMS
+    extraLeadsPrice: 0.04,  // 4 cents per lead
+    popular: true,
+  },
+  pro: {
+    name: 'Pro',
+    price: 199,
+    limits: 15000,
+    maxEmails: 50000,
+    maxSMS: 5000,
+    maxContacts: 15000,
+    features: {
+      followUpEmails: true,
+      abTesting: true,
+      aiOptimization: true,
+      analytics: true,
+      customDomain: true,
+      previewLeads: true,
+      importContacts: true,
+      fullLeadAccess: true,
+      bulkOperations: true,
+    },
+    description: 'For power users and agencies',
+    extraEmailPrice: 0.001, // $1 per 1000 emails
+    extraSMSPrice: 0.01,    // 1 cent per SMS
+    extraLeadsPrice: 0.03,  // 3 cents per lead
   },
 };
 
@@ -119,66 +184,49 @@ export const useSubscription = () => {
   const loadSubscription = async () => {
     setIsLoading(true);
     try {
-      // Replace with actual API call
-      const response = await fetch('/api/subscription');
-      const data = await response.json();
-      setSubscription(data);
-    } catch (err) {
-      setError('Failed to load subscription');
-      // Default to free tier if loading fails
+      if (!user) throw new Error('User not authenticated');
+
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.data();
+
+      if (!userData) {
+        setError('User data not found.');
+        return;
+      }
+
+      // Check for subscription data
+      const subscriptionData = userData.subscriptionData;
+
+      if (!subscriptionData) {
+        // Set up default subscription for free tier
+        setSubscription({
+          userId: user.uid,
+          tier: 'free',
+          limits: SUBSCRIPTION_TIERS.free.limits,
+          maxEmails: SUBSCRIPTION_TIERS.free.maxEmails,
+          maxContacts: SUBSCRIPTION_TIERS.free.maxContacts,
+          maxSMS: SUBSCRIPTION_TIERS.free.maxSMS,
+          features: SUBSCRIPTION_TIERS.free.features,
+          expiresAt: null,
+        });
+        return;
+      }
+
+      // Continue with existing logic for users with subscription data
+      const tierData = SUBSCRIPTION_TIERS[subscriptionData.tier];
       setSubscription({
-        tier: 'free',
-        credits: 0,
-        maxEmails: 5,
-        maxContacts: 5,
-        features: {
-          followUpEmails: false,
-          abTesting: false,
-          aiOptimization: false,
-          analytics: false,
-          customDomain: false,
-        },
+        userId: user.uid,
+        tier: subscriptionData.tier,
+        limits: tierData.limits,
+        maxEmails: tierData.maxEmails,
+        maxContacts: tierData.maxContacts,
+        maxSMS: tierData.maxSMS,
+        features: tierData.features,
+        expiresAt: subscriptionData.expiresAt,
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const upgradeTier = async (tier: string) => {
-    setIsLoading(true);
-    try {
-      // Replace with actual API call
-      const response = await fetch('/api/subscription/upgrade', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ tier }),
-      });
-      const data = await response.json();
-      setSubscription(data);
-    } catch (err) {
-      setError('Failed to upgrade subscription');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const addCredits = async (amount: number) => {
-    setIsLoading(true);
-    try {
-      // Replace with actual API call
-      const response = await fetch('/api/subscription/credits', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount }),
-      });
-      const data = await response.json();
-      setSubscription(data);
-    } catch (err) {
-      setError('Failed to add credits');
+    } catch (error) {
+      console.error('Failed to load subscription:', error);
+      setError('Failed to load subscription');
     } finally {
       setIsLoading(false);
     }
@@ -189,31 +237,67 @@ export const useSubscription = () => {
     return subscription.features[feature];
   };
 
-  const getRemainingCredits = () => {
+  const getRemainingLimits = () => {
     if (!subscription) return 0;
-    return subscription.credits;
+    return subscription.limits;
   };
 
   const getMaxEmails = () => {
-    if (!subscription) return 5;
+    if (!subscription) return 0;
     return subscription.maxEmails;
   };
 
   const getMaxContacts = () => {
-    if (!subscription) return 5;
+    if (!subscription) return 0;
     return subscription.maxContacts;
+  };
+
+  const getMaxSMS = () => {
+    if (!subscription) return 0;
+    return subscription.maxSMS;
+  };
+
+  const isTrialValid = () => {
+    if (!subscription || subscription.tier !== 'free') return false;
+    if (!subscription.expiresAt) return false;
+    return new Date(subscription.expiresAt) > new Date() && subscription.limits > 0 && subscription.maxEmails > 0;
   };
 
   return {
     subscription,
     isLoading,
     error,
-    upgradeTier,
-    addCredits,
+    subscriptionTiers: SUBSCRIPTION_TIERS,
     checkFeatureAccess,
-    getRemainingCredits,
+    getRemainingLimits,
     getMaxEmails,
     getMaxContacts,
-    subscriptionTiers,
+    getMaxSMS,
+    isTrialValid,
   };
-}; 
+};
+
+function calculateEmailsUsed(contacts: number, splitA: number, splitB: number, followUp: boolean = false): number {
+  let emailsA = Math.ceil(contacts * (splitA / 100));
+  let emailsB = Math.ceil(contacts * (splitB / 100));
+  let totalEmails = emailsA + emailsB;
+
+  if (followUp) {
+    totalEmails *= 2; // Double the emails for follow-ups
+  }
+
+  return totalEmails;
+}
+
+function calculateSMSUsed(contacts: number, splitA: number, splitB: number, smsA: boolean = false, smsB: boolean = false): number {
+  let smsUsed = 0;
+
+  if (smsA) {
+    smsUsed += Math.ceil(contacts * (splitA / 100));
+  }
+  if (smsB) {
+    smsUsed += Math.ceil(contacts * (splitB / 100));
+  }
+
+  return smsUsed;
+} 

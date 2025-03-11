@@ -1,47 +1,46 @@
-# .cursor.rules
+bro folow these rules strictly and udate urself everytime you have accomplishes a step and always reference to it before making any changes the ones marked x have being done the ones not marked as not be done or as being done halfway
+I have an existing SaaS codebase for an email+SMS automation platform with the following major sections:
 
-## Task Tracking
+Dashboard (/dashboard) – Shows live analytics (open rate, conversion rate, revenue, click rate, charts, etc.).
 
-- [ ] Optimize Database Queries: Ensure queries handle high email & lead volumes efficiently.
-- [ ] Upgrade Email Analytics & AI Insights:
-  - [ ] Show real-time campaign performance (open rates, click rates, revenue).
-  - [ ] Implement heatmaps for high-engagement tracking.
-  - [ ] Add AI-powered insights & recommendations to improve campaign results.
-- [ ] Improve Campaign Management & AI Automation:
-  - [ ] Display active campaigns & real-time performance updates.
-  - [ ] Add AI-suggested optimizations for better engagement.
-  - [ ] Allow bulk actions to pause, duplicate, or edit campaigns instantly.
-- [ ] Enhance Billing & Referral System:
-  - [ ] Show detailed billing history with downloadable invoices.
-  - [ ] Support NowPayments, PayPal, Flutterwave for flexible payments.
-  - [ ] Allow users to upgrade/downgrade their plans seamlessly.
-- [ ] Modify Free Trial & Subscription Tiers:
-  - [ ] Set up trial limits & subscription plans.
-  - [ ] Implement a dynamic paywall to restrict features based on user tier.
-- [ ] Improve Email Deliverability & Testing System:
-  - [ ] Implement Smart Cold Email Warm-Up to avoid spam filters.
-  - [ ] Add an Inbox Rotation System for better deliverability.
-  - [ ] Ensure test emails display the exact HTML template before sending.
-  - [ ] Allow users to preview & approve test emails before finalizing.
-- [ ] Social Media Marketing Integration:
-  - [ ] Add "Social Media Leads" section in the dashboard.
-  - [ ] Capture leads from social media DMs and link clicks.
-  - [ ] Automate social media follow-ups with AI messaging.
-  - [ ] Link social media accounts in user settings.
-  - [ ] Adjust pricing to include social media features.
+Campaign Creation (/dashboard/campaign) – This page handles:
 
-## AI Lead Selection
+Creating a New Campaign:
+- [x] When a user clicks "Create New Campaign," the AB testing flow is launched.
+- [x] The campaign can be sent immediately or scheduled based on the target country's local time.
+- [x] Users should see their saved/created email templates.
+- [x] Audience Selector: Uses AI to fetch and score leads based on the selected niche.
+- [x] Import Contacts CSV: Positioned below the audience selector.
+- [x] Follow-Up Section: Users select a template for follow-up emails.
+- [x] Review Step: Users confirm the campaign details before sending.
+- [x] Import Contacts: Users can upload existing contact lists to build their audience quickly, with validation and limits based on subscription tier.
+  - [x] how can we add retargeting, lookalike audiences based on the selected niche and high engagement leads, and location.
 
-- [ ] Implement AI Model to Identify High-Potential Leads:
-  - [ ] Analyze lead data from Apollo to determine high-target leads.
-  - [ ] Use machine learning algorithms to score leads based on engagement and conversion potential.
-  - [ ] Integrate lead scoring into the platform for prioritization.
+Template Editor:
+- [x] A drag-and-drop email builder that also integrates an SMS function.
+- [x] It includes personalization fields and UTM parameters for tracking clicks, open rates, and conversions.
+- [x] Templates saved here are reusable in the campaign creation flow and can be re-edited.
 
-## Platform Improvement Checklist
+Campaign Analytics:
+- [x] Provides live campaign stats, including options to pause, run, or stop campaigns.
 
-- [ ] Refactor & Optimize Codebase
-  - [ ] Modularize code into smaller, reusable components.
-  - [ ] Document all functions and modules.
-  - [ ] Optimize database queries for efficiency.
+Analytics Page:
+- [x ] Shows live analytics of open rate, conversion rate, revenue, click rate, etc., displayed in charts.
 
-# Add entries here as changes are made.
+
+Billing Page:
+- [ ] New Pricing/Traffic Model Inspired by TikTok Ads:
+- [x] Base Subscription (Membership Required)
+- [x] Users must pay a monthly subscription to access the platform.
+- [x] This unlocks core features, including email & SMS campaign creation, basic analytics, limited audience targeting, access to saved templates, and limited free credits.
+- [x] Pay-As-You-Go "Ad Spend" Model: Users add funds to their account to spend on leads, SMS, and campaign boosts.
+- [x] Dynamic Pricing (AI-Based Like TikTok): Users set a budget for email/SMS campaigns, and the AI optimizes spending based on lead engagement.
+
+Maintain Code Consistency:
+- [ ] All modifications should follow the current coding style and structure.
+- [ ] Ensure that any new UI elements are integrated without breaking existing designs.
+
+Testing & Rollout:
+- [ ] After modifications, the code should be tested to ensure that the campaign creation flow, template editor sync, analytics, billing, and referral systems work seamlessly with the new features.
+
+- [x] Fix the error related to templates.filter not being a function.

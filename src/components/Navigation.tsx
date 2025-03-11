@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { BoltIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { BoltIcon, Bars3Icon, XMarkIcon, CodeBracketIcon } from '@heroicons/react/24/outline';
 
 export default function Navigation({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -45,22 +45,48 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
 
             {/* Desktop navigation */}
             <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
-              <Link href="/features" className="nav-link text-sm lg:text-base">Features</Link>
-              <Link href="/pricing" className="nav-link text-sm lg:text-base">Pricing</Link>
-              <Link href="/contact" className="nav-link text-sm lg:text-base">Contact</Link>
-              <Link href="/privacy" className="nav-link text-sm lg:text-base">Privacy Policy</Link>
+              <Link 
+                href="/features" 
+                className={`nav-link ${pathname === '/features' ? 'active' : ''}`}
+              >
+                Features
+              </Link>
+              <Link 
+                href="/pricing" 
+                className={`nav-link ${pathname === '/pricing' ? 'active' : ''}`}
+              >
+                Pricing
+              </Link>
+              {/* <Link
+                href="/api-docs"
+                className={`nav-link ${pathname === '/api-docs' ? 'active' : ''}`}
+              >
+                API
+              </Link> */}
+            
+              <Link 
+                href="/contact" 
+                className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}
+              >
+                Contact
+              </Link>
               {user && isProtectedRoute ? (
                 <>
-                  <Link href="/dashboard" className="nav-link text-sm lg:text-base">Dashboard</Link>
+                  <Link 
+                    href="/dashboard" 
+                    className={`nav-link ${pathname.startsWith('/dashboard') ? 'active' : ''}`}
+                  >
+                    Dashboard
+                  </Link>
                   <button 
                     onClick={handleSignOut}
-                    className="btn-secondary !py-2 !px-4 text-sm lg:text-base"
+                    className="nav-button-secondary"
                   >
                     Logout
                   </button>
                 </>
               ) : (
-                <Link href="/login" className="btn-primary !py-2 !px-4 text-sm lg:text-base">
+                <Link href="/login" className="nav-button-primary">
                   Get Started
                 </Link>
               )}
@@ -94,37 +120,58 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-1">
               <Link
                 href="/features"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === '/features'
+                    ? 'text-indigo-600 bg-indigo-50'
+                    : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Features
               </Link>
               <Link
                 href="/pricing"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === '/pricing'
+                    ? 'text-indigo-600 bg-indigo-50'
+                    : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Pricing
               </Link>
+              {/* <Link
+                href="/api-docs"
+                className={classNames(
+                  pathname === '/api-docs'
+                    ? 'bg-gray-100 text-gray-900'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                  'group flex items-center px-2 py-2 text-base font-medium rounded-md'
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                API Docs
+              </Link> */}
               <Link
                 href="/contact"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === '/contact'
+                    ? 'text-indigo-600 bg-indigo-50'
+                    : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Contact
-              </Link>
-              <Link
-                href="/privacy"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Privacy Policy
               </Link>
               {user && isProtectedRoute ? (
                 <>
                   <Link
                     href="/dashboard"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                    className={`block px-3 py-2 rounded-md text-base font-medium ${
+                      pathname.startsWith('/dashboard')
+                        ? 'text-indigo-600 bg-indigo-50'
+                        : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Dashboard

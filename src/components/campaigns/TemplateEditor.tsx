@@ -7,7 +7,19 @@ import {
   RadioIcon as RedoIcon,
   SparklesIcon,
   ChevronLeftIcon, 
-  ChevronRightIcon 
+  ChevronRightIcon,
+  ViewColumnsIcon,
+  DevicePhoneMobileIcon,
+  DeviceTabletIcon,
+  ComputerDesktopIcon,
+  UserIcon,
+  ChartBarIcon,
+  ClockIcon,
+  UserGroupIcon,
+  XMarkIcon,
+  QuestionMarkCircleIcon,
+  ArrowLeftIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
 import { v4 as uuidv4 } from 'uuid';
 import { cloudinaryService } from './cloudinaryService';
@@ -16,275 +28,17 @@ import { useResend } from '../../hooks/useResend';
 import { useAI } from '../../hooks/useAI';
 import { useTemplate } from '../../hooks/useTemplate';
 import { StarIcon } from '@heroicons/react/24/solid';
-
-// Define preset templates
-export const presetTemplates = {
-  'Product Launch': {
-    name: 'Product Launch Template',
-    blocks: [
-      {
-        id: 'header-1',
-        type: 'header',
-        content: {
-          header: {
-            logo: { url: '/logo.png', width: '120px', height: 'auto', alt: 'Logo' },
-            navigation: { links: [{ text: 'View Collection', url: '#' }] },
-            backgroundColor: '#ffffff',
-            textColor: '#1f2937',
-            padding: '1.5rem 2rem',
-            borderBottom: { width: '1px', style: 'solid', color: '#e5e7eb' },
-            position: 'relative',
-            zIndex: 50
-          },
-          style: {
-            position: 'relative',
-            zIndex: 50
-          }
-        }
-      },
-      {
-        id: 'hero-1',
-        type: 'hero',
-        content: {
-          title: 'Introducing Our Latest Innovation',
-          subtitle: 'Limited Time Launch Offer - Save 20%',
-          imageUrl: '/product-hero.jpg',
-          backgroundColor: '#f8fafc',
-          padding: '4rem 2rem',
-          style: {
-            titleColor: '#1f2937',
-            titleFontSize: '2.5rem',
-            titleLineHeight: '1.2',
-            titleLetterSpacing: '-0.025em',
-            subtitleColor: '#4b5563',
-            subtitleFontSize: '1.25rem',
-            subtitleLineHeight: '1.5',
-            subtitleMarginTop: '1rem'
-          },
-          button: {
-            text: 'Shop Now - 20% Off',
-            style: 'gradient',
-            url: '#',
-            gradient: {
-              from: '#4f46e5',
-              to: '#6366f1'
-            }
-          }
-        }
-      },
-      {
-        id: 'product-grid-1',
-        type: 'product',
-        content: {
-          title: 'Best Sellers',
-          description: 'Shop our most popular items',
-          columns: 2,
-          padding: '3rem 2rem',
-          backgroundColor: '#ffffff',
-          showPrice: true,
-          showDescription: true,
-          boxShadow: true,
-          borderRadius: 'lg',
-          buttonText: 'Add to Cart',
-          buttonStyle: 'gradient'
-        }
-      }
-    ]
-  },
-  'Limited Time Offer': {
-    name: 'Flash Sale Template',
-    blocks: [
-      {
-        id: 'hero-2',
-        type: 'hero',
-        content: {
-          title: '48-Hour Flash Sale',
-          subtitle: 'Up to 50% Off - Don\'t Miss Out!',
-          backgroundColor: '#ef4444',
-          textColor: '#ffffff',
-          padding: '3rem 2rem',
-          style: {
-            titleFontSize: '3rem',
-            titleLetterSpacing: '-0.025em',
-            subtitleMarginTop: '1rem'
-          },
-          button: {
-            text: 'Shop Now',
-            style: 'gradient',
-            gradient: {
-              from: '#ffffff',
-              to: '#f3f4f6'
-            },
-            textColor: '#ef4444'
-          }
-        }
-      },
-      {
-        id: 'countdown-1',
-        type: 'countdown',
-        content: {
-          title: 'Time Remaining',
-          endDate: '2024-12-31T23:59:59',
-          showDays: true,
-          showHours: true,
-          showMinutes: true,
-          showSeconds: true,
-          backgroundColor: '#fef2f2',
-          padding: '2rem',
-          style: {
-            titleColor: '#ef4444',
-            titleFontSize: '1.5rem'
-          }
-        }
-      },
-      {
-        id: 'product-grid-2',
-        type: 'product',
-        content: {
-          columns: 3,
-          padding: '2rem',
-          backgroundColor: '#ffffff',
-          showPrice: true,
-          showDescription: true,
-          boxShadow: true,
-          borderRadius: 'md'
-        }
-      }
-    ]
-  },
-  'Abandoned Cart': {
-    name: 'Cart Recovery Template',
-    blocks: [
-      {
-        id: 'hero-3',
-        type: 'hero',
-        content: {
-          title: 'Your Cart Misses You',
-          subtitle: 'Complete your purchase and get 10% off',
-          backgroundColor: '#f8fafc',
-          padding: '3rem 2rem',
-          style: {
-            titleColor: '#1f2937',
-            titleFontSize: '2rem',
-            subtitleColor: '#4b5563'
-          }
-        }
-      },
-      {
-        id: 'product-1',
-        type: 'product',
-        content: {
-          title: 'Items in Your Cart',
-          columns: 1,
-          padding: '2rem',
-          backgroundColor: '#ffffff',
-          showPrice: true,
-          showDescription: true,
-          boxShadow: true,
-          borderRadius: 'lg',
-          buttonText: 'Complete Purchase',
-          buttonStyle: 'gradient'
-        }
-      },
-      {
-        id: 'promotion-1',
-        type: 'promotion',
-        content: {
-          title: 'Special Offer',
-          discount: '10% OFF',
-          code: 'COMEBACK10',
-          expiryDate: '2024-12-31',
-          backgroundColor: '#f0fdf4',
-          padding: '2rem',
-          borderRadius: 'md'
-        }
-      }
-    ]
-  },
-  'Welcome Series': {
-    name: 'Welcome Email Template',
-    blocks: [
-      {
-        id: 'hero-4',
-        type: 'hero',
-        content: {
-          title: 'Welcome to Our Family',
-          subtitle: 'Get 15% off your first purchase',
-          backgroundColor: '#f0f9ff',
-          padding: '4rem 2rem',
-          style: {
-            titleColor: '#0369a1',
-            titleFontSize: '2.5rem',
-            subtitleColor: '#0c4a6e'
-          }
-        }
-      },
-      {
-        id: 'featured-1',
-        type: 'featured-collection',
-        content: {
-          title: 'Our Best Sellers',
-          columns: 2,
-          padding: '3rem 2rem',
-          backgroundColor: '#ffffff',
-          showPrice: true,
-          showDescription: true,
-          boxShadow: true,
-          borderRadius: 'lg'
-        }
-      },
-      {
-        id: 'testimonial-1',
-        type: 'testimonial',
-        content: {
-          quote: 'Best purchase I\'ve made this year!',
-          author: 'Sarah Johnson',
-          role: 'Verified Customer',
-          rating: 5,
-          backgroundColor: '#ffffff',
-          padding: '2rem',
-          borderRadius: 'md'
-        }
-      }
-    ]
-  },
-  'New Collection': {
-    name: 'Collection Launch Template',
-    blocks: [
-      {
-        id: 'hero-5',
-        type: 'hero',
-        content: {
-          title: 'The New Collection Has Arrived',
-          subtitle: 'Be the first to shop our latest designs',
-          backgroundColor: '#faf5ff',
-          padding: '4rem 2rem',
-          style: {
-            titleColor: '#6b21a8',
-            titleFontSize: '2.5rem',
-            subtitleColor: '#581c87'
-          }
-        }
-      },
-      {
-        id: 'product-grid-3',
-        type: 'product',
-        content: {
-          title: 'New Arrivals',
-          columns: 3,
-          padding: '3rem 2rem',
-          backgroundColor: '#ffffff',
-          showPrice: true,
-          showDescription: true,
-          boxShadow: true,
-          borderRadius: 'lg',
-          buttonText: 'Shop Now',
-          buttonStyle: 'gradient'
-        }
-      }
-    ]
-  }
-};
+import { presetTemplates, responsiveStyles, templateFeatures } from './presetTemplates';
+import Modal from '../../components/Modal';
+import { Template, Block, BlockType, BlockContent } from '@/types/template';
+import Joyride, { Step } from 'react-joyride';
+import { useAuth } from '@/contexts/AuthContext';
+import { apolloService } from '@/services/apollo';
+import { useSubscription } from '@/hooks/useSubscription';
+import { Subscription } from '@/types/subscription'; // Import Subscription type from the new file
+import { fetchSavedTemplates } from '../../services/api'; // Updated to new service file
+import { aiOptimizationService } from '@/services/ai-optimization';
+import { toast } from 'react-hot-toast';
 
 const categories = [
   'All',
@@ -298,418 +52,661 @@ const categories = [
   'VIP Exclusive',
 ];
 
-// Define types
-type BlockContent = {
-  title?: string;
-  subtitle?: string;
-  imageUrl?: string;
-  images?: Array<{
-    url: string;
-    alt?: string;
-    isPrimary?: boolean;
-  }>;
-  text?: string;
-  align?: 'left' | 'center' | 'right';
-  fontSize?: string;
-  color?: string;
-  backgroundColor?: string;
-  width?: string;
-  height?: string;
-  alt?: string;
-  productId?: string;
-  showPrice?: boolean;
-  showDescription?: boolean;
-  buttonText?: string;
-  button?: {
-    text: string;
-    style: 'primary' | 'secondary' | 'ghost' | 'gradient' | 'outline' | 'link';
-    url?: string;
-  };
-  gradient?: {
-    from: string;
-    to: string;
-    direction: 'to-right' | 'to-bottom' | 'to-bottom-right';
-  };
-  overlay?: {
-    opacity: number;
-  };
-  style?: {
-    titleColor?: string;
-    titleFontSize?: string;
-    titleLineHeight?: string;
-    titleLetterSpacing?: string;
-    subtitleColor?: string;
-    subtitleFontSize?: string;
-    subtitleLineHeight?: string;
-    subtitleMarginTop?: string;
-    ctaGradient?: {
-      from: string;
-      to: string;
-    };
-    ctaColor?: string;
-    ctaFontSize?: string;
-    ctaPadding?: string;
-    ctaBorderRadius?: string;
-    ctaTransition?: string;
-    ctaHoverTransform?: string;
-  };
-  header?: {
-    logo?: {
-      url: string;
-      width?: string;
-      height?: string;
-      alt?: string;
-    };
-    navigation?: {
-      links: Array<{ text: string; url: string }>;
-    };
-    backgroundColor?: string;
-    textColor?: string;
-    padding?: string;
-    borderBottom?: {
-      width: string;
-      style: 'solid' | 'dashed' | 'dotted';
-      color: string;
-    };
-  };
-  footer?: {
-    logo?: {
-      url: string;
-      width?: string;
-      height?: string;
-      alt?: string;
-    };
-    companyName?: string;
-    address?: string;
-    socialLinks?: {
-      [key: string]: string;
-    };
-    navigation?: {
-      links: Array<{ text: string; url: string }>;
-    };
-    backgroundColor?: string;
-    textColor?: string;
-    padding?: string;
-    copyright?: string;
-    showUnsubscribe?: boolean;
-    unsubscribeText?: string;
-  };
-  columns?: number;
-  buttonStyle?: 'filled' | 'outline' | 'link' | 'gradient';
-  discount?: string;
-  code?: string;
-  expiryDate?: string;
-  quote?: string;
-  author?: string;
-  role?: string;
-  avatar?: string;
-  rating?: number;
-  endDate?: string;
-  showDays?: boolean;
-  showHours?: boolean;
-  showMinutes?: boolean;
-  showSeconds?: boolean; 
-  borderRadius?: string;
-  boxShadow?: boolean;
-  padding?: string;
-  margin?: string;
-  price?: string;
-  description?: string;
-};
-
-type Block = {
-  id: string;
-  type: BlockType;
-  content: BlockContent;
-};
-
-type BlockType = 'hero' | 'featured-collection' | 'promotion' | 'testimonial' | 'countdown' | 'text' | 'image' | 'product' | 'header' | 'footer';
-
-interface Template {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  lastModified: string;
-  blocks: Block[];
-  isPreset?: boolean;
-  status?: 'draft' | 'published'; // Add status property
-}
-
 interface TemplateEditorProps {
   template: Template;
   onSave: (template: Template) => Promise<void>;
-  onCancel: () => void;
+  onPreview?: () => void;
+  readOnly?: boolean;
 }
 
-// Enhance default templates with high-conversion elements
-const defaultTemplates = [
-  {
-    id: 'welcome',
-    name: 'Welcome Email',
-    category: 'Engagement',
-    description: 'A warm welcome email to new subscribers.',
-    blocks: [
-      {
-        id: 'hero',
-        type: 'hero',
-        content: {
-          title: 'Welcome to Our Community!',
-          subtitle: 'We are thrilled to have you here.',
-          imageUrl: 'https://source.unsplash.com/random/800x400?welcome',
-          button: {
-            text: 'Explore Now',
-            style: 'primary',
-            url: 'https://yourwebsite.com/explore',
-          },
-          overlay: { opacity: 0.3 },
-        },
-      },
-      {
-        id: 'testimonial',
-        type: 'testimonial',
-        content: {
-          quote: 'This is the best service I have ever used!',
-          author: 'Jane Doe',
-          role: 'Happy Customer',
-          avatar: 'https://source.unsplash.com/random/100x100?avatar',
-          rating: 5,
-        },
-      },
-      {
-        id: 'cta',
-        type: 'promotion',
-        content: {
-          title: 'Special Offer Just for You!',
-          discount: '20% OFF',
-          code: 'WELCOME20',
-          expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-      },
-    ],
-  },
-  // Add more templates as needed
+const blockTypes: BlockType[] = [
+  'hero',
+  'featured-collection',
+  'promotion',
+  'testimonial',
+  'countdown',
+  'text',
+  'image',
+  'product',
+  'header',
+  'footer',
+  'social-proof',
+  'cart',
+  'grid',
+  'product-grid',
+  'features',
+  'benefits',
+  'newsletter-signup',
+  'divider',
+  'spacer',
+  'video',
+  'social-share',
+  'menu',
+  'custom-block',
+  'advanced-block'
 ];
 
-// Enhance default templates with advanced design and content strategies
-const advancedTemplates = [
-  {
-    id: 'product-launch',
-    name: 'Product Launch',
-    category: 'Promotion',
-    description: 'Announce a new product with style.',
-    blocks: [
-      {
-        id: 'hero',
-        type: 'hero',
-        content: {
-          title: 'Introducing Our Latest Innovation!',
-          subtitle: 'Experience the future of technology today.',
-          imageUrl: 'https://source.unsplash.com/random/800x400?product',
-          button: {
-            text: 'Shop Now',
-            style: 'gradient',
-            url: 'https://yourwebsite.com/shop',
-          },
-          overlay: { opacity: 0.4 },
-        },
-      },
-      {
-        id: 'social-proof',
-        type: 'testimonial',
-        content: {
-          quote: 'This product changed my life!',
-          author: 'John Smith',
-          role: 'Verified Buyer',
-          avatar: 'https://source.unsplash.com/random/100x100?avatar',
-          rating: 5,
-        },
-      },
-      {
-        id: 'urgency',
-        type: 'countdown',
-        content: {
-          title: 'Limited Time Offer!',
-          showDays: true,
-          showHours: true,
-          showMinutes: true,
-          showSeconds: true,
-        },
-      },
-      {
-        id: 'cta',
-        type: 'promotion',
-        content: {
-          title: 'Exclusive Discount Just for You!',
-          discount: '30% OFF',
-          code: 'LAUNCH30',
-          expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-      },
-    ],
-  },
-  // Add more advanced templates as needed
-];
+type TriggerType = 'immediate' | 'scheduled' | 'event-based';
+type SendTimeType = 'with-email' | 'before-email' | 'after-email';
 
-// Update the TemplateEditor to use advanced templates
+// Extend the BlockContent type with additional properties
+interface ExtendedBlockContent extends BlockContent {
+  avatar?: string;
+  borderRadius?: string;
+  price?: string;
+  features?: Array<{
+    icon: string;
+    title: string;
+    description: string;
+  }>;
+}
+
+// Move the getMinimumTierForBlock function to the top
+function getMinimumTierForBlock(type: BlockType): string {
+  switch (type) {
+    // Free tier blocks
+    case 'hero':
+    case 'text':
+    case 'image':
+    case 'button':
+    case 'spacer':
+    case 'divider':
+      return 'free';
+    
+    // Starter tier blocks
+    case 'social':
+    case 'video':
+    case 'testimonial':
+    case 'featured-collection':
+      return 'starter';
+    
+    // Growth tier blocks
+    case 'countdown':
+    case 'product-grid':
+    case 'cart':
+    case 'benefits':
+    case 'newsletter-signup':
+      return 'growth';
+    
+    // Pro tier blocks
+    case 'custom-block':
+    case 'advanced-block':
+    case 'menu':
+      return 'pro';
+    
+    // Default to free tier if not specified
+    default:
+      return 'free';
+  }
+}
+
 const TemplateEditor: React.FC<TemplateEditorProps> = ({
-  template: initialTemplate = advancedTemplates[0], // Use the first advanced template as a fallback
+  template,
   onSave,
-  onCancel,
+  onPreview,
+  readOnly = false
 }) => {
   const router = useRouter();
-  const apolloService = new ApolloService();
-  const { optimizeText, isOptimizing } = useAI();
-  const { loadTemplate, saveTemplate } = useTemplate();
-  const { sendEmail } = useResend();
-  
-  const [template, setTemplate] = useState<Template>(initialTemplate);
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const { subscription } = useSubscription();
+  const maxBlocks = subscription ? subscription.limits.maxBlocks : 0;
+  const maxPersonalizationFields = subscription ? subscription.limits.personalizationFields : 0;
+
+  // Add new state for feature restriction modal
+  const [showFeatureRestrictModal, setShowFeatureRestrictModal] = useState(false);
+  const [restrictedFeature, setRestrictedFeature] = useState<{
+    type: string;
+    requiredTier: string;
+    description: string;
+  } | null>(null);
+
+  // Add FeatureRestrictModal component
+  const FeatureRestrictModal = () => (
+    <Modal
+      isOpen={showFeatureRestrictModal}
+      onClose={() => setShowFeatureRestrictModal(false)}
+      title="Feature Not Available"
+      className="w-full max-w-md mx-auto"
+    >
+      <div className="p-6">
+        <div className="mb-6">
+          <div className="flex items-center justify-center w-12 h-12 mx-auto bg-indigo-100 rounded-full">
+            <LockClosedIcon className="w-6 h-6 text-indigo-600" />
+          </div>
+          <h3 className="mt-4 text-lg font-medium text-center text-gray-900">
+            Upgrade Required
+          </h3>
+          <p className="mt-2 text-sm text-center text-gray-500">
+            {restrictedFeature?.description || 'This feature requires a higher subscription tier.'}
+          </p>
+        </div>
+        
+        <div className="p-4 bg-gray-50 rounded-lg">
+          <h4 className="text-sm font-medium text-gray-900 mb-2">
+            {restrictedFeature?.requiredTier.charAt(0).toUpperCase() + restrictedFeature?.requiredTier.slice(1)} Tier Features:
+          </h4>
+          <ul className="text-sm text-gray-600 space-y-1">
+            {restrictedFeature?.requiredTier === 'starter' && (
+              <>
+                <li>• Access to social media blocks</li>
+                <li>• Video embedding</li>
+                <li>• Testimonial layouts</li>
+                <li>• Featured collections</li>
+              </>
+            )}
+            {restrictedFeature?.requiredTier === 'growth' && (
+              <>
+                <li>• Countdown timers</li>
+                <li>• Product grid layouts</li>
+                <li>• Shopping cart integration</li>
+                <li>• Advanced newsletter signup</li>
+              </>
+            )}
+            {restrictedFeature?.requiredTier === 'pro' && (
+              <>
+                <li>• Custom HTML blocks</li>
+                <li>• Advanced layouts</li>
+                <li>• Custom menu blocks</li>
+                <li>• Priority support</li>
+              </>
+            )}
+          </ul>
+        </div>
+
+        <div className="mt-6 flex justify-end space-x-3">
+          <button
+            onClick={() => setShowFeatureRestrictModal(false)}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              setShowFeatureRestrictModal(false);
+              router.push('/dashboard/subscription');
+            }}
+            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+          >
+            Upgrade Now
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+
+  const handleFeatureAttempt = (type: BlockType): boolean => {
+    const currentTier = subscription?.tier || 'free';
+    const requiredTier = getMinimumTierForBlock(type);
+    
+    // Define tier levels for comparison
+    const tierLevels = {
+      'free': 0,
+      'starter': 1,
+      'growth': 2,
+      'pro': 3
+    };
+
+    if (tierLevels[currentTier] < tierLevels[requiredTier]) {
+      setRestrictedFeature({
+        type,
+        requiredTier,
+        description: `The ${type} block is only available in the ${requiredTier} tier and above. Upgrade your subscription to access this feature.`
+      });
+      setShowFeatureRestrictModal(true);
+      return false;
+    }
+
+    return true;
+  };
+
+  const [blocks, setBlocks] = useState(template.blocks);
+  const [personalizationFields, setPersonalizationFields] = useState<string[]>([]);
+  const [showBlockPicker, setShowBlockPicker] = useState(false);
+  const [selectedBlockIndex, setSelectedBlockIndex] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null); // Renamed to avoid conflict
+
+  // New state for saved templates
+  const [savedTemplates, setSavedTemplates] = useState<Template[]>([]);
+
+  useEffect(() => {
+    const loadSavedTemplates = async () => {
+      try {
+        const templates = await fetchSavedTemplates();
+        setSavedTemplates(templates);
+      } catch (error) {
+        console.error('Error fetching saved templates:', error);
+        setLocalError('Failed to load templates.'); // Set error message
+      }
+    };
+    loadSavedTemplates();
+  }, []);
+
   const [showLeftPanel, setShowLeftPanel] = useState(true);
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [isMobileView, setIsMobileView] = useState(false);
-  const [history, setHistory] = useState<Template[]>([]);
-  const [redoStack, setRedoStack] = useState<Template[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('saved');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [testEmailAddress, setTestEmailAddress] = useState('');
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [showPersonalizationModal, setShowPersonalizationModal] = useState(false);
+  const [showAutomationModal, setShowAutomationModal] = useState(false);
+  const [showSmsModal, setShowSmsModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [showAudienceModal, setShowAudienceModal] = useState(false);
+  const [utmParams, setUtmParams] = useState<{
+    source?: string;
+    medium?: string;
+    campaign?: string;
+  }>({});
 
-  const canUndo = history.length > 0;
-  const canRedo = redoStack.length > 0;
+  // Update automation settings with proper types
+  const [automationSettings, setAutomationSettings] = useState<{
+    triggerType: TriggerType;
+    scheduledDate: string;
+    scheduledTime: string;
+    eventTrigger: string;
+    delay: number;
+    conditions: string[];
+  }>({
+    triggerType: 'immediate',
+    scheduledDate: '',
+    scheduledTime: '',
+    eventTrigger: '',
+    delay: 0,
+    conditions: [],
+  });
 
-  const categories = [
-    'All',
-    'Product Launch',
-    'Limited Time Offer',
-    'New Collection',
-    'Abandoned Cart',
-    'Welcome Series',
-    'Customer Feedback',
-    'Seasonal Sale',
-    'VIP Exclusive',
+  // Update SMS settings with proper types
+  const [smsSettings, setSmsSettings] = useState<{
+    enabled: boolean;
+    message: string;
+    sendTime: SendTimeType;
+    delay: number;
+    consent: boolean;
+  }>({
+    enabled: false,
+    message: '',
+    sendTime: 'with-email',
+    delay: 0,
+    consent: true,
+  });
+
+  // Update analytics settings type
+  const [analyticsSettings, setAnalyticsSettings] = useState({
+    enableTracking: true,
+    trackOpens: true,
+    trackClicks: true,
+    trackConversions: true,
+    utmSource: '',
+    utmMedium: '',
+    utmCampaign: '',
+  });
+
+  // Add toolbar buttons
+  const toolbarButtons = [
+    {
+      icon: <QuestionMarkCircleIcon className="w-5 h-5 md:hidden" />,
+      label: 'Guide',
+      onClick: () => setRunTour(true),
+    },
+    {
+      icon: <DevicePhoneMobileIcon className="w-5 h-5 md:hidden" />,
+      label: 'Mobile',
+      onClick: () => setPreviewDevice('mobile'),
+      active: previewDevice === 'mobile',
+    },
+    {
+      icon: <DeviceTabletIcon className="w-5 h-5 md:hidden" />,
+      label: 'Tablet',
+      onClick: () => setPreviewDevice('tablet'),
+      active: previewDevice === 'tablet',
+    },
+    {
+      icon: <ComputerDesktopIcon className="w-5 h-5 md:hidden" />,
+      label: 'Desktop',
+      onClick: () => setPreviewDevice('desktop'),
+      active: previewDevice === 'desktop',
+    },
+    {
+      icon: <UserIcon className="w-5 h-5 md:hidden" />,
+      label: 'Personalization',
+      onClick: () => setShowPersonalizationModal(true),
+    },
+    {
+      icon: <ClockIcon className="w-5 h-5 md:hidden" />,
+      label: 'Automation',
+      onClick: () => setShowAutomationModal(true),
+    },
+    {
+      icon: <DevicePhoneMobileIcon className="w-5 h-5 md:hidden" />,
+      label: 'SMS',
+      onClick: () => setShowSmsModal(true),
+    },
+    {
+      icon: <ChartBarIcon className="w-5 h-5 md:hidden" />,
+      label: 'Analytics',
+      onClick: () => setShowAnalyticsModal(true),
+    },
+    {
+      icon: <UserGroupIcon className="w-5 h-5 md:hidden" />,
+      label: 'Audience',
+      onClick: () => setShowAudienceModal(true),
+    },
   ];
 
-  useEffect(() => {
-    const loadInitialTemplate = async () => {
-      const templateId = window.location.pathname.split('/').pop();
-      if (templateId && templateId !== 'new') {
-        // Try to load from localStorage first
-        const storedTemplate = localStorage.getItem('editingTemplate');
-        if (storedTemplate) {
-          const parsedTemplate = JSON.parse(storedTemplate);
-          setTemplate(parsedTemplate);
-          setHistory([parsedTemplate]);
-          // Clear the stored template
-          localStorage.removeItem('editingTemplate');
-          return;
+  // Enhancing Personalization Fields
+  const PersonalizationModal = () => {
+    const { subscription } = useSubscription();
+    const maxPersonalizationFields = subscription ? subscription.limits.personalizationFields : 0;
+
+    // Logic to limit the number of personalization fields
+    const [personalizationFields, setPersonalizationFields] = useState<string[]>([]);
+
+    const addPersonalizationField = () => {
+        if (personalizationFields.length < maxPersonalizationFields) {
+            setPersonalizationFields([...personalizationFields, '']);
+        } else {
+            alert('You have reached the limit for personalization fields.');
         }
-        
-        // If not in localStorage, load from API
-        const loadedTemplate = await loadTemplate(templateId);
-        if (loadedTemplate) {
-          setTemplate(loadedTemplate);
-          setHistory([loadedTemplate]);
-        }
-      }
     };
 
-    if (!initialTemplate?.id) {
-      loadInitialTemplate();
-    }
-  }, []);
+    return (
+    <Modal
+      isOpen={showPersonalizationModal}
+      onClose={() => setShowPersonalizationModal(false)}
+      title="Personalization Fields"
+      className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto"
+    >
+      <div className="space-y-4 max-h-[80vh] overflow-y-auto px-3 sm:px-6 py-4">
+        <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+          <input
+            type="text"
+            placeholder="Add field (e.g., firstName)"
+            className="w-full sm:flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                const value = e.currentTarget.value;
+                if (value) {
+                  setPersonalizationFields([...personalizationFields, value]);
+                  e.currentTarget.value = '';
+                }
+              }
+            }}
+            onChange={(e) => e.preventDefault()}
+          />
+          <button
+            onClick={(e) => {
+              const value = (e.currentTarget.previousElementSibling as HTMLInputElement).value;
+              if (value) {
+                setPersonalizationFields([...personalizationFields, value]);
+                (e.currentTarget.previousElementSibling as HTMLInputElement).value = '';
+              }
+            }}
+            className="px-4 py-2 bg-indigo-600 text-white rounded"
+          >
+            Add
+          </button>
+        </div>
+        <div className="space-y-2 mt-4">
+          {personalizationFields.map((field, index) => (
+            <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+              <span className="text-sm sm:text-base">{field}</span>
+              <button
+                onClick={() => {
+                  const newFields = [...personalizationFields];
+                  newFields.splice(index, 1);
+                  setPersonalizationFields(newFields);
+                }}
+                className="text-red-500 hover:text-red-700 p-1"
+              >
+                <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Modal>
+  );
+};
 
-  const handleUndo = () => {
-    if (history.length > 0) {
-      const previousState = history[history.length - 1];
-      setRedoStack([template, ...redoStack]);
-      setHistory(history.slice(0, -1));
-      setTemplate(previousState);
-    }
-  };
-
-  const handleRedo = () => {
-    if (redoStack.length > 0) {
-      const nextState = redoStack[0];
-      setHistory([...history, template]);
-      setRedoStack(redoStack.slice(1));
-      setTemplate(nextState);
-    }
-  };
-
-  const handleTemplateChange = (newTemplate: Template) => {
-    setTemplate(newTemplate);
-    setHasUnsavedChanges(true);
-    
-    const newHistory = history.slice(0, currentIndex + 1);
-    newHistory.push(newTemplate);
-    setHistory(newHistory);
-    setCurrentIndex(newHistory.length - 1);
-  };
-
-  const handleSaveAsDraft = async () => {
-      setIsSaving(true);
-    try {
-      await onSave({ ...template, lastModified: new Date().toISOString() });
-      setSaveStatus('saved');
-        setHasUnsavedChanges(false);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handlePublish = async () => {
-      setIsSaving(true);
-    try {
-      await onSave({ ...template, lastModified: new Date().toISOString(), isPreset: false });
-      setSaveStatus('published');
-        setHasUnsavedChanges(false);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleOptimizeText = async (blockId: string, text: string) => {
-      const optimizedText = await optimizeText(text);
-      updateBlock(blockId, { text: optimizedText });
-  };
-
-  const handleSave = async (isDraft = true) => {
-    if (isDraft) {
-      await handleSaveAsDraft();
-    } else {
-      await handlePublish();
-    }
-  };
-
-  const handleSendTest = async () => {
-    if (!testEmailAddress) return;
-    
-    try {
-      await sendEmail({
-          to: testEmailAddress,
-        subject: template.name,
-        template: template,
+  // Update the event handlers to use proper types
+  const handleAutomationTypeChange = (value: string) => {
+    if (value === 'immediate' || value === 'scheduled' || value === 'event-based') {
+      setAutomationSettings({
+        ...automationSettings,
+        triggerType: value
       });
-      
-      // Show success message
-      alert('Test email sent successfully!');
-    } catch (error) {
-      console.error('Error sending test email:', error);
-      alert('Failed to send test email. Please try again.');
     }
   };
 
-  const addBlock = (type: BlockType) => {
-    const newBlock: Block = {
-      id: uuidv4(),
-      type,
-      content: getInitialBlockContent(type),
-    };
-    setTemplate(prev => ({ ...prev, blocks: [...prev.blocks, newBlock] }));
-    setSelectedBlockId(newBlock.id);
+  const handleSmsTimeChange = (value: string) => {
+    if (value === 'with-email' || value === 'before-email' || value === 'after-email') {
+      setSmsSettings({
+        ...smsSettings,
+        sendTime: value
+      });
+    }
+  };
+
+  // Automation modal
+  const AutomationModal = () => (
+    <Modal
+      isOpen={showAutomationModal}
+      onClose={() => setShowAutomationModal(false)}
+      title="Automation Settings"
+      className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto"
+    >
+      <div className="space-y-6 max-h-[80vh] overflow-y-auto px-3 sm:px-6 py-4">
+      <div className="space-y-4">
+        <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Trigger Type</label>
+          <select
+            value={automationSettings.triggerType}
+            onChange={(e) => handleAutomationTypeChange(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="immediate">Send Immediately</option>
+            <option value="scheduled">Schedule</option>
+            <option value="event-based">Event Based</option>
+          </select>
+        </div>
+
+        {automationSettings.triggerType === 'scheduled' && (
+            <div className="space-y-4">
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={automationSettings.scheduledDate}
+                onChange={(e) => setAutomationSettings({
+                  ...automationSettings,
+                  scheduledDate: e.target.value
+                })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+              <input
+                type="time"
+                value={automationSettings.scheduledTime}
+                onChange={(e) => setAutomationSettings({
+                  ...automationSettings,
+                  scheduledTime: e.target.value
+                })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              />
+            </div>
+            </div>
+        )}
+
+        {automationSettings.triggerType === 'event-based' && (
+            <div className="space-y-4">
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Event Trigger</label>
+              <select
+                value={automationSettings.eventTrigger}
+                onChange={(e) => setAutomationSettings({
+                  ...automationSettings,
+                  eventTrigger: e.target.value
+                })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                <option value="cart-abandoned">Cart Abandoned</option>
+                <option value="purchase-complete">Purchase Complete</option>
+                <option value="email-opened">Email Opened</option>
+                <option value="link-clicked">Link Clicked</option>
+              </select>
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Delay (hours)</label>
+              <input
+                type="number"
+                value={automationSettings.delay}
+                onChange={(e) => setAutomationSettings({
+                  ...automationSettings,
+                  delay: parseInt(e.target.value)
+                })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                min="0"
+              />
+            </div>
+            </div>
+        )}
+        </div>
+      </div>
+    </Modal>
+  );
+
+  // SMS modal
+  const SmsModal = () => (
+    <Modal
+      isOpen={showSmsModal}
+      onClose={() => setShowSmsModal(false)}
+      title="SMS Integration"
+      className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto"
+    >
+      <div className="space-y-6 max-h-[80vh] overflow-y-auto px-3 sm:px-6 py-4">
+        <div className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            checked={smsSettings.enabled}
+            onChange={(e) => setSmsSettings({
+              ...smsSettings,
+              enabled: e.target.checked
+            })}
+            className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+          />
+          <label className="text-sm sm:text-base text-gray-900">
+            Enable SMS with this campaign
+          </label>
+        </div>
+
+        {smsSettings.enabled && (
+          <div className="space-y-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <textarea
+                value={smsSettings.message}
+                onChange={(e) => setSmsSettings({
+                  ...smsSettings,
+                  message: e.target.value
+                })}
+                rows={4}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                placeholder="Enter your SMS message..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Send Time</label>
+              <select
+                value={smsSettings.sendTime}
+                onChange={(e) => handleSmsTimeChange(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                <option value="with-email">Send with Email</option>
+                <option value="before-email">Send before Email</option>
+                <option value="after-email">Send after Email</option>
+              </select>
+            </div>
+            {smsSettings.sendTime !== 'with-email' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Delay (hours)</label>
+                <input
+                  type="number"
+                  value={smsSettings.delay}
+                  onChange={(e) => setSmsSettings({
+                    ...smsSettings,
+                    delay: parseInt(e.target.value)
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  min="0"
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+
+  // Improving UTM Parameters
+  const AnalyticsModal = () => (
+    <Modal
+      isOpen={showAnalyticsModal}
+      onClose={() => setShowAnalyticsModal(false)}
+      title="Analytics & Tracking"
+      className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto"
+    >
+      <div className="space-y-6 max-h-[80vh] overflow-y-auto px-3 sm:px-6 py-4">
+        <div className="flex items-center space-x-3">
+          <input
+            type="text"
+            placeholder="UTM Source"
+            value={analyticsSettings.utmSource}
+            onChange={(e) => setAnalyticsSettings({ ...analyticsSettings, utmSource: e.target.value })}
+            className="h-10 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            title="The source of your traffic (e.g., Google, newsletter)"
+          />
+          <input
+            type="text"
+            placeholder="UTM Medium"
+            value={analyticsSettings.utmMedium}
+            onChange={(e) => setAnalyticsSettings({ ...analyticsSettings, utmMedium: e.target.value })}
+            className="h-10 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            title="The medium of your traffic (e.g., email, cpc)"
+          />
+          <input
+            type="text"
+            placeholder="UTM Campaign"
+            value={analyticsSettings.utmCampaign}
+            onChange={(e) => setAnalyticsSettings({ ...analyticsSettings, utmCampaign: e.target.value })}
+            className="h-10 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            title="The name of your campaign (e.g., spring_sale)"
+          />
+        </div>
+        <button
+          onClick={() => {
+            if (!analyticsSettings.utmSource || !analyticsSettings.utmMedium || !analyticsSettings.utmCampaign) {
+              alert('Please fill in all UTM parameters.');
+              return;
+            }
+            alert('UTM parameters saved successfully!');
+          }}
+          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded"
+        >
+          Save UTM Parameters
+        </button>
+      </div>
+    </Modal>
+  );
+
+  // Update preview container with device preview
+  const getPreviewScale = () => {
+    switch (previewDevice) {
+      case 'mobile':
+        return 'max-w-sm';
+      case 'tablet':
+        return 'max-w-2xl';
+      default:
+        return 'max-w-4xl';
+    }
   };
 
   const getInitialBlockContent = (type: BlockType): BlockContent => {
@@ -719,1313 +716,1657 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
           title: 'Welcome to Our Store',
           subtitle: 'Discover the best products for you!',
           imageUrl: 'https://source.unsplash.com/random/1920x1080',
-          button: { text: 'Shop Now', style: 'primary' },
+          button: { 
+            text: 'Shop Now', 
+            style: 'primary',
+            url: '#'
+          },
+          backgroundColor: '#f8fafc',
+          textColor: '#1a202c'
         };
       case 'featured-collection':
         return {
           title: 'Featured Products',
-          columns: 3,
-          showPrice: true,
-          showDescription: true,
-          buttonStyle: 'filled',
+          products: [
+            {
+              id: '1',
+              title: 'Product 1',
+              description: 'Amazing product description',
+              price: '$99.99',
+              imageUrl: 'https://source.unsplash.com/random/800x600',
+              url: '#',
+              button: { text: 'View Details', style: 'primary' }
+            }
+          ],
+          backgroundColor: '#ffffff'
         };
       case 'promotion':
         return {
           title: 'Special Offer',
-          discount: '20% OFF',
-          code: 'SUMMER20',
-          expiryDate: '2023-12-31',
+          description: 'Get 20% off on your first purchase',
+          code: 'WELCOME20',
+          backgroundColor: '#4f46e5',
+          textColor: '#ffffff'
         };
       case 'testimonial':
         return {
-          quote: 'This product has transformed our business operations.',
-          author: 'John Smith',
-          role: 'CEO at Company',
+          quote: 'This product changed my life!',
+          author: 'John Doe',
+          role: 'Happy Customer',
           avatar: 'https://source.unsplash.com/random/100x100',
-          rating: 5,
-        };
-      case 'countdown':
-        return {
-          title: 'Sale Ends Soon',
-          endDate: '2023-12-31T23:59:59',
-          showDays: true,
-          showHours: true,
-          showMinutes: true,
-          showSeconds: true,
+          backgroundColor: '#f9fafb'
         };
       case 'text':
         return {
-          text: 'This is a customizable text block. You can add any text you want here.',
+          text: 'Enter your content here...',
           align: 'left',
           fontSize: '16px',
-          color: '#000000',
-          backgroundColor: '#ffffff',
+          color: '#1a202c',
+          backgroundColor: '#ffffff'
         };
       case 'image':
         return {
-          imageUrl: 'https://source.unsplash.com/random/800x600',
-          alt: 'Sample Image',
+          imageUrl: 'https://source.unsplash.com/random/1200x800',
+          alt: 'Beautiful image',
           width: '100%',
           height: 'auto',
+          borderRadius: '8px'
         };
       case 'product':
         return {
-          productId: '12345',
-          title: 'Sample Product',
-          description: 'A great product description goes here.',
-          price: '$99.99',
-          images: [
-            { url: 'https://source.unsplash.com/random/800x600', alt: 'Product Image 1', isPrimary: true },
-          ],
+          title: 'Amazing Product',
+          description: 'This is an amazing product that will solve all your problems.',
+          price: '$199.99',
+          imageUrl: 'https://source.unsplash.com/random/800x600',
+          button: {
+            text: 'Buy Now',
+            style: 'primary',
+            url: '#'
+          },
           showPrice: true,
           showDescription: true,
-          buttonText: 'Add to Cart',
-          backgroundColor: '#ffffff',
-          borderRadius: 'md',
-          boxShadow: false,
-          columns: 1
+          backgroundColor: '#ffffff'
         };
-      case 'header':
+      case 'features':
         return {
-          header: {
-            logo: {
-              url: 'https://source.unsplash.com/random/120x40',
-              width: '120px',
-              height: '40px',
-              alt: 'Company Logo',
+          title: 'Key Features',
+          features: [
+            {
+              icon: '⚡',
+              title: 'Fast',
+              description: 'Lightning quick delivery'
             },
-            navigation: {
-              links: [
-                { text: 'Home', url: '#' },
-                { text: 'Products', url: '#' },
-                { text: 'About', url: '#' },
-                { text: 'Contact', url: '#' },
-              ],
+            {
+              icon: '🛡️',
+              title: 'Secure',
+              description: 'Bank-level security'
             },
-            backgroundColor: '#ffffff',
-            textColor: '#1a1a1a',
-            padding: '1rem 2rem',
-            borderBottom: {
-              width: '1px',
-              style: 'solid',
-              color: '#e5e7eb',
-            },
-          },
+            {
+              icon: '💎',
+              title: 'Premium',
+              description: 'Top-quality service'
+            }
+          ],
+          backgroundColor: '#ffffff'
         };
-      case 'footer':
+      case 'social-proof':
         return {
-          footer: {
-            logo: {
-              url: 'https://source.unsplash.com/random/120x40',
-              width: '120px',
-              height: '40px',
-              alt: 'Company Logo',
+          title: 'Customer Reviews',
+          reviews: [
+            {
+              text: 'This product is amazing! I love it so much.',
+              author: 'John Doe',
+              date: 'January 1, 2024',
+              rating: 5,
+              avatar: 'https://source.unsplash.com/random/100x100'
             },
-            companyName: 'Your Company',
-            address: '123 Main Street, Anytown, USA',
-            socialLinks: {
-              facebook: 'https://facebook.com/yourcompany',
-              twitter: 'https://twitter.com/yourcompany',
-              instagram: 'https://instagram.com/yourcompany',
+            {
+              text: 'I highly recommend this product. It exceeded my expectations.',
+              author: 'Jane Smith',
+              date: 'December 15, 2023',
+              rating: 4,
+              avatar: 'https://source.unsplash.com/random/100x100'
             },
-            navigation: {
-              links: [
-                { text: 'Home', url: '#' },
-                { text: 'Products', url: '#' },
-                { text: 'About', url: '#' },
-                { text: 'Contact', url: '#' },
-              ],
-            },
-            backgroundColor: '#f9fafb',
-            textColor: '#4b5563',
-            padding: '3rem 2rem',
-            copyright: ' 2024 Your Company. All rights reserved.',
-            showUnsubscribe: true,
-            unsubscribeText: 'Unsubscribe',
+            {
+              text: 'This is the best purchase I have ever made. 100% recommended.',
+              author: 'Bob Johnson',
+              date: 'November 20, 2023',
+              rating: 5,
+              avatar: 'https://source.unsplash.com/random/100x100'
+            }
+          ],
+          backgroundColor: '#ffffff'
+        };
+      case 'countdown':
+        return {
+          title: 'Sale Ends in',
+          button: {
+            text: 'Shop Now',
+            style: 'primary',
+            url: '#'
           },
+          backgroundColor: '#4f46e5',
+          textColor: '#ffffff'
+        };
+      case 'newsletter-signup':
+        return {
+          title: 'Join Our Newsletter',
+          description: 'Get exclusive deals and updates right in your inbox.',
+          button: {
+            text: 'Subscribe',
+            style: 'primary',
+            url: '#'
+          },
+          placeholder: 'Enter your email'
+        };
+      case 'divider':
+        return {
+          color: '#e5e7eb',
+          style: 'solid',
+          margin: '1rem 0'
+        };
+      case 'spacer':
+        return {
+          height: '2rem'
+        };
+      case 'video':
+        return {
+          title: 'Watch Our Video',
+          videoUrl: 'https://example.com/video.mp4',
+          videoThumbnail: 'https://example.com/video-thumbnail.jpg',
+          description: 'A short video about our product'
+        };
+      case 'social-share':
+        return {
+          title: 'Share This Product',
+          facebookUrl: 'https://www.facebook.com/sharer/sharer.php?u=https://example.com',
+          twitterUrl: 'https://twitter.com/intent/tweet?url=https://example.com',
+          linkedinUrl: 'https://www.linkedin.com/shareArticle?url=https://example.com',
+          instagramUrl: 'https://www.instagram.com/sharer/sharer.php?u=https://example.com'
+        };
+      case 'menu':
+        return {
+          title: 'Menu',
+          items: [
+            {
+              name: 'Burger',
+              description: 'A delicious burger with fries',
+              price: '$12.99'
+            },
+            {
+              name: 'Salad',
+              description: 'A fresh salad with dressing',
+              price: '$8.99'
+            },
+            {
+              name: 'Pizza',
+              description: 'A cheesy pizza with toppings',
+              price: '$15.99'
+            }
+          ] as Array<{ name: string; description: string; price: string; }>
         };
       default:
-        return {};
+        return {
+          title: 'New Block',
+          text: 'Click to edit this block',
+          backgroundColor: '#ffffff'
+        };
     }
   };
 
-  const updateBlock = (blockId: string, content: Partial<BlockContent>) => {
-    setTemplate(prev => ({
-      ...prev,
-      blocks: (prev.blocks || []).map(block =>
-        block.id === blockId ? { ...block, content: { ...block.content, ...content } } : block
-      ),
-    }));
+  // Update button type handling
+  const updateButtonContent = (
+    currentButton: BlockContent['button'],
+    updates: Partial<Required<NonNullable<BlockContent['button']>>>
+  ): BlockContent['button'] => {
+    return {
+      text: updates.text || currentButton?.text || 'Click Here',
+      style: updates.style || currentButton?.style || 'primary',
+      url: updates.url || currentButton?.url || '#',
+      gradient: updates.gradient || currentButton?.gradient
+    };
+  };
+
+  const addBlock = (type: BlockType) => {
+    if (!handleFeatureAttempt(type)) return;
+
+    // Add the new block without checking for maximum limits
+    const newBlock = { 
+      id: uuidv4(),
+      type,
+      content: getInitialBlockContent(type)
+    };
+    setBlocks([...blocks, newBlock]);
   };
 
   const deleteBlock = (blockId: string) => {
-    setTemplate(prev => ({
-      ...prev,
-      blocks: (prev.blocks || []).filter(block => block.id !== blockId),
-    }));
-    if (selectedBlockId === blockId) {
-      setSelectedBlockId(null);
-    }
+    setBlockToDelete(blockId);
+    setShowDeleteConfirm(true);
   };
 
-  const handleDragEnd = (result: DropResult) => {
+  const confirmDelete = () => {
+    if (!blockToDelete) return;
+    
+    const blockIndex = blocks.findIndex(b => b.id === blockToDelete);
+    const deletedBlock = blocks[blockIndex];
+    
+    setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== blockToDelete));
+    setDeletedBlocks(prev => [...prev, deletedBlock]);
+    
+    toast.success(
+      <div className="flex items-center gap-2">
+        Block deleted
+        <button 
+          onClick={() => undoDelete()} 
+          className="text-indigo-600 hover:text-indigo-500 font-medium"
+        >
+          Undo
+        </button>
+      </div>,
+      { duration: 5000 }
+    );
+    
+    setShowDeleteConfirm(false);
+    setBlockToDelete(null);
+  };
+
+  const undoDelete = () => {
+    if (deletedBlocks.length === 0) return;
+    
+    const lastDeleted = deletedBlocks[deletedBlocks.length - 1];
+    setBlocks(prev => [...prev, lastDeleted]);
+    setDeletedBlocks(prev => prev.slice(0, -1));
+    
+    toast.success('Block restored');
+  };
+
+  const handleDragEnd = (result: any) => {
     if (!result.destination) return;
 
-    const blocks = Array.from(template.blocks);
-    const [reorderedBlock] = blocks.splice(result.source.index, 1);
-    blocks.splice(result.destination.index, 0, reorderedBlock);
+    const items = Array.from(blocks);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
 
-    setTemplate(prev => ({ ...prev, blocks }));
+    setBlocks(items); // Update to setBlocks correctly
   };
 
-  // Add this inside the TemplateEditor component, after the state declarations
-  const loadPresetTemplate = (category: string) => {
-    const preset = presetTemplates[category];
-    if (preset) {
-      setTemplate({
-        ...initialTemplate,
-        ...preset,
-        id: initialTemplate.id,
-        blocks: preset.blocks.map(block => ({
-          ...block,
-          id: uuidv4() // Generate new IDs for the blocks
-        }))
-      });
-      setHasUnsavedChanges(true);
-    }
-  };
-
-  // Modify the handleImageUpload function
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, blockId: string, field: 'imageUrl' | 'avatar' | 'header.logo.url' | 'footer.logo.url' | string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Get the current block from template state
-    const currentBlock = template.blocks.find(b => b.id === blockId);
-    if (!currentBlock) return;
-
-    // Create a temporary URL for immediate preview
-    const tempUrl = URL.createObjectURL(file);
-    
-    // Update the block with temporary URL for immediate preview
-    if (field.includes('.')) {
-      const [section, subsection, prop] = field.split('.');
-      if (field.startsWith('images.')) {
-        // Handle product images array
-        const imageIndex = parseInt(subsection);
-        const images = [...(currentBlock.content.images || [])];
-        if (!images[imageIndex]) {
-          images[imageIndex] = { url: '', alt: `Product Image ${imageIndex + 1}` };
-        }
-        images[imageIndex].url = tempUrl;
-        updateBlock(blockId, { images });
-      } else {
-        // Handle nested properties like header.logo.url
-        updateBlock(blockId, {
-          [section]: {
-            ...currentBlock.content[section],
-            [subsection]: {
-              ...currentBlock.content[section]?.[subsection],
-              [prop]: tempUrl
-            }
-          }
-        });
-      }
-    } else {
-      updateBlock(blockId, { [field]: tempUrl });
-    }
-
-    try {
-      // Upload to your actual storage service
-      const uploadedUrl = await cloudinaryService.uploadImage(file);
-      
-      // Update with the permanent URL
-      if (field.includes('.')) {
-        const [section, subsection, prop] = field.split('.');
-        if (field.startsWith('images.')) {
-          // Handle product images array
-          const imageIndex = parseInt(subsection);
-          const images = [...(currentBlock.content.images || [])];
-          if (!images[imageIndex]) {
-            images[imageIndex] = { url: '', alt: `Product Image ${imageIndex + 1}` };
-          }
-          images[imageIndex].url = uploadedUrl;
-          updateBlock(blockId, { images });
-        } else {
-          // Handle nested properties
-          updateBlock(blockId, {
-            [section]: {
-              ...currentBlock.content[section],
-              [subsection]: {
-                ...currentBlock.content[section]?.[subsection],
-                [prop]: uploadedUrl
-              }
-            }
-          });
-        }
-      } else {
-        updateBlock(blockId, { [field]: uploadedUrl });
-      }
-
-      // Clean up the temporary URL
-      URL.revokeObjectURL(tempUrl);
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      // Handle error (show message to user, etc.)
-    }
-  };
-
-  const renderBlockEditor = (block: Block | undefined) => {
-    if (!block) return null;
-    
-    const commonTextSettings = (
-      <div className="space-y-4 mb-6 border-b border-gray-200 pb-6">
-        <h3 className="font-medium text-gray-900">Text Settings</h3>
-        <div className="grid grid-cols-2 gap-4">
-            <div>
-            <label className="block text-sm font-medium text-gray-700">Font Size</label>
-            <select
-              value={block.content.fontSize || '16px'}
-              onChange={(e) => updateBlock(block.id, { fontSize: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+  const renderBlock = (block: Block) => {
+    if (!isBlockTypeAvailable(block.type)) {
+      return (
+        <div className="p-4 bg-gray-100 rounded-lg border border-gray-300">
+          <p className="text-sm text-gray-600">
+            This block type requires a {getMinimumTierForBlock(block.type)} subscription.
+            <button
+              onClick={() => router.push('/dashboard/subscription')}
+              className="ml-2 text-indigo-600 hover:text-indigo-500"
             >
-              {['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '48px'].map(size => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-            </select>
-            </div>
-            <div>
-            <label className="block text-sm font-medium text-gray-700">Text Align</label>
-              <select
-              value={block.content.align || 'left'}
-              onChange={(e) => updateBlock(block.id, { align: e.target.value as any })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
-              </select>
-          </div>
-            </div>
-            <div>
-          <label className="block text-sm font-medium text-gray-700">Text Color</label>
-              <input
-            type="color"
-            value={block.content.color || '#000000'}
-            onChange={(e) => updateBlock(block.id, { color: e.target.value })}
-            className="mt-1 block w-full"
-              />
-                </div>
-              </div>
-        );
+              Upgrade now →
+            </button>
+          </p>
+        </div>
+      );
+    }
 
-    const commonSpacingSettings = (
-      <div className="space-y-4 mb-6 border-b border-gray-200 pb-6">
-        <h3 className="font-medium text-gray-900">Spacing</h3>
-        <div className="grid grid-cols-2 gap-4">
-            <div>
-            <label className="block text-sm font-medium text-gray-700">Padding</label>
-              <input
-                type="text"
-              value={block.content.padding || '1rem'}
-              onChange={(e) => updateBlock(block.id, { padding: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="e.g., 1rem or 16px"
-              />
-            </div>
-            <div>
-            <label className="block text-sm font-medium text-gray-700">Margin</label>
-              <input
-                type="text"
-              value={block.content.margin || '1rem'}
-              onChange={(e) => updateBlock(block.id, { margin: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="e.g., 1rem or 16px"
-              />
-            </div>
-            </div>
-          </div>
-        );
-
-    const buttonSettings = block.content.button || block.content.buttonText ? (
-      <div className="space-y-4 mb-6 border-b border-gray-200 pb-6">
-        <h3 className="font-medium text-gray-900">Button Settings</h3>
-            <div>
-          <label className="block text-sm font-medium text-gray-700">Button Text</label>
-              <input
-                type="text"
-            value={block.content.button?.text || block.content.buttonText || ''}
-            onChange={(e) => {
-              if (block.content.button) {
-                updateBlock(block.id, { 
-                  button: { ...block.content.button, text: e.target.value }
-                });
-              } else {
-                updateBlock(block.id, { buttonText: e.target.value });
-              }
-            }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-          <label className="block text-sm font-medium text-gray-700">Button Background Color</label>
-              <input
-            type="color"
-            value={block.content.button?.style === 'gradient' 
-              ? block.content.button.gradient?.from 
-              : block.content.backgroundColor || '#4F46E5'}
-            onChange={(e) => {
-              if (block.content.button?.style === 'gradient') {
-                updateBlock(block.id, {
-                  button: {
-                    ...block.content.button,
-                    gradient: { ...block.content.button.gradient, from: e.target.value }
-                  }
-                });
-              } else {
-                updateBlock(block.id, { backgroundColor: e.target.value });
-              }
-            }}
-            className="mt-1 block w-full"
-              />
-            </div>
-            <div>
-          <label className="block text-sm font-medium text-gray-700">Button Text Color</label>
-              <input
-            type="color"
-            value={block.content.style?.ctaColor || '#ffffff'}
-            onChange={(e) => updateBlock(block.id, {
-              style: { ...block.content.style, ctaColor: e.target.value }
-            })}
-            className="mt-1 block w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Button Style</label>
-              <select
-            value={block.content.button?.style || block.content.buttonStyle || 'primary'}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (block.content.button) {
-                updateBlock(block.id, {
-                  button: { ...block.content.button, style: value as any }
-                });
-              } else {
-                updateBlock(block.id, { buttonStyle: value as any });
-              }
-            }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-            <option value="primary">Primary</option>
-            <option value="secondary">Secondary</option>
-                <option value="outline">Outline</option>
-                <option value="gradient">Gradient</option>
-            <option value="link">Link</option>
-              </select>
-            </div>
-          </div>
-    ) : null;
-
-    switch (block.type) {
+    const { type, content } = block;
+    const extendedContent = content as ExtendedBlockContent;
+    
+    switch (type) {
       case 'hero':
         return (
-          <div className="space-y-6">
-            {commonTextSettings}
-            {commonSpacingSettings}
-            <div className="space-y-4 mb-6 border-b border-gray-200 pb-6">
-              <h3 className="font-medium text-gray-900">Hero Settings</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                type="text"
-                value={block.content.title || ''}
-                onChange={(e) => updateBlock(block.id, { title: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Subtitle</label>
-              <input
-                type="text"
-                  value={block.content.subtitle || ''}
-                  onChange={(e) => updateBlock(block.id, { subtitle: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Background Image</label>
-              <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e, block.id, 'imageUrl')}
-                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-              />
-            </div>
-              {buttonSettings}
-            </div>
-            <div className="space-y-4">
-              <h3 className="font-medium text-gray-900">Style Settings</h3>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Background Color</label>
-              <input
-                  type="color"
-                  value={block.content.backgroundColor || '#ffffff'}
-                  onChange={(e) => updateBlock(block.id, { backgroundColor: e.target.value })}
-                  className="mt-1 block w-full"
-              />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Title Color</label>
-                <input
-                  type="color"
-                  value={block.content.style?.titleColor || '#000000'}
-                  onChange={(e) => updateBlock(block.id, { style: { ...block.content.style, titleColor: e.target.value } })}
-                  className="mt-1 block w-full"
+          <div className="relative overflow-hidden">
+            {extendedContent.imageUrl && (
+              <div className="absolute inset-0">
+                <img
+                  src={extendedContent.imageUrl}
+                  alt={extendedContent.alt || 'Hero background'}
+                  className="w-full h-full object-cover"
                 />
+                <div className="absolute inset-0 bg-black bg-opacity-40"></div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Subtitle Color</label>
-                <input
-                  type="color"
-                  value={block.content.style?.subtitleColor || '#000000'}
-                  onChange={(e) => updateBlock(block.id, { style: { ...block.content.style, subtitleColor: e.target.value } })}
-                  className="mt-1 block w-full"
-                />
-              </div>
+            )}
+            <div className="relative px-8 py-16 text-center">
+              {extendedContent.title && (
+                <h1 className="text-4xl font-bold text-white mb-4">{extendedContent.title}</h1>
+              )}
+              {extendedContent.subtitle && (
+                <p className="text-xl text-white mb-8">{extendedContent.subtitle}</p>
+              )}
+              {extendedContent.button && (
+                <button className={`px-8 py-3 rounded-lg font-medium ${
+                  extendedContent.button.style === 'primary' 
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    : 'bg-white text-gray-900 hover:bg-gray-100'
+                }`}>
+                  {extendedContent.button.text}
+                </button>
+              )}
             </div>
           </div>
         );
 
-      case 'testimonial':
+      case 'featured-collection':
         return (
-          <div className="space-y-6">
-            {commonTextSettings}
-            {commonSpacingSettings}
-            <div className="space-y-4 mb-6 border-b border-gray-200 pb-6">
-              <h3 className="font-medium text-gray-900">Testimonial Settings</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Quote</label>
-              <textarea
-                value={block.content.quote || ''}
-                onChange={(e) => updateBlock(block.id, { quote: e.target.value })}
-                rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
+          <div className="p-8">
+            {extendedContent.title && (
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">{extendedContent.title}</h2>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {extendedContent.products?.map((product, index) => (
+                <div key={index} className="group relative">
+                  <div className="aspect-w-4 aspect-h-3 rounded-lg overflow-hidden bg-gray-100">
+                    <img
+                      src={product.imageUrl}
+                      alt={product.title}
+                      className="object-cover object-center"
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <h3 className="text-lg font-medium text-gray-900">{product.title}</h3>
+                    <p className="text-lg font-medium text-gray-900">{product.price}</p>
+                    {product.button && (
+                      <button className="mt-2 text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                        {product.button.text}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Author Name</label>
-              <input
-                type="text"
-                value={block.content.author || ''}
-                onChange={(e) => updateBlock(block.id, { author: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Role</label>
-              <input
-                type="text"
-                value={block.content.role || ''}
-                onChange={(e) => updateBlock(block.id, { role: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Avatar</label>
-              <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, block.id, 'avatar')}
-                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                  />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Rating</label>
-              <select
-                value={block.content.rating || 5}
-                onChange={(e) => updateBlock(block.id, { rating: parseInt(e.target.value) })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                  {[1, 2, 3, 4, 5].map(rating => (
-                    <option key={rating} value={rating}>{rating} Stars</option>
-                  ))}
-              </select>
-            </div>
-            </div>
-            {buttonSettings}
-          </div>
-        );
-
-      case 'countdown':
-        return (
-          <div className="space-y-6">
-            {commonTextSettings}
-            {commonSpacingSettings}
-            <div className="space-y-4 mb-6 border-b border-gray-200 pb-6">
-              <h3 className="font-medium text-gray-900">Countdown Settings</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                type="text"
-                value={block.content.title || ''}
-                onChange={(e) => updateBlock(block.id, { title: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">End Date</label>
-              <input
-                type="datetime-local"
-                value={block.content.endDate || ''}
-                onChange={(e) => updateBlock(block.id, { endDate: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-              <div className="space-y-2">
-                <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={block.content.showDays}
-                onChange={(e) => updateBlock(block.id, { showDays: e.target.checked })}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-                  <label className="ml-2 block text-sm text-gray-700">Show Days</label>
-            </div>
-                <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={block.content.showHours}
-                onChange={(e) => updateBlock(block.id, { showHours: e.target.checked })}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-                  <label className="ml-2 block text-sm text-gray-700">Show Hours</label>
-            </div>
-                <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={block.content.showMinutes}
-                onChange={(e) => updateBlock(block.id, { showMinutes: e.target.checked })}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-                  <label className="ml-2 block text-sm text-gray-700">Show Minutes</label>
-            </div>
-                <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={block.content.showSeconds}
-                onChange={(e) => updateBlock(block.id, { showSeconds: e.target.checked })}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-                  <label className="ml-2 block text-sm text-gray-700">Show Seconds</label>
-            </div>
-              </div>
-            </div>
-            {buttonSettings}
           </div>
         );
 
       case 'promotion':
         return (
-          <div className="space-y-6">
-            {commonTextSettings}
-            {commonSpacingSettings}
-            <div className="space-y-4 mb-6 border-b border-gray-200 pb-6">
-              <h3 className="font-medium text-gray-900">Promotion Settings</h3>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                  type="text"
-                  value={block.content.title || ''}
-                  onChange={(e) => updateBlock(block.id, { title: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Discount</label>
-                <input
-                  type="text"
-                  value={block.content.discount || ''}
-                  onChange={(e) => updateBlock(block.id, { discount: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="e.g., 20% OFF"
+          <div className="bg-indigo-700 text-white p-8 text-center">
+            {extendedContent.title && (
+              <h2 className="text-3xl font-bold mb-4">{extendedContent.title}</h2>
+            )}
+            {extendedContent.description && (
+              <p className="text-xl mb-6">{extendedContent.description}</p>
+            )}
+            {extendedContent.code && (
+              <div className="inline-block bg-white text-indigo-700 px-6 py-3 rounded-lg font-mono text-lg font-bold">
+                {extendedContent.code}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'testimonial':
+        return (
+          <div className="p-8 bg-gray-50">
+            {extendedContent.quote && (
+              <blockquote className="text-xl text-gray-900 text-center italic mb-6">
+                "{extendedContent.quote}"
+              </blockquote>
+            )}
+            <div className="flex items-center justify-center">
+              {extendedContent.avatar && (
+                <img
+                  src={extendedContent.avatar}
+                  alt={extendedContent.author || 'Testimonial author'}
+                  className="h-12 w-12 rounded-full mr-4"
                 />
+              )}
+              <div>
+                {extendedContent.author && (
+                  <div className="font-medium text-gray-900">{extendedContent.author}</div>
+                )}
+                {extendedContent.role && (
+                  <div className="text-gray-500">{extendedContent.role}</div>
+                )}
+              </div>
             </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Promo Code</label>
-              <input
-                type="text"
-                  value={block.content.code || ''}
-                  onChange={(e) => updateBlock(block.id, { code: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Expiry Date</label>
-              <input
-                  type="date"
-                  value={block.content.expiryDate || ''}
-                  onChange={(e) => updateBlock(block.id, { expiryDate: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            </div>
-            {buttonSettings}
           </div>
         );
 
       case 'text':
         return (
-          <div className="space-y-6">
-            {commonTextSettings}
-            {commonSpacingSettings}
-            <div className="space-y-4 mb-6 border-b border-gray-200 pb-6">
-              <h3 className="font-medium text-gray-900">Text Content</h3>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Content</label>
-                <textarea
-                  value={block.content.text || ''}
-                  onChange={(e) => updateBlock(block.id, { text: e.target.value })}
-                  rows={4}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
+          <div className={`p-8 ${extendedContent.backgroundColor ? `bg-${extendedContent.backgroundColor}` : ''}`}>
+            <div className={`prose max-w-none ${extendedContent.align ? `text-${extendedContent.align}` : ''}`}>
+              {extendedContent.text && (
+                <div dangerouslySetInnerHTML={{ __html: extendedContent.text }} />
+              )}
             </div>
-            </div>
-            {buttonSettings}
           </div>
         );
 
       case 'image':
         return (
-          <div className="space-y-6">
-            {commonSpacingSettings}
-            <div className="space-y-4 mb-6 border-b border-gray-200 pb-6">
-              <h3 className="font-medium text-gray-900">Image Settings</h3>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Image</label>
-              <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e, block.id, 'imageUrl')}
-                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Alt Text</label>
-              <input
-                type="text"
-                value={block.content.alt || ''}
-                onChange={(e) => updateBlock(block.id, { alt: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Width</label>
-                <input
-                  type="text"
-                  value={block.content.width || '100%'}
-                  onChange={(e) => updateBlock(block.id, { width: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="e.g., 100% or 500px"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Height</label>
-                <input
-                  type="text"
-                  value={block.content.height || 'auto'}
-                  onChange={(e) => updateBlock(block.id, { height: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="e.g., auto or 300px"
-                />
-              </div>
-            </div>
-            {buttonSettings}
-          </div>
-        );
-
-      case 'product':
-        return (
-          <div className="space-y-6">
-            {commonTextSettings}
-            {commonSpacingSettings}
-            <div className="space-y-4 mb-6 border-b border-gray-200 pb-6">
-              <h3 className="font-medium text-gray-900">Product Settings</h3>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                type="text"
-                  value={block.content.title || ''}
-                  onChange={(e) => updateBlock(block.id, { title: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea
-                  value={block.content.description || ''}
-                  onChange={(e) => updateBlock(block.id, { description: e.target.value })}
-                  rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Price</label>
-              <input
-                type="text"
-                  value={block.content.price || ''}
-                  onChange={(e) => updateBlock(block.id, { price: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Images (Max 4)</label>
-            <div className="grid grid-cols-2 gap-4">
-                  {[0, 1, 2, 3].map((index) => (
-                    <div key={index} className="relative bg-gray-50 p-4 rounded-lg">
-                      {block.content.images?.[index]?.url ? (
-                        <div className="relative">
-                          <img
-                            src={block.content.images[index].url}
-                            alt={block.content.images[index].alt || `Product ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-md mb-2"
-                    />
-                    <button
-                      onClick={() => {
-                              const images = [...(block.content.images || [])];
-                              images[index] = { url: '', alt: '' };
-                              updateBlock(block.id, { images });
-                            }}
-                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
-                  </div>
-                      ) : (
-                        <div className="flex items-center justify-center h-32 bg-gray-100 rounded-md">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const images = [...(block.content.images || [])];
-                              if (!images[index]) {
-                                images[index] = { url: '', alt: `Product Image ${index + 1}` };
-                              }
-                              handleImageUpload(e, block.id, `images.${index}.url`);
-                            }}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          />
-                          <div className="text-gray-500 text-sm text-center">
-                            <span className="block">Click to upload</span>
-                            <span className="block">Product Image {index + 1}</span>
-            </div>
-            </div>
-                      )}
-                      {block.content.images?.[index]?.url && (
-              <input
-                type="text"
-                          placeholder="Alt text"
-                          value={block.content.images[index].alt || ''}
-                          onChange={(e) => {
-                            const images = [...(block.content.images || [])];
-                            images[index] = { ...images[index], alt: e.target.value };
-                            updateBlock(block.id, { images });
-                          }}
-                          className="mt-2 block w-full text-sm rounded-md border-gray-300"
-                        />
-                      )}
-            </div>
-                  ))}
-                </div>
-                </div>
-                <div>
-                <label className="block text-sm font-medium text-gray-700">Products per Row</label>
-                  <select
-                  value={block.content.columns || 1}
-                  onChange={(e) => updateBlock(block.id, { columns: parseInt(e.target.value) })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  >
-                  <option value={1}>1 Product</option>
-                  <option value={2}>2 Products</option>
-                  <option value={3}>3 Products</option>
-                  <option value={4}>4 Products</option>
-                  </select>
-                </div>
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={block.content.showPrice}
-                    onChange={(e) => updateBlock(block.id, { showPrice: e.target.checked })}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 block text-sm text-gray-700">Show Price</label>
-                </div>
-                <div className="flex items-center">
-              <input
-                type="checkbox"
-                    checked={block.content.showDescription}
-                    onChange={(e) => updateBlock(block.id, { showDescription: e.target.checked })}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 block text-sm text-gray-700">Show Description</label>
-            </div>
-            </div>
-            </div>
-            {buttonSettings}
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  // Add error handling for template rendering
-  if (!template) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900">Template not found</h2>
-          <p className="mt-2 text-gray-600">The template you're trying to edit doesn't exist.</p>
-          <button
-            onClick={onCancel}
-            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Add design options for colors, fonts, and layouts
-  const designOptions = {
-    colors: ['#4F46E5', '#F59E0B', '#10B981', '#EF4444'],
-    fonts: ['Arial', 'Helvetica', 'Georgia', 'Times New Roman'],
-    layouts: ['single-column', 'two-column', 'three-column'],
-  };
-
-  // Add a function to apply selected design options
-  template.blocks.forEach(block => {
-    block.content.color = designOptions.colors[0]; // Default color
-    block.content.fontSize = '16px'; // Default font size
-    block.content.layout = designOptions.layouts[0]; // Default layout
-  });
-
-  // Implement dynamic content insertion for personalization
-  const personalizeContent = (content: string, user: any) => {
-    return content.replace(/{{name}}/g, user.name).replace(/{{product}}/g, user.product);
-  };
-
-  // Update the renderBlock function to use personalized content
-  const renderBlock = (block: Block) => {
-    const personalizedText = personalizeContent(block.content.text || '', { name: 'John Doe', product: 'Awesome Product' });
-    const getColumnClass = (columns: number = 2) => {
-      switch (columns) {
-        case 1: return 'grid-cols-1';
-        case 2: return 'grid-cols-1 sm:grid-cols-2';
-        case 3: return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
-        case 4: return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
-        default: return 'grid-cols-1 sm:grid-cols-2';
-      }
-    };
-
-    const getStyles = (content: BlockContent) => ({
-      color: content.color || 'inherit',
-      fontSize: content.fontSize || 'inherit',
-      textAlign: content.align as any || 'left',
-      backgroundColor: content.backgroundColor || 'transparent',
-      padding: content.padding || '1rem',
-      margin: content.margin || '0',
-      borderRadius: content.borderRadius === 'none' ? '0' : 
-                   content.borderRadius === 'sm' ? '0.25rem' :
-                   content.borderRadius === 'md' ? '0.375rem' :
-                   content.borderRadius === 'lg' ? '0.5rem' : '0',
-      boxShadow: content.boxShadow ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' : 'none',
-    });
-
-    const renderButton = (buttonConfig: any, style: any = {}) => {
-      const buttonStyle = {
-        background: buttonConfig.style === 'gradient'
-          ? `linear-gradient(to right, ${buttonConfig.gradient?.from || '#4F46E5'}, ${buttonConfig.gradient?.to || '#6366F1'})`
-          : buttonConfig.backgroundColor || '#4F46E5',
-        color: style?.ctaColor || '#ffffff',
-        fontSize: style?.ctaFontSize || '1rem',
-        padding: style?.ctaPadding || '0.75rem 1.5rem',
-        borderRadius: style?.ctaBorderRadius || '0.375rem',
-        transition: 'all 0.3s ease',
-        border: buttonConfig.style === 'outline' ? '2px solid currentColor' : 'none',
-      };
-
-    return (
-        <button 
-          className="mt-4 w-full font-medium transition-all transform hover:scale-105"
-          style={buttonStyle}
-        >
-          {buttonConfig.text}
-        </button>
-      );
-    };
-
-    switch (block.type) {
-      case 'hero':
-        return (
-          <div style={getStyles(block.content)} className="relative overflow-hidden">
-                {block.content.imageUrl && (
-              <div className="absolute inset-0">
-                  <img
-                    src={block.content.imageUrl}
-                  alt={block.content.title || 'Hero'}
-                  className="w-full h-full object-cover"
-                />
-                {block.content.overlay && (
-                  <div 
-                    className="absolute inset-0 bg-black" 
-                    style={{ opacity: block.content.overlay.opacity || 0.5 }}
-                  />
-                )}
-              </div>
-            )}
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24">
-              <h1 
-                className="text-4xl md:text-5xl font-bold"
-                  style={{
-                  color: block.content.style?.titleColor || '#ffffff',
-                  fontSize: block.content.style?.titleFontSize,
-                  lineHeight: block.content.style?.titleLineHeight,
-                  letterSpacing: block.content.style?.titleLetterSpacing,
+          <div className="p-8">
+            {extendedContent.imageUrl && (
+              <img
+                src={extendedContent.imageUrl}
+                alt={extendedContent.alt || 'Image'}
+                className={`w-full ${extendedContent.borderRadius ? `rounded-${extendedContent.borderRadius}` : ''}`}
+                style={{
+                  maxWidth: extendedContent.width || 'none',
+                  margin: extendedContent.align === 'center' ? '0 auto' : undefined
                 }}
-              >
-                {block.content.title}
-              </h1>
-              {block.content.subtitle && (
-                <p 
-                  className="mt-6 text-xl md:text-2xl"
-                  style={{
-                    color: block.content.style?.subtitleColor || '#ffffff',
-                    fontSize: block.content.style?.subtitleFontSize,
-                    lineHeight: block.content.style?.subtitleLineHeight,
-                    marginTop: block.content.style?.subtitleMarginTop,
-                  }}
-                >
-                  {block.content.subtitle}
-                </p>
-              )}
-              {block.content.button && (
-                renderButton(block.content.button, block.content.style)
-                  )}
-                </div>
-              </div>
+              />
+            )}
+          </div>
         );
 
       case 'product':
         return (
-          <div style={getStyles(block.content)} className="relative">
-            <div className={`grid ${getColumnClass(block.content.columns)} gap-6`}>
-              {/* Render each product card */}
-              {block.content.images?.filter(img => img?.url).map((image, index) => (
-                <div key={index} className="space-y-4 bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden">
-                    <img
-                      src={image.url}
-                      alt={image.alt || `Product Image ${index + 1}`}
-                      className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-200"
-                    />
-                  </div>
-                  <div className="p-4 space-y-2">
-                    <h3 className="text-xl font-semibold">{block.content.title}</h3>
-                    {block.content.showDescription && (
-                      <p className="text-gray-600">{block.content.description}</p>
-                    )}
-                    {block.content.showPrice && (
-                      <p className="text-lg font-bold">{block.content.price}</p>
-                    )}
-                    {block.content.buttonText && (
-                      renderButton({
-                        text: block.content.buttonText,
-                        style: block.content.buttonStyle,
-                        backgroundColor: block.content.backgroundColor,
-                      }, block.content.style)
-                    )}
-                  </div>
-                  </div>
-                ))}
+          <div className="p-8">
+            <div className="flex flex-col md:flex-row gap-8">
+              {extendedContent.imageUrl && (
+                <div className="flex-1">
+                  <img
+                    src={extendedContent.imageUrl}
+                    alt={extendedContent.title || 'Product'}
+                    className="w-full rounded-lg"
+                  />
+                </div>
+              )}
+              <div className="flex-1 space-y-4">
+                {extendedContent.title && (
+                  <h2 className="text-2xl font-bold text-gray-900">{extendedContent.title}</h2>
+                )}
+                {extendedContent.description && (
+                  <p className="text-gray-600">{extendedContent.description}</p>
+                )}
+                {extendedContent.price && (
+                  <div className="text-2xl font-bold text-gray-900">{extendedContent.price}</div>
+                )}
+                {extendedContent.button && (
+                  <button className="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">
+                    {extendedContent.button.text}
+                  </button>
+                )}
               </div>
-              </div>
+            </div>
+          </div>
         );
 
-      case 'testimonial':
+      case 'features':
         return (
-          <div style={getStyles(block.content)} className="relative">
-            <div className="max-w-3xl mx-auto text-center">
-              <div className="flex justify-center mb-6">
-                {block.content.avatar && (
-                  <img
-                    src={block.content.avatar}
-                    alt={block.content.author || 'Testimonial'}
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                )}
-              </div>
-              <blockquote className="text-xl italic text-gray-900">"{block.content.quote}"</blockquote>
-              <div className="mt-4">
-                <div className="font-semibold text-gray-900">{block.content.author}</div>
-                {block.content.role && (
-                  <div className="text-gray-500">{block.content.role}</div>
-                )}
-                {block.content.rating && (
-                  <div className="flex justify-center mt-2">
-                    {[...Array(5)].map((_, i) => (
-                      <StarIcon
-                        key={i}
-                        className={`h-5 w-5 ${
-                          i < block.content.rating! ? 'text-yellow-400' : 'text-gray-200'
-                        }`}
-                      />
-                    ))}
-              </div>
+          <div className="p-8">
+            {extendedContent.title && (
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">{extendedContent.title}</h2>
             )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {extendedContent.features?.map((feature, index) => (
+                <div key={index} className="text-center">
+                  <div className="text-4xl mb-4">{feature.icon}</div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{feature.title}</h3>
+                  <p className="text-gray-500">{feature.description}</p>
                 </div>
-              </div>
-              </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'social-proof':
+        return (
+          <div className="p-8 bg-white">
+            {extendedContent.title && (
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">{extendedContent.title}</h2>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {extendedContent.reviews?.map((review, index) => (
+                <div key={index} className="bg-gray-50 p-6 rounded-lg">
+                  <div className="flex items-center mb-4">
+                    {review.avatar && (
+                      <img src={review.avatar} alt={review.name} className="h-12 w-12 rounded-full mr-4" />
+                    )}
+            <div>
+                      <div className="font-medium text-gray-900">{review.name}</div>
+                      <div className="text-gray-500">{review.date}</div>
+                    </div>
+                  </div>
+                  <div className="flex text-yellow-400 mb-2">
+                    {[...Array(5)].map((_, i) => (
+                      <StarIcon key={i} className={`h-5 w-5 ${i < (review.rating || 5) ? 'text-yellow-400' : 'text-gray-300'}`} />
+                    ))}
+            </div>
+                  <p className="text-gray-600">{review.text}</p>
+          </div>
+              ))}
+            </div>
+          </div>
         );
 
       case 'countdown':
         return (
-          <div style={getStyles(block.content)} className="relative">
-            <div className="text-center">
-              <h3 className="text-2xl font-bold mb-4">{block.content.title}</h3>
-              <div className="grid grid-cols-4 gap-4 max-w-lg mx-auto">
-                {block.content.showDays && (
-                  <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-3xl font-bold">00</div>
-                    <div className="text-sm text-gray-500">Days</div>
-              </div>
+          <div className="p-8 text-center" style={{ backgroundColor: extendedContent.backgroundColor || '#ffffff' }}>
+            {extendedContent.title && (
+              <h2 className="text-2xl font-bold mb-4" style={{ color: extendedContent.textColor || '#000000' }}>
+                {extendedContent.title}
+              </h2>
             )}
-                {block.content.showHours && (
-                  <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-3xl font-bold">00</div>
-                    <div className="text-sm text-gray-500">Hours</div>
-              </div>
-            )}
-                {block.content.showMinutes && (
-                  <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-3xl font-bold">00</div>
-                    <div className="text-sm text-gray-500">Minutes</div>
-                    </div>
-                )}
-                {block.content.showSeconds && (
-                  <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-3xl font-bold">00</div>
-                    <div className="text-sm text-gray-500">Seconds</div>
-              </div>
-            )}
-              </div>
+            <div className="flex justify-center space-x-4">
+              {['days', 'hours', 'minutes', 'seconds'].map((unit) => (
+                <div key={unit} className="bg-gray-800 text-white p-4 rounded-lg">
+                  <div className="text-3xl font-bold">{extendedContent[unit] || '00'}</div>
+                  <div className="text-sm uppercase">{unit}</div>
+                </div>
+              ))}
             </div>
+            {extendedContent.button && (
+              <button className={`mt-8 px-6 py-3 rounded-lg font-medium ${
+                extendedContent.button.style === 'primary' 
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  : 'bg-white text-gray-900 hover:bg-gray-100'
+              }`}>
+                {extendedContent.button.text}
+              </button>
+            )}
           </div>
         );
 
-      case 'promotion':
+      case 'newsletter-signup':
         return (
-          <div style={getStyles(block.content)} className="relative">
-            <div className="text-center space-y-4">
-              <h3 className="text-2xl font-bold">{block.content.title}</h3>
-              {block.content.discount && (
-                <div className="text-4xl font-bold text-indigo-600">{block.content.discount}</div>
-              )}
-              {block.content.code && (
-                <div className="inline-block bg-gray-100 px-4 py-2 rounded-md">
-                  <span className="font-mono font-bold">{block.content.code}</span>
-                  </div>
-                )}
-              {block.content.expiryDate && (
-                <p className="text-sm text-gray-500">
-                  Expires {new Date(block.content.expiryDate).toLocaleDateString()}
-                </p>
-                  )}
+          <div className="p-8 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-center">
+            {extendedContent.title && (
+              <h2 className="text-3xl font-bold mb-4">{extendedContent.title}</h2>
+            )}
+            {extendedContent.description && (
+              <p className="text-lg mb-6 opacity-90">{extendedContent.description}</p>
+            )}
+            <div className="max-w-md mx-auto">
+              <div className="flex gap-2">
+              <input
+                  type="email"
+                  placeholder={extendedContent.placeholder || "Enter your email"}
+                  className="flex-1 px-4 py-3 rounded-lg text-gray-900"
+                />
+                <button className="px-6 py-3 bg-white text-indigo-600 rounded-lg font-medium hover:bg-gray-100">
+                  {extendedContent.button?.text || "Subscribe"}
+                </button>
+              </div>
                 </div>
               </div>
         );
 
+      case 'divider':
+        return (
+          <div className="py-4">
+            <hr className="border-t" style={{
+              borderColor: extendedContent.color || '#e5e7eb',
+              borderStyle: extendedContent.style || 'solid',
+              margin: extendedContent.margin || '1rem 0'
+            }} />
+          </div>
+        );
+
+      case 'spacer':
+        return (
+          <div style={{ height: extendedContent.height || '2rem' }} />
+        );
+
+      case 'video':
+        return (
+          <div className="p-8">
+            {extendedContent.title && (
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{extendedContent.title}</h2>
+            )}
+            <div className="relative aspect-w-16 aspect-h-9">
+              {extendedContent.videoUrl && (
+                <iframe
+                  src={extendedContent.videoUrl}
+                  className="absolute inset-0 w-full h-full rounded-lg"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              )}
+              {extendedContent.videoThumbnail && !extendedContent.videoUrl && (
+                <div className="absolute inset-0 bg-black">
+                  <img
+                    src={extendedContent.videoThumbnail}
+                    alt="Video thumbnail"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                      <div className="w-0 h-0 border-t-8 border-b-8 border-l-12 border-transparent border-l-indigo-600 ml-1" />
+            </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            {extendedContent.description && (
+              <p className="mt-4 text-gray-600">{extendedContent.description}</p>
+            )}
+          </div>
+        );
+
+      case 'social-share':
+        return (
+          <div className="p-8 text-center">
+            {extendedContent.title && (
+              <h2 className="text-xl font-bold text-gray-900 mb-4">{extendedContent.title}</h2>
+            )}
+            <div className="flex justify-center space-x-4">
+              {['facebook', 'twitter', 'linkedin', 'instagram'].map((platform) => (
+                <a
+                  key={platform}
+                  href={extendedContent[`${platform}Url`] || '#'}
+                  className="p-3 bg-gray-100 rounded-full hover:bg-gray-200"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={`/icons/${platform}.svg`}
+                    alt={`Share on ${platform}`}
+                    className="w-6 h-6"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'menu':
+        return (
+          <div className="p-8">
+            {extendedContent.title && (
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">{extendedContent.title}</h2>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {extendedContent.items?.map((item, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">{item.name}</h3>
+                    <p className="text-gray-500">{item.description}</p>
+                  </div>
+                  <div className="text-lg font-bold text-indigo-600">{item.price}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
       default:
-        return null;
+        return (
+          <div className="p-4 border border-dashed border-gray-300 text-gray-500 text-center">
+            {type} block - Click to edit
+          </div>
+        );
     }
   };
 
-  return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Top Bar - Highest z-index */}
-      <div className="fixed top-0 left-0 right-0 bg-white border-b px-4 py-2 flex justify-between items-center z-[200]">
-        <div className="flex items-center space-x-4">
+  const renderBlockEditor = (block: Template['blocks'][number] | undefined) => {
+    if (!block) return null;
+    const { type, content } = block;
+    
+    const updateContent = (updates: Partial<BlockContent>) => {
+      setBlocks(prev => prev.map(b => 
+        b.id === block.id ? { ...b, content: { ...content, ...updates } } : b
+      ));
+    };
+
+    const handleAIOptimize = async (field: string, text: string, textType: 'title' | 'description' | 'quote' | 'button' | 'feature') => {
+      try {
+        const result = await aiOptimizationService.optimizeBlockText({
+          text,
+          type: textType,
+          context: {
+            industry: template.industry,
+            tone: template.tone,
+            purpose: template.purpose,
+            targetAudience: template.targetAudience
+          }
+        });
+
+        // Update the content with optimized text
+        updateContent({ [field]: result.optimizedText });
+
+        // Show suggestions in a modal
+        setOptimizationResult({
+          field,
+          originalText: text,
+          ...result
+        });
+        setShowOptimizationModal(true);
+      } catch (error) {
+        console.error('Error optimizing text:', error);
+        // Show error message
+      }
+    };
+
+    const AIOptimizeButton = ({ field, text, type }: { field: string; text: string; type: 'title' | 'description' | 'quote' | 'button' | 'feature' }) => (
+      <button
+        onClick={() => handleAIOptimize(field, text, type)}
+        className="absolute right-2 top-2 p-1 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-gray-100"
+        title="Optimize with AI"
+      >
+        <SparklesIcon className="w-5 h-5" />
+      </button>
+    );
+
+    const TextInputWithAI = ({ 
+      label, 
+      value, 
+      onChange, 
+      field, 
+      type,
+      multiline = false
+    }: { 
+      label: string;
+      value: string;
+      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+      field: string;
+      type: 'title' | 'description' | 'quote' | 'button' | 'feature';
+      multiline?: boolean;
+    }) => (
+      <div className="relative">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {label}
+        </label>
+        {multiline ? (
+          <textarea
+            value={value}
+            onChange={onChange}
+            className="w-full rounded-md border-gray-300 pr-10"
+            rows={3}
+          />
+        ) : (
+          <input
+            type="text"
+            value={value}
+            onChange={onChange}
+            className="w-full rounded-md border-gray-300 pr-10"
+          />
+        )}
+        <AIOptimizeButton field={field} text={value} type={type} />
+      </div>
+    );
+
+    // Common style options that apply to most blocks
+    const CommonStyleOptions = () => (
+      <div className="space-y-4 border-t pt-4 mt-4">
+        <h3 className="font-medium text-gray-900">Style Options</h3>
+            <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Background Color
+          </label>
+              <input
+            type="color"
+            value={content.backgroundColor || '#ffffff'}
+            onChange={(e) => updateContent({ backgroundColor: e.target.value })}
+            className="h-8 w-full rounded-md"
+              />
+            </div>
+            <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Text Color
+          </label>
+              <input
+            type="color"
+            value={content.textColor || '#000000'}
+            onChange={(e) => updateContent({ textColor: e.target.value })}
+            className="h-8 w-full rounded-md"
+              />
+            </div>
+            <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Padding
+          </label>
+              <input
+            type="text"
+            value={content.padding || '1rem'}
+            onChange={(e) => updateContent({ padding: e.target.value })}
+            className="w-full rounded-md border-gray-300"
+            placeholder="e.g., 1rem or 16px"
+              />
+            </div>
+            <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Border Radius
+          </label>
+          <input
+            type="text"
+            value={content.borderRadius || '0'}
+            onChange={(e) => updateContent({ borderRadius: e.target.value })}
+            className="w-full rounded-md border-gray-300"
+            placeholder="e.g., 0.5rem or 8px"
+          />
+        </div>
+      </div>
+    );
+
+    // Button style options
+    const ButtonStyleOptions = () => (
+      <div className="space-y-4 border-t pt-4 mt-4">
+        <h3 className="font-medium text-gray-900">Button Style</h3>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Style
+          </label>
+              <select
+            value={content.button?.style || 'primary'}
+            onChange={(e) => updateContent({ 
+              button: updateButtonContent(content.button, { 
+                style: e.target.value as 'primary' | 'secondary' | 'ghost' | 'gradient' | 'outline' | 'link'
+              })
+            })}
+            className="w-full rounded-md border-gray-300"
+              >
+            <option value="primary">Primary</option>
+            <option value="secondary">Secondary</option>
+            <option value="ghost">Ghost</option>
+                <option value="gradient">Gradient</option>
+            <option value="outline">Outline</option>
+            <option value="link">Link</option>
+              </select>
+            </div>
+            <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Text
+          </label>
+              <input
+                type="text"
+            value={content.button?.text || ''}
+            onChange={(e) => updateContent({ 
+              button: updateButtonContent(content.button, { text: e.target.value })
+            })}
+            className="w-full rounded-md border-gray-300"
+            placeholder="Button text"
+              />
+            </div>
+            <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            URL
+          </label>
+              <input
+                type="text"
+            value={content.button?.url || ''}
+            onChange={(e) => updateContent({ 
+              button: updateButtonContent(content.button, { url: e.target.value })
+            })}
+            className="w-full rounded-md border-gray-300"
+            placeholder="https://..."
+              />
+            </div>
+            </div>
+    );
+    
+    return (
+            <div className="space-y-4">
+        {/* Block Type */}
+            <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Block Type
+          </label>
+          <div className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded">
+            {type}
+            </div>
+              </div>
+
+        {/* Block-specific fields */}
+        {type === 'hero' && (
+          <>
+              <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Title
+          </label>
+                <input
+            type="text"
+            value={content.title || ''}
+                onChange={(e) => updateContent({ title: e.target.value })}
+            className="w-full rounded-md border-gray-300"
+                />
+              </div>
+            <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Subtitle
+          </label>
+              <input
+                type="text"
+            value={content.subtitle || ''}
+                onChange={(e) => updateContent({ subtitle: e.target.value })}
+            className="w-full rounded-md border-gray-300"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Image URL
+              </label>
+              <input
+                type="text"
+                value={content.imageUrl || ''}
+                onChange={(e) => updateContent({ imageUrl: e.target.value })}
+                className="w-full rounded-md border-gray-300"
+              />
+            </div>
+            <ButtonStyleOptions />
+            <CommonStyleOptions />
+          </>
+        )}
+
+        {type === 'text' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Content
+              </label>
+              <textarea
+                value={content.text || ''}
+                onChange={(e) => updateContent({ text: e.target.value })}
+                rows={4}
+                className="w-full rounded-md border-gray-300"
+                  />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Text Alignment
+              </label>
+              <select
+                value={content.align || 'left'}
+                onChange={(e) => updateContent({ align: e.target.value as 'left' | 'center' | 'right' })}
+                className="w-full rounded-md border-gray-300"
+              >
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Font Size
+              </label>
+              <input
+                type="text"
+                value={content.fontSize || '1rem'}
+                onChange={(e) => updateContent({ fontSize: e.target.value })}
+                className="w-full rounded-md border-gray-300"
+                placeholder="e.g., 1rem or 16px"
+              />
+            </div>
+            <CommonStyleOptions />
+          </>
+        )}
+
+        {type === 'image' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Image
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const imageUrl = await handleImageUpload(file);
+                      if (imageUrl) {
+                        updateContent({ imageUrl });
+                      }
+                    }
+                  }}
+                  className="w-full"
+                />
+                {content.imageUrl && (
+                  <button
+                    onClick={() => updateContent({ imageUrl: '' })}
+                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              {content.imageUrl && (
+                <img 
+                  src={content.imageUrl} 
+                  alt="Preview" 
+                  className="mt-2 max-w-full h-auto rounded"
+                />
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Alt Text
+              </label>
+              <input
+                type="text"
+                value={content.alt || ''}
+                onChange={(e) => updateContent({ alt: e.target.value })}
+                className="w-full rounded-md border-gray-300"
+                placeholder="Describe the image for accessibility"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Width
+                </label>
+                <select
+                  value={content.width || '100%'}
+                  onChange={(e) => updateContent({ width: e.target.value })}
+                  className="w-full rounded-md border-gray-300"
+                >
+                  <option value="100%">Full Width</option>
+                  <option value="75%">75%</option>
+                  <option value="50%">50%</option>
+                  <option value="25%">25%</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Alignment
+                </label>
+                <select
+                  value={content.align || 'center'}
+                  onChange={(e) => updateContent({ align: e.target.value })}
+                  className="w-full rounded-md border-gray-300"
+                >
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+            </div>
+            <CommonStyleOptions />
+          </>
+        )}
+
+        {type === 'product' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Product Title
+              </label>
+              <input
+                  type="text"
+                value={content.title || ''}
+                onChange={(e) => updateContent({ title: e.target.value })}
+                className="w-full rounded-md border-gray-300"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                value={content.description || ''}
+                onChange={(e) => updateContent({ description: e.target.value })}
+                rows={3}
+                className="w-full rounded-md border-gray-300"
+                />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Price
+              </label>
+              <input
+                type="text"
+                value={content.price || ''}
+                onChange={(e) => updateContent({ price: e.target.value })}
+                className="w-full rounded-md border-gray-300"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Image URL
+              </label>
+              <input
+                type="text"
+                value={content.imageUrl || ''}
+                onChange={(e) => updateContent({ imageUrl: e.target.value })}
+                className="w-full rounded-md border-gray-300"
+              />
+            </div>
+            <ButtonStyleOptions />
+            <CommonStyleOptions />
+          </>
+        )}
+
+        {type === 'testimonial' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Quote
+              </label>
+                <textarea
+                value={content.quote || ''}
+                onChange={(e) => updateContent({ quote: e.target.value })}
+                rows={3}
+                className="w-full rounded-md border-gray-300"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Author Name
+              </label>
+              <input
+                type="text"
+                value={content.author || ''}
+                onChange={(e) => updateContent({ author: e.target.value })}
+                className="w-full rounded-md border-gray-300"
+              />
+            </div>
+              <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Author Role
+              </label>
+                <input
+                  type="text"
+                value={content.role || ''}
+                onChange={(e) => updateContent({ role: e.target.value })}
+                className="w-full rounded-md border-gray-300"
+                />
+              </div>
+              <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Avatar URL
+              </label>
+                <input
+                  type="text"
+                value={content.avatar || ''}
+                onChange={(e) => updateContent({ avatar: e.target.value })}
+                className="w-full rounded-md border-gray-300"
+                />
+              </div>
+            <CommonStyleOptions />
+          </>
+        )}
+
+        {type === 'features' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Section Title
+              </label>
+              <input
+                type="text"
+                value={content.title || ''}
+                onChange={(e) => updateContent({ title: e.target.value })}
+                className="w-full rounded-md border-gray-300"
+              />
+            </div>
+            <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">
+                Features
+            </label>
+              {(content.features || []).map((feature: any, index: number) => (
+                <div key={index} className="space-y-2 p-3 border rounded-md">
+              <input
+                type="text"
+                    value={feature.icon || ''}
+                            onChange={(e) => {
+                      const newFeatures = [...(content.features || [])];
+                      newFeatures[index] = { ...feature, icon: e.target.value };
+                      updateContent({ features: newFeatures });
+              }}
+              className="w-full rounded-md border-gray-300"
+                    placeholder="Feature icon (emoji or icon class)"
+            />
+              <input
+                type="text"
+                    value={feature.title || ''}
+                          onChange={(e) => {
+                      const newFeatures = [...(content.features || [])];
+                      newFeatures[index] = { ...feature, title: e.target.value };
+                      updateContent({ features: newFeatures });
+              }}
+              className="w-full rounded-md border-gray-300"
+                    placeholder="Feature title"
+                  />
+                  <textarea
+                    value={feature.description || ''}
+                    onChange={(e) => {
+                      const newFeatures = [...(content.features || [])];
+                      newFeatures[index] = { ...feature, description: e.target.value };
+                      updateContent({ features: newFeatures });
+                    }}
+                    className="w-full rounded-md border-gray-300"
+                    placeholder="Feature description"
+                    rows={2}
+                  />
+                  <button
+                    onClick={() => {
+                      const newFeatures = [...(content.features || [])];
+                      newFeatures.splice(index, 1);
+                      updateContent({ features: newFeatures });
+                    }}
+                    className="text-red-600 hover:text-red-700 text-sm"
+                  >
+                    Remove Feature
+                  </button>
+                </div>
+              ))}
           <button
-            onClick={handleUndo}
-            disabled={!canUndo}
-            className={`p-2 rounded ${
-              canUndo ? 'text-gray-600 hover:bg-gray-100' : 'text-gray-300'
-            }`}
-            title="Undo"
-          >
-            <UndoIcon className="h-5 w-5" />
-          </button>
-          <button
-            onClick={handleRedo}
-            disabled={!canRedo}
-            className={`p-2 rounded ${
-              canRedo ? 'text-gray-600 hover:bg-gray-100' : 'text-gray-300'
-            }`}
-            title="Redo"
-          >
-            <RedoIcon className="h-5 w-5" />
+                onClick={() => {
+                  const newFeatures = [...(content.features || []), { icon: '', title: '', description: '' }];
+                  updateContent({ features: newFeatures });
+                }}
+                className="w-full py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Add Feature
           </button>
         </div>
-        
-        <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-500">
-            {hasUnsavedChanges ? 'Unsaved changes' : 'All changes saved'}
-          </span>
+            <CommonStyleOptions />
+          </>
+        )}
+
+        {/* Add more block-specific editors here */}
+      </div>
+    );
+  };
+
+  // Add responsive state
+  const [isMobile, setIsMobile] = useState(false);
+  const [showPanelControls, setShowPanelControls] = useState(false);
+
+  // Add useEffect for responsive handling
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobileView = window.innerWidth < 768;
+      setIsMobile(isMobileView);
+      if (isMobileView) {
+        // On mobile, default to hiding panels
+        setShowLeftPanel(false);
+        setShowRightPanel(false);
+      } else {
+        // On desktop, default to showing panels
+        setShowLeftPanel(true);
+        setShowRightPanel(true);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Add panel controls for mobile
+  const PanelControls = () => (
+    <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 flex items-center space-x-2 bg-white rounded-lg shadow-lg p-2 ${isMobile ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}>
+        <button 
+        onClick={() => setShowLeftPanel(!showLeftPanel)}
+        className={`p-2 rounded ${showLeftPanel ? 'bg-indigo-100 text-indigo-700' : 'hover:bg-gray-100'}`}
+        title="Toggle Block Types"
+        >
+        <ViewColumnsIcon className="w-5 h-5" />
+        </button>
+      <button
+        onClick={() => setShowRightPanel(!showRightPanel)}
+        className={`p-2 rounded ${showRightPanel ? 'bg-indigo-100 text-indigo-700' : 'hover:bg-gray-100'}`}
+        title="Toggle Block Settings"
+      >
+        <ChevronRightIcon className="w-5 h-5" />
+      </button>
+              </div>
+        );
+
+        const handleSaveTemplate = async () => {
+          try {
+            const savedTemplate = {
+              ...template,
+              blocks,
+            };
+            await onSave(savedTemplate);
+            alert('Template saved successfully!');
+          } catch (error) {
+            console.error('Error saving template:', error);
+            alert('Failed to save template.');
+          }
+        };
+
+  const openAutomationModal = () => {
+    if (subscription && (subscription.tier === 'pro' || subscription.tier === 'premium')) {
+      setShowAutomationModal(true);
+    } else {
+      alert('This feature is only available for premium users. Please upgrade your subscription.');
+    }
+  };
+
+  const openSmsModal = () => {
+    if (subscription && (subscription.tier === 'premium' || subscription.tier === 'pro')) {
+      setShowSmsModal(true);
+    } else {
+      alert('This feature is only available for premium users. Please upgrade your subscription.');
+    }
+  };
+
+  const openAnalyticsModal = () => {
+    if (subscription && (subscription.tier === 'premium' || subscription.tier === 'pro')) {
+      setShowAnalyticsModal(true);
+    } else {
+      alert('This feature is only available for premium users. Please upgrade your subscription.');
+    }
+  };
+
+  const openPersonalizationModal = () => {
+    if (subscription && (subscription.tier === 'premium' || subscription.tier === 'pro')) {
+      setShowPersonalizationModal(true);
+    } else {
+      alert('This feature is only available for premium users. Please upgrade your subscription.');
+    }
+  };
+
+  const [runTour, setRunTour] = useState(false);
+  const [tourReady, setTourReady] = useState(false);
+
+  useEffect(() => {
+    // Wait for elements to be mounted
+    const timer = setTimeout(() => {
+      setTourReady(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const steps: Step[] = [
+    {
+      target: '.template-editor-main',
+      content: 'Welcome to the Template Editor! Here you can create beautiful, responsive email templates with our drag-and-drop interface.',
+      placement: 'center',
+      disableBeacon: true
+    },
+    {
+      target: '.blocks-section',
+      content: 'Add different types of content blocks to build your email template. Tap the + button to explore available blocks.',
+      placement: isMobile ? 'bottom-start' : 'right',
+      disableBeacon: true
+    },
+    {
+      target: '.hero-block',
+      content: 'Choose from various block types:\n• Hero sections\n• Text content\n• Images\n• Products\n• Collections\n• Testimonials\n• And more!',
+      placement: isMobile ? 'bottom-start' : 'right',
+      disableBeacon: true
+    },
+    {
+      target: '.preview-section',
+      content: 'Your template preview updates in real-time as you make changes.',
+      placement: isMobile ? 'top' : 'left',
+      disableBeacon: true
+    },
+    {
+      target: '.device-preview-controls',
+      content: 'Test your template on different devices to ensure it looks great everywhere.',
+      placement: isMobile ? 'bottom' : 'bottom',
+      disableBeacon: true
+    },
+    {
+      target: '.block-settings',
+      content: 'Customize your blocks:\n• Colors\n• Typography\n• Spacing\n• Borders\n• Layout\n• Responsiveness',
+      placement: isMobile ? 'bottom-end' : 'left',
+      disableBeacon: true
+    },
+    {
+      target: '.template-editor-main',
+      content: 'Additional Features Available:\n\n• Personalization: Add dynamic content like customer names and order details\n• Automation: Set up rules to trigger emails based on behavior\n• SMS Integration: Configure text message notifications\n• Analytics: Track performance metrics\n• Audience Targeting: Define and segment your email list\n\nAccess these features through the toolbar above.',
+      placement: 'center',
+      disableBeacon: true
+    }
+  ];
+
+  // Audience Modal Component
+  const AudienceModal = () => (
+    <Modal
+      isOpen={showAudienceModal}
+      onClose={() => setShowAudienceModal(false)}
+      title="Template Audience"
+      className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto"
+    >
+      <div className="space-y-6 max-h-[80vh] overflow-y-auto px-3 sm:px-6 py-4">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-yellow-800">About Template Audience</h3>
+          <p className="mt-2 text-sm text-yellow-700">
+            Audience selection happens during campaign creation. This template can be used with any audience segment.
+            When you create a campaign using this template, you'll be able to:
+          </p>
+          <ul className="mt-2 text-sm text-yellow-700 list-disc list-inside">
+            <li>Select specific audience segments</li>
+            <li>Filter by engagement levels</li>
+            <li>Target based on customer behavior</li>
+            <li>Set up A/B testing groups</li>
+          </ul>
+        </div>
+
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium text-gray-900">Recommended For</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="border rounded-lg p-4">
+              <h5 className="font-medium text-gray-900">Industry</h5>
+              <p className="text-sm text-gray-500 mt-1">{template.category || 'All Industries'}</p>
+            </div>
+            <div className="border rounded-lg p-4">
+              <h5 className="font-medium text-gray-900">Customer Type</h5>
+              <p className="text-sm text-gray-500 mt-1">{template.audienceType || 'All Customers'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6">
           <button
-            onClick={handleSaveAsDraft}
-            disabled={isSaving || !hasUnsavedChanges}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            onClick={async () => {
+              try {
+                await handleSaveTemplate();
+                setShowAudienceModal(false);
+              } catch (error) {
+                console.error('Error saving template:', error);
+              }
+            }}
+            className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            Save as Draft
-          </button>
-          <button
-            onClick={handlePublish}
-            disabled={isSaving}
-            className="px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {isSaving ? 'Saving...' : 'Publish'}
+            Create Campaign with this Template
           </button>
         </div>
       </div>
+    </Modal>
+  );
 
-      {/* Left Panel - High z-index */}
-      <div className={`${
+  // Update the main layout with responsive classes
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Add FeatureRestrictModal to the component */}
+      <FeatureRestrictModal />
+      
+      {/* Header with Back Button */}
+      <div className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <button
+                onClick={() => router.back()}
+                className="mr-4 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                <ArrowLeftIcon className="h-6 w-6" />
+              </button>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {template.id ? 'Edit Template' : 'Create New Template'}
+              </h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Rest of the template editor content */}
+      <div className="template-editor-main">
+        {tourReady && (
+          <Joyride
+            steps={steps}
+            run={runTour}
+            continuous
+            showProgress
+            showSkipButton
+            hideCloseButton
+            disableOverlayClose
+            disableScrolling={false}
+            styles={{
+              options: {
+                zIndex: 10000,
+                primaryColor: '#4F46E5',
+                overlayColor: 'rgba(0, 0, 0, 0.5)',
+              },
+              tooltip: {
+                width: isMobile ? '90vw' : '350px',
+                padding: '1.5rem',
+                backgroundColor: '#ffffff',
+                borderRadius: '0.5rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+              },
+              tooltipContent: {
+                padding: '0.5rem 0',
+                fontSize: '0.875rem',
+                lineHeight: '1.5'
+              },
+              buttonNext: {
+                backgroundColor: '#4F46E5',
+                fontSize: '14px',
+                padding: '8px 16px',
+                borderRadius: '0.375rem'
+              },
+              buttonBack: {
+                color: '#4F46E5',
+                fontSize: '14px',
+                marginRight: '8px'
+              },
+              buttonSkip: {
+                color: '#6B7280',
+                fontSize: '14px'
+              }
+            }}
+            floaterProps={{
+              disableAnimation: true,
+              hideArrow: isMobile,
+              styles: {
+                floater: {
+                  filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
+                }
+              }
+            }}
+            callback={({ status, type }) => {
+              if (['finished', 'skipped'].includes(status) || type === 'tour:end') {
+                setRunTour(false);
+                // Remove any inline styles that might affect scrolling
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('position');
+                document.body.style.removeProperty('top');
+                document.body.style.removeProperty('width');
+                document.body.style.removeProperty('height');
+                document.body.style.removeProperty('margin');
+                
+                // Ensure the toolbar container is visible and scrollable
+                const toolbarContainer = document.querySelector('.toolbar-container');
+                if (toolbarContainer) {
+                  toolbarContainer.removeAttribute('style');
+                }
+                
+                // Force a small delay to ensure all styles are properly reset
+                setTimeout(() => {
+                  window.dispatchEvent(new Event('resize'));
+                }, 100);
+              }
+            }}
+          />
+        )}
+
+    <div className="flex h-screen bg-gray-50">
+      {/* Left Panel - Block Types */}
+      <div 
+        className={`${
           showLeftPanel ? 'w-64' : 'w-0'
-        } bg-white shadow-lg transition-all duration-300 ease-in-out ${
-        isMobileView ? 'fixed left-0 z-[150] h-full' : 'relative'
-      }`}>
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-semibold">Blocks</h2>
-          {isMobileView && (
+        } bg-white border-r border-gray-200 overflow-hidden transition-all duration-300 ${
+          isMobile ? 'fixed left-0 top-0 h-full z-50' : 'relative'
+            } blocks-section`}
+      >
+        {showLeftPanel && (
+          <div className="p-4 h-full overflow-y-auto">
+            {isMobile && (
             <button
               onClick={() => setShowLeftPanel(false)}
-              className="p-2 hover:bg-gray-100 rounded"
+                    className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100"
             >
-              <ChevronRightIcon className="w-5 h-5" />
+                <XMarkIcon className="w-5 h-5" />
             </button>
           )}
-        </div>
-        <div className="p-4 space-y-4">
           <div className="grid grid-cols-2 gap-2">
-            {['hero', 'featured-collection', 'promotion', 'testimonial', 'countdown', 'text', 'image', 'product', 'header', 'footer'].map((type) => (
+              {blockTypes.map((type) => (
               <button
                 key={type}
-                onClick={() => addBlock(type)}
-                className="p-3 text-sm bg-gray-50 hover:bg-gray-100 rounded border border-gray-200"
+                  onClick={() => {
+                    addBlock(type as BlockType);
+                    if (isMobile) setShowLeftPanel(false);
+                  }}
+                      className={`p-3 text-sm bg-gray-50 hover:bg-gray-100 rounded border border-gray-200 ${type === 'hero' ? 'hero-block' : ''}`}
               >
                 {type}
               </button>
             ))}
           </div>
         </div>
+        )}
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden relative pt-16">
-        {/* Top Bar */}
-        <div className="bg-white border-b px-4 py-2 flex justify-between items-center z-[100]">
-          <div className="flex items-center space-x-2">
-            {isMobileView && (
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Toolbar */}
+            <div className="bg-white border-b">
+              <div className="flex items-center justify-between p-4">
+                <div className="toolbar-container flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+                  <div className="flex items-center space-x-4 min-w-max pb-2">
+              {toolbarButtons.map((button, index) => (
               <button
-                onClick={() => setShowLeftPanel(true)}
-                className="p-2 hover:bg-gray-100 rounded"
-              >
-                <ChevronRightIcon className="w-5 h-5" />
+                  key={index}
+                  onClick={button.onClick}
+                        className={`flex-shrink-0 flex items-center p-2 rounded whitespace-nowrap ${
+                    button.active ? 'bg-indigo-100 text-indigo-700' : 'hover:bg-gray-100'
+                        } ${button.label.toLowerCase()}-button device-preview-controls`}
+                >
+                        {button.icon}
+                        <span className="ml-2">{button.label}</span>
               </button>
-            )}
-            <select
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value);
-                if (presetTemplates[e.target.value]) {
-                  if (confirm('Load preset template? This will replace your current template.')) {
-                    loadPresetTemplate(e.target.value);
-                  }
-                }
-              }}
-              className="rounded-md border-gray-300"
-            >
-              <option value="all">All Templates</option>
-              {Object.keys(presetTemplates).map(category => (
-                <option key={category} value={category}>{category}</option>
               ))}
-            </select>
           </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="email"
-              placeholder="Test email address"
-              value={testEmailAddress}
-              onChange={(e) => setTestEmailAddress(e.target.value)}
-              className="rounded-md border-gray-300 text-sm"
-            />
+                </div>
+                <div className="flex-shrink-0 flex items-center space-x-2 ml-4 pl-4 border-l">
             <button
-              onClick={handleSendTest}
-              disabled={!testEmailAddress || isSaving}
-              className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
-            >
-              Test Send
+                onClick={handleSaveTemplate}
+                    className="save-template-button px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+              >
+                Save Template
             </button>
-            <button
-              onClick={() => handleSave(false)}
-              disabled={isSaving}
-              className="px-3 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 disabled:opacity-50"
-            >
-              {isSaving ? 'Saving...' : 'Save'}
+                  <button
+                    onClick={handleSaveTemplate}
+                    className="save-button px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                  >
+                    Save
             </button>
+            </div>
           </div>
         </div>
 
-        {/* Template Editor Area */}
-        <div className="flex-1 overflow-auto p-4">
+        {/* Preview Area */}
+        <div 
+              className="flex-1 bg-gray-100 overflow-auto p-4 md:p-8 preview-section"
+          onMouseEnter={() => setShowPanelControls(true)}
+          onMouseLeave={() => setShowPanelControls(false)}
+        >
+          <div className={`mx-auto bg-white shadow-lg rounded-lg ${getPreviewScale()}`}>
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="blocks">
               {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="space-y-4"
-                >
-                  {(template?.blocks || []).map((block, index) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef}>
+                    {blocks.map((block, index) => (
                     <Draggable key={block.id} draggableId={block.id} index={index}>
                       {(provided) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`relative bg-white rounded-lg shadow-sm border-2 ${
-                            selectedBlockId === block.id ? 'border-blue-500' : 'border-transparent'
-                          }`}
-                          onClick={() => setSelectedBlockId(block.id)}
+                                className={`relative ${selectedBlockIndex === block.id ? 'ring-2 ring-indigo-500' : ''} drag-handle`}
+                          onClick={() => setSelectedBlockIndex(block.id)}
                         >
-                          {/* Block Controls - Higher z-index than content */}
-                          <div className="absolute top-2 right-2 flex items-center space-x-2 z-[120]">
+                            <div className="absolute top-2 right-2 z-10 flex items-center space-x-2 opacity-0 group-hover:opacity-100">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteBlock(block.id);
                               }}
-                              className="p-1 hover:bg-red-100 rounded text-red-600"
+                                className="p-1 bg-white rounded-full shadow hover:bg-red-50 text-red-600"
                             >
                               <TrashIcon className="w-4 h-4" />
                             </button>
                           </div>
-                          {/* Block Content */}
-                          <div className="relative z-[110]">
                           {renderBlock(block)}
-                          </div>
                         </div>
                       )}
                     </Draggable>
@@ -2035,32 +2376,67 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
               )}
             </Droppable>
           </DragDropContext>
+          </div>
         </div>
       </div>
 
-      {/* Right Panel - High z-index */}
-      <div className={`${
+      {/* Right Panel - Block Settings */}
+      <div 
+        className={`${
           showRightPanel ? 'w-80' : 'w-0'
-        } bg-white shadow-lg transition-all duration-300 ease-in-out ${
-        isMobileView ? 'fixed right-0 z-[150] h-full' : 'relative'
-      }`}>
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-semibold">Settings</h2>
-          {isMobileView && (
+        } bg-white border-l border-gray-200 overflow-hidden transition-all duration-300 ${
+          isMobile ? 'fixed right-0 top-0 h-full z-50' : 'relative'
+            } block-settings`}
+          >
+            {showRightPanel && (
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h3 className="text-lg font-medium text-gray-900">Block Settings</h3>
             <button
               onClick={() => setShowRightPanel(false)}
-              className="p-2 hover:bg-gray-100 rounded"
+                    className="p-2 rounded-full hover:bg-gray-100"
             >
-              <ChevronRightIcon className="w-5 h-5" />
+                <XMarkIcon className="w-5 h-5" />
             </button>
-          )}
+                </div>
+                <div className="flex-1 overflow-y-auto p-4">
+                  {selectedBlockIndex ? (
+                    renderBlockEditor(blocks.find(b => b.id === selectedBlockIndex))
+                  ) : (
+                    <div className="text-center text-gray-500 mt-4">
+                      Select a block to customize
+                    </div>
+                  )}
+                </div>
         </div>
-        <div className="p-4 overflow-auto h-full">
-          {selectedBlockId && renderBlockEditor(template.blocks.find(b => b.id === selectedBlockId))}
+        )}
+        </div>
+
+      {/* Mobile Panel Controls */}
+      {isMobile && <PanelControls />}
+
+      {/* Modals */}
+      <PersonalizationModal />
+      <AutomationModal />
+      <SmsModal />
+      <AnalyticsModal />
+          <AudienceModal />
         </div>
       </div>
     </div>
   );
+};
+
+const isBlockTypeAvailable = (type: BlockType): boolean => {
+  // Define the logic to check if the block type is available
+  return blockTypes.includes(type);
+};
+
+const tierFeatures = {
+  free: { maxBlocks: 5 },
+  starter: { maxBlocks: 10 },
+  growth: { maxBlocks: 20 },
+  pro: { maxBlocks: 50 },
 };
 
 export default TemplateEditor;

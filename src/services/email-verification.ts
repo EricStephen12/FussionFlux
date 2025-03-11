@@ -1,7 +1,7 @@
 import { auth } from '@/utils/firebase';
 
 export class EmailVerificationService {
-  static async sendVerificationEmail(email: string, displayName: string) {
+  static async sendVerificationEmail(email: string, displayName: string): Promise<void> {
     try {
       // First check if we have a current user
       const currentUser = auth.currentUser;
@@ -23,15 +23,13 @@ export class EmailVerificationService {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to send verification email');
       }
-
-      return data;
     } catch (error: any) {
       console.error('Error in sendVerificationEmail:', error);
       throw new Error(error.message || 'Failed to send verification email');
     }
   }
 
-  static async verifyEmailToken(oobCode: string) {
+  static async verifyEmailToken(oobCode: string): Promise<boolean> {
     try {
       // Verify the action code/oobCode
       await auth.applyActionCode(oobCode);
@@ -46,20 +44,8 @@ export class EmailVerificationService {
     }
   }
 
-  static async checkEmailVerificationStatus() {
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        throw new Error('No authenticated user found');
-      }
-
-      // Force refresh the user to get the latest status
-      await currentUser.reload();
-      
-      return currentUser.emailVerified;
-    } catch (error: any) {
-      console.error('Error checking email verification status:', error);
-      throw new Error(error.message || 'Failed to check email verification status');
-    }
+  static async checkEmailVerificationStatus(): Promise<boolean> {
+    const currentUser = auth.currentUser;
+    return currentUser ? currentUser.emailVerified : false;
   }
 } 

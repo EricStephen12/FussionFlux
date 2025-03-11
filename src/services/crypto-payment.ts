@@ -167,10 +167,10 @@ class CryptoPaymentService {
             updatedAt: new Date(),
           });
 
-          // Grant access to user (e.g., add credits)
-          await firestoreService.updateUserCredits(
+          // Grant access to user (e.g., add limits)
+          await firestoreService.updateUserLimits(
             payment.userId,
-            this.calculateCredits(payment.amount)
+            this.calculateLimits(payment.amount)
           );
         }
       }
@@ -180,9 +180,9 @@ class CryptoPaymentService {
     }
   }
 
-  private calculateCredits(amount: number): number {
-    // Convert payment amount to credits based on your pricing
-    return Math.floor(amount * 100); // Example: $1 = 100 credits
+  private calculateLimits(amount: number): number {
+    // Convert payment amount to limits based on your pricing
+    return Math.floor(amount * 100); // Example: $1 = 100 limits
   }
 }
 

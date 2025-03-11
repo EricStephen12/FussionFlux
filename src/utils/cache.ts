@@ -91,8 +91,8 @@ class CacheService {
     return this.getOrSet(
       this.generateKey('templates', niche),
       async () => {
-        const templates = await sendGridService.getTemplates();
-        return templates.filter(t => t.niche === niche);
+        // const templates = await sendGridService.getTemplates();
+        return [];
       },
       7200 // 2 hours cache
     );

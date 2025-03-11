@@ -28,22 +28,18 @@ interface PaymentStatus {
   updated_at?: string;
 }
 
-class NOWPaymentsService {
-  private readonly API_URL = 'https://api.nowpayments.io/v1';
-  private readonly API_KEY: string;
+export class NOWPaymentsService {
+  private apiKey: string;
+  private baseURL = 'https://api.nowpayments.io/v1';
 
-  constructor() {
-    const apiKey = process.env.NOWPAYMENTS_API_KEY;
-    if (!apiKey) {
-      throw new Error('NOWPayments API key is not configured');
-    }
-    this.API_KEY = apiKey;
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
   }
 
   private get headers() {
     return {
-      'x-api-key': this.API_KEY,
-      'Content-Type': 'application/json',
+      'x-api-key': this.apiKey,
+      'Content-Type': 'application/json'
     };
   }
 
@@ -51,45 +47,49 @@ class NOWPaymentsService {
     price_amount: number;
     price_currency: string;
     pay_currency: string;
-    order_id?: string;
-    order_description?: string;
+    order_id: string;
+    order_description: string;
     ipn_callback_url?: string;
-  }): Promise<CreatePaymentResponse> {
+  }) {
     try {
+      console.log('Creating NOWPayments payment with params:', params);
+      console.log('Using API key:', this.apiKey ? 'Present' : 'Missing');
+
+      if (!this.apiKey) {
+        throw new Error('NOWPayments API key is not configured');
+      }
+
       const response = await axios.post(
-        `${this.API_URL}/payment`,
-        {
-          ...params,
-          ipn_callback_url: params.ipn_callback_url || `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/crypto-payment`,
-        },
+        `${this.baseURL}/payment`,
+        params,
         { headers: this.headers }
       );
 
+      console.log('NOWPayments API response:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('NOWPayments create payment error:', error.response?.data || error.message);
-      throw new Error('Failed to create crypto payment');
+      console.error('Error creating payment:', error.response?.data || error);
+      throw error;
     }
   }
 
-  async getPaymentStatus(paymentId: string): Promise<PaymentStatus> {
+  async getPaymentStatus(paymentId: string) {
     try {
       const response = await axios.get(
-        `${this.API_URL}/payment/${paymentId}`,
+        `${this.baseURL}/payment/${paymentId}`,
         { headers: this.headers }
       );
-
       return response.data;
-    } catch (error: any) {
-      console.error('NOWPayments get status error:', error.response?.data || error.message);
-      throw new Error('Failed to get payment status');
+    } catch (error) {
+      console.error('Error getting payment status:', error);
+      throw error;
     }
   }
 
   async getAvailableCurrencies(): Promise<string[]> {
     try {
       const response = await axios.get(
-        `${this.API_URL}/currencies`,
+        `${this.baseURL}/currencies`,
         { headers: this.headers }
       );
 
@@ -103,7 +103,7 @@ class NOWPaymentsService {
   async getMinimumPaymentAmount(currency: string): Promise<number> {
     try {
       const response = await axios.get(
-        `${this.API_URL}/min-amount?currency=${currency}`,
+        `${this.baseURL}/min-amount?currency=${currency}`,
         { headers: this.headers }
       );
 
@@ -124,7 +124,7 @@ class NOWPaymentsService {
   }> {
     try {
       const response = await axios.get(
-        `${this.API_URL}/estimate`,
+        `${this.baseURL}/estimate`,
         {
           params,
           headers: this.headers,
@@ -160,4 +160,24 @@ class NOWPaymentsService {
 }
 
 export const nowPaymentsService = new NOWPaymentsService();
-export type { CreatePaymentResponse, PaymentStatus }; 
+export type { CreatePaymentResponse, PaymentStatus };
+
+export function verifyIPNSignature(payload: string, signature: string): boolean {
+  try {
+    const crypto = require('crypto');
+    const secret = process.env.NOWPAYMENTS_IPN_SECRET;
+    
+    if (!secret) {
+      throw new Error('NOWPayments IPN secret is not configured');
+    }
+
+    const hmac = crypto.createHmac('sha512', secret);
+    hmac.update(payload);
+    const calculatedSignature = hmac.digest('hex');
+
+    return calculatedSignature === signature;
+  } catch (error) {
+    console.error('NOWPayments signature verification error:', error);
+    return false;
+  }
+} 

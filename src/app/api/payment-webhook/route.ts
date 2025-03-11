@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { paymentService } from '@/services/payment';
-import { verifyIPNSignature } from '@/lib/nowpayments';
+import { verifyIPNSignature } from '@/services/nowpayments';
 
 export async function POST(request: Request) {
   try {

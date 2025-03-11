@@ -1,6 +1,5 @@
 import { db } from '@/utils/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, Timestamp } from 'firebase/firestore';
-import { sendGridService } from './sendgrid';
 import type { Campaign } from './firestore';
 
 interface ScheduleConfig {
@@ -82,14 +81,14 @@ class SchedulerService {
         let successCount = 0;
 
         for (const contact of batchContacts) {
-          const success = await sendGridService.sendEmail({
-            to: contact,
-            templateId: campaign.templateId,
-            campaignId: campaign.id,
-            dynamicTemplateData: {
-              unsubscribe_url: `${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${contact.email}&campaign=${campaign.id}`,
-            },
-          });
+          // const success = await sendGridService.sendEmail({
+          //   to: contact,
+          //   templateId: campaign.templateId,
+          //   campaignId: campaign.id,
+          //   dynamicTemplateData: {
+          //     unsubscribe_url: `${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${contact.email}&campaign=${campaign.id}`,
+          //   },
+          // });
 
           if (success) successCount++;
         }

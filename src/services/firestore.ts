@@ -1,7 +1,6 @@
 import { db } from '@/utils/firebase';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy as fsOrderBy, DocumentData, CollectionReference } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy as fsOrderBy, DocumentData, CollectionReference, limit, Timestamp, onSnapshot, setDoc } from 'firebase/firestore';
 import type { ApolloContact } from './apollo';
-import { Timestamp } from 'firebase/firestore';
 
 interface Campaign {
   id?: string;
@@ -17,6 +16,30 @@ interface Campaign {
   clickCount?: number;
   lastSentAt?: string;
   scheduledFor?: string;
+  followUpEmails?: any[];
+  firstOpenAt?: string;
+  firstClickAt?: string;
+  lastActivityAt?: string;
+  engagementData?: Array<{
+    timestamp: string;
+    opens: number;
+    clicks: number;
+    conversions: number;
+  }>;
+  recommendedActions?: string[];
+  abTest?: {
+    enabled: boolean;
+    testId?: string;
+    variants: Array<{
+      templateId: string;
+      name: string;
+      weight: number;
+    }>;
+    winningCriteria: 'openRate' | 'clickRate' | 'conversionRate' | 'revenue';
+    testDuration: number;
+    status: 'active' | 'completed' | 'paused';
+    winner?: string;
+  };
 }
 
 interface Transaction {
@@ -24,7 +47,7 @@ interface Transaction {
   transactionId: string;
   paymentMethod: 'flutterwave' | 'paypal';
   planId: string;
-  credits: number;
+  limits: number;
   timestamp: Date;
 }
 
@@ -37,17 +60,9 @@ export class FirestoreService {
     this.usersRef = collection(db, 'users');
   }
 
-  async createCampaign(campaign: Omit<Campaign, 'id'>): Promise<string> {
-    try {
-      const docRef = await addDoc(this.campaignsRef, {
-        ...campaign,
-        createdAt: new Date().toISOString(),
-      });
-      return docRef.id;
-    } catch (error) {
-      console.error('Create campaign error:', error);
-      throw new Error('Failed to create campaign');
-    }
+  async createCampaign(campaign: Campaign): Promise<void> {
+    const campaignRef = await addDoc(this.campaignsRef, campaign);
+    console.log('Campaign created with ID:', campaignRef.id);
   }
 
   async getUserCampaigns(userId: string): Promise<Campaign[]> {
@@ -69,20 +84,8 @@ export class FirestoreService {
   }
 
   async getCampaign(campaignId: string): Promise<Campaign | null> {
-    try {
-      const docRef = doc(this.campaignsRef, campaignId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        return {
-          id: docSnap.id,
-          ...docSnap.data(),
-        } as Campaign;
-      }
-      return null;
-    } catch (error) {
-      console.error('Get campaign error:', error);
-      return null;
-    }
+    const campaignDoc = await getDoc(doc(this.campaignsRef, campaignId));
+    return campaignDoc.exists() ? { id: campaignDoc.id, ...campaignDoc.data() } as Campaign : null;
   }
 
   async updateCampaign(campaignId: string, data: Partial<Campaign>): Promise<void> {
@@ -290,29 +293,36 @@ export class FirestoreService {
 
   async getDashboardStats(userId: string) {
     try {
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      const statsDoc = await getDoc(doc(db, 'stats', userId));
+      const q = query(this.campaignsRef, where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
       
-      if (!userDoc.exists() || !statsDoc.exists()) {
-        throw new Error('User stats not found');
-      }
+      let totalEmails = 0;
+      let totalOpens = 0;
+      let totalClicks = 0;
+      let totalCampaigns = 0;
 
-      const userData = userDoc.data();
-      const statsData = statsDoc.data();
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        totalEmails += data.sentCount || 0;
+        totalOpens += data.openCount || 0;
+        totalClicks += data.clickCount || 0;
+        totalCampaigns++;
+      });
 
       return {
-        totalCampaigns: statsData.totalCampaigns || 0,
-        activeCampaigns: statsData.activeCampaigns || 0,
-        totalEmails: statsData.totalEmails || 0,
-        openRate: statsData.openRate || 0,
-        subscribers: statsData.subscribers || 0,
-        revenue: statsData.revenue || 0,
-        revenueGrowth: statsData.revenueGrowth || 0,
-        conversionRate: statsData.conversionRate || 0,
+        totalCampaigns,
+        totalEmails,
+        openRate: totalEmails > 0 ? (totalOpens / totalEmails) * 100 : 0,
+        conversionRate: totalOpens > 0 ? (totalClicks / totalOpens) * 100 : 0,
       };
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      throw error;
+      console.error('Error getting dashboard stats:', error);
+      return {
+        totalCampaigns: 0,
+        totalEmails: 0,
+        openRate: 0,
+        conversionRate: 0,
+      };
     }
   }
 
@@ -339,42 +349,69 @@ export class FirestoreService {
 
   async getPerformanceData(userId: string) {
     try {
-      const performanceRef = collection(db, 'users', userId, 'performance');
-      
-      // Get daily data
-      const dailyQuery = query(
-        performanceRef,
-        where('type', '==', 'daily'),
-        orderBy('date', 'desc'),
-        limit(7)
-      );
-      
-      // Get weekly data
-      const weeklyQuery = query(
-        performanceRef,
-        where('type', '==', 'weekly'),
-        orderBy('date', 'desc'),
-        limit(4)
+      const q = query(
+        this.campaignsRef,
+        where('userId', '==', userId),
+        where('status', '==', 'completed'),
+        fsOrderBy('createdAt', 'desc'),
+        limit(30)
       );
 
-      const [dailySnapshot, weeklySnapshot] = await Promise.all([
-        getDocs(dailyQuery),
-        getDocs(weeklyQuery),
-      ]);
+      const querySnapshot = await getDocs(q);
+      const campaigns = querySnapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+
+      // Process daily data
+      const dailyData = campaigns.reduce((acc: any[], campaign: any) => {
+        const date = new Date(campaign.createdAt).toLocaleDateString();
+        const existingDay = acc.find(d => d.date === date);
+
+        if (existingDay) {
+          existingDay.opens += campaign.openCount || 0;
+          existingDay.clicks += campaign.clickCount || 0;
+          existingDay.conversions += campaign.conversionCount || 0;
+        } else {
+          acc.push({
+            date,
+            opens: campaign.openCount || 0,
+            clicks: campaign.clickCount || 0,
+            conversions: campaign.conversionCount || 0,
+          });
+        }
+        return acc;
+      }, []);
+
+      // Process weekly data
+      const weeklyData = campaigns.reduce((acc: any[], campaign: any) => {
+        const date = new Date(campaign.createdAt);
+        const weekStart = new Date(date.setDate(date.getDate() - date.getDay())).toLocaleDateString();
+        const existingWeek = acc.find(w => w.date === weekStart);
+
+        if (existingWeek) {
+          existingWeek.campaigns++;
+          existingWeek.engagement += (campaign.openCount || 0) + (campaign.clickCount || 0);
+        } else {
+          acc.push({
+            date: weekStart,
+            campaigns: 1,
+            engagement: (campaign.openCount || 0) + (campaign.clickCount || 0),
+          });
+        }
+        return acc;
+      }, []);
 
       return {
-        daily: dailySnapshot.docs.map(doc => ({
-          date: this.formatDate(doc.data().date),
-          ...doc.data(),
-        })).reverse(),
-        weekly: weeklySnapshot.docs.map(doc => ({
-          date: this.formatDate(doc.data().date),
-          ...doc.data(),
-        })).reverse(),
+        daily: dailyData.slice(0, 7).reverse(), // Last 7 days
+        weekly: weeklyData.slice(0, 4).reverse(), // Last 4 weeks
       };
     } catch (error) {
-      console.error('Error fetching performance data:', error);
-      throw error;
+      console.error('Error getting performance data:', error);
+      return {
+        daily: [],
+        weekly: [],
+      };
     }
   }
 
@@ -387,21 +424,68 @@ export class FirestoreService {
       }
 
       const userData = userDoc.data();
-      const trialStart = userData.trialStartDate?.toDate() || new Date();
-      const trialDays = 14; // 14-day trial
+      const trialEndDate = userData.trialEndDate ? new Date(userData.trialEndDate) : null;
       const now = new Date();
-      const daysElapsed = Math.floor((now.getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24));
-      const daysRemaining = Math.max(0, trialDays - daysElapsed);
+      
+      if (!trialEndDate) {
+        return {
+          isActive: false,
+          daysRemaining: 0,
+          usedLeads: 0,
+          totalLeads: 0,
+          usedEmails: 0,
+          totalEmails: 0,
+          leadsProgress: 0,
+          emailsProgress: 0
+        };
+      }
+
+      const daysRemaining = Math.max(0, Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+      const usedLeads = userData.usedLeads || 0;
+      const totalLeads = userData.totalLeads || 100;
+      const usedEmails = userData.usedEmails || 0;
+      const totalEmails = userData.totalEmails || 500;
       
       return {
+        isActive: daysRemaining > 0 && userData.subscriptionStatus === 'trial',
         daysRemaining,
-        usedFeatures: userData.usedFeatures || 0,
-        totalFeatures: userData.totalFeatures || 5,
-        trialProgress: Math.min(100, Math.round((daysElapsed / trialDays) * 100)),
+        usedLeads,
+        totalLeads,
+        usedEmails,
+        totalEmails,
+        leadsProgress: Math.min(100, Math.round((usedLeads / totalLeads) * 100)),
+        emailsProgress: Math.min(100, Math.round((usedEmails / totalEmails) * 100))
       };
     } catch (error) {
       console.error('Error fetching trial status:', error);
       throw error;
+    }
+  }
+
+  async getTopPerformingCampaigns(userId: string) {
+    try {
+      const q = query(
+        this.campaignsRef,
+        where('userId', '==', userId),
+        where('status', '==', 'completed'),
+        fsOrderBy('openRate', 'desc'),
+        limit(5)
+      );
+
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          openRate: (data.openCount / data.sentCount) * 100 || 0,
+          clickRate: (data.clickCount / data.sentCount) * 100 || 0,
+          conversionRate: (data.clickCount / data.openCount) * 100 || 0,
+        };
+      });
+    } catch (error) {
+      console.error('Error getting top performing campaigns:', error);
+      return [];
     }
   }
 
@@ -429,6 +513,84 @@ export class FirestoreService {
       month: 'short',
       day: 'numeric',
     });
+  }
+
+  async startFreeTrial(userId: string): Promise<void> {
+    try {
+      const docRef = doc(this.usersRef, userId);
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 14); // 14-day trial
+
+      await updateDoc(docRef, {
+        trialEndDate: trialEndDate.toISOString(),
+        subscriptionStatus: 'trial',
+        usedLeads: 0,
+        totalLeads: 100,
+        usedEmails: 0,
+        totalEmails: 500,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Start free trial error:', error);
+      throw new Error('Failed to start free trial');
+    }
+  }
+
+  subscribeToUserUpdates(userId: string, callback: (userData: any) => void) {
+    try {
+      const docRef = doc(this.usersRef, userId);
+      return onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          callback({
+            id: docSnap.id,
+            ...docSnap.data()
+          });
+        }
+      }, (error) => {
+        console.error('Error in user subscription:', error);
+      });
+    } catch (error) {
+      console.error('Subscribe to user updates error:', error);
+      // Return a no-op function as fallback
+      return () => {};
+    }
+  }
+
+  async getUserData(userId: string) {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      return userDoc.exists() ? userDoc.data() : null;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error;
+    }
+  }
+
+  async initializeUserData(userId: string, initialData: any) {
+    try {
+      // Check if user document already exists
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      
+      if (!userDoc.exists()) {
+        // Create new user document with initial data
+        await setDoc(doc(db, 'users', userId), {
+          ...initialData,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        // If document exists but needs subscription data
+        if (!userDoc.data().subscriptionData) {
+          await updateDoc(doc(db, 'users', userId), {
+            subscriptionData: initialData.subscriptionData,
+            updatedAt: new Date().toISOString()
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing user data:', error);
+      throw error;
+    }
   }
 }
 

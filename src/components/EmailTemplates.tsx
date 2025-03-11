@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { nicheService } from '@/services/niche';
+import { apolloService } from '@/services/apollo';
 import {
   DocumentDuplicateIcon,
   CheckIcon,
@@ -43,105 +44,35 @@ export default function EmailTemplates() {
       const nichePreference = await nicheService.getUserNiche(user!.uid);
       if (nichePreference) {
         setUserNiche(nichePreference.currentNiche);
-        // Load templates for the user's niche
-        const nicheTemplates = await loadTemplatesForNiche(nichePreference.currentNiche);
-        setTemplates(nicheTemplates);
+        
+        // Load both preset and user templates
+        const [presetTemplates, userTemplates] = await Promise.all([
+          apolloService.getPresetTemplates(),
+          apolloService.getUserTemplates()
+        ]);
+        
+        // Combine and format templates
+        const formattedTemplates = [...presetTemplates, ...userTemplates].map(template => ({
+          id: template.id,
+          title: template.name,
+          subject: template.subject || 'No subject',
+          body: template.content || '',
+          niche: template.category || 'General',
+          performance: {
+            openRate: template.stats?.openRate || 0,
+            clickRate: template.stats?.clickRate || 0,
+            useCount: template.stats?.useCount || 0
+          }
+        }));
+
+        setTemplates(formattedTemplates);
       }
     } catch (error: any) {
       setError(error.message || 'Failed to load templates');
+      console.error('Error loading templates:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const loadTemplatesForNiche = async (niche: string): Promise<EmailTemplate[]> => {
-    // This would typically come from your backend
-    // For now, returning mock data
-    return [
-      {
-        id: '1',
-        title: 'Welcome Series - Introduction',
-        subject: 'Welcome to [Store Name] - Your Source for [Niche] Products',
-        body: `Hi {first_name},
-
-Thank you for showing interest in our [Niche] products! We're excited to have you here.
-
-At [Store Name], we specialize in providing high-quality [Niche] products that [benefit statement].
-
-Here's what you can expect from us:
-- Exclusive deals and discounts
-- New product announcements
-- Expert tips and advice
-- Special subscriber-only offers
-
-Stay tuned for our next email where we'll share [teaser for next email].
-
-Best regards,
-[Your Name]
-[Store Name]`,
-        niche: niche,
-        performance: {
-          openRate: 45.2,
-          clickRate: 12.8,
-          useCount: 1234,
-        },
-      },
-      {
-        id: '2',
-        title: 'Product Showcase',
-        subject: 'Discover Our Best-Selling [Niche] Products',
-        body: `Hello {first_name},
-
-We wanted to share our most popular [Niche] products with you:
-
-1. [Product Name]
-   - Key benefit 1
-   - Key benefit 2
-   - Special price: [Price]
-
-2. [Product Name]
-   - Key benefit 1
-   - Key benefit 2
-   - Special price: [Price]
-
-Shop now and get [special offer/discount].
-
-Best regards,
-[Store Name]`,
-        niche: niche,
-        performance: {
-          openRate: 38.5,
-          clickRate: 15.3,
-          useCount: 987,
-        },
-      },
-      {
-        id: '3',
-        title: 'Limited Time Offer',
-        subject: 'Special [Holiday/Event] Deals on [Niche] Products',
-        body: `Hi {first_name},
-
-Don't miss out on our biggest [Holiday/Event] sale!
-
-For a limited time only:
-- [Discount details]
-- [Special bundle offers]
-- [Free shipping terms]
-
-Shop now: [Store URL]
-
-Hurry, offer ends [Date]!
-
-Best regards,
-[Store Name]`,
-        niche: niche,
-        performance: {
-          openRate: 42.7,
-          clickRate: 18.9,
-          useCount: 756,
-        },
-      },
-    ];
   };
 
   const handleCopyTemplate = (template: EmailTemplate) => {

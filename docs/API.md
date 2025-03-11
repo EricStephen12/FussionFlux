@@ -1,298 +1,137 @@
-# API Documentation
+# Lead Generation API
 
-## Authentication
+Transform your outreach with our powerful lead generation API, powered by Apollo.io integration.
 
-### POST /api/auth/signup
-Create a new user account.
+## 🚀 Core Features
 
-**Request Body:**
+### 1. Lead Search & Discovery
+```http
+GET /api/v1/leads
+```
+Find qualified leads based on:
 ```json
 {
-  "email": "string",
-  "password": "string",
-  "displayName": "string"
+  "industry": ["Fashion"],
+  "title": ["owner", "CEO"],
+  "limit": 100
 }
 ```
 
-**Response:**
+What you get:
+- Industry-targeted leads
+- Professional titles
+- Verified business information
+- Lead quality scores
+
+### 2. Lead Management
+```http
+POST /api/v1/leads
+```
+Store and manage your leads with:
+- Contact information tracking
+- Lead scoring
+- Data enrichment
+- Activity history
+
+### 3. Performance Analytics
+```http
+GET /api/user/stats
+```
+Track your lead generation metrics:
 ```json
 {
-  "success": true,
-  "userId": "string"
+  "metrics": {
+    "searched": 1000,
+    "qualified": 250,
+    "enriched": 200
+  }
 }
 ```
 
-### POST /api/auth/login
-Authenticate a user.
+## 💎 Pricing Plans
 
-**Request Body:**
+### Free Trial
+- 25 lead searches
+- 14 days access
+- Basic features
+- No credit card needed
+
+### Paid Plans
 ```json
 {
-  "email": "string",
-  "password": "string"
+  "starter": {
+    "perfect_for": "Starting teams",
+    "credits": 150,
+    "price": 29,
+    "features": [
+      "Lead search",
+      "Basic enrichment",
+      "Standard analytics"
+    ]
+  },
+  "growth": {
+    "perfect_for": "Growing teams",
+    "credits": 500,
+    "price": 79,
+    "features": [
+      "Advanced search",
+      "Full enrichment",
+      "Detailed analytics"
+    ]
+  },
+  "pro": {
+    "perfect_for": "Power users",
+    "credits": 1500,
+    "price": 149,
+    "features": [
+      "Premium search",
+      "Bulk enrichment",
+      "Advanced analytics"
+    ]
+  }
 }
 ```
 
-**Response:**
+## 🔒 Security & Rate Limits
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+Rate limits:
+- 100 requests/minute
+- 1,000 requests/day
+- 10,000 requests/month
+
+## 📈 Credit System
+
+- 1 credit per lead search
+- Credits deducted on successful search
+- Monitor usage in real-time
+- Purchase more credits as needed
+
+## 🛟 Error Handling
+
 ```json
 {
-  "success": true,
-  "token": "string"
+  "error": {
+    "code": "insufficient_credits",
+    "message": "Not enough credits",
+    "remaining": 5
+  }
 }
 ```
 
-## Campaigns
+## 💡 Best Practices
 
-### GET /api/campaigns
-Get user's campaigns with pagination.
+1. **Efficient Searching**
+- Use specific industry filters
+- Target relevant titles
+- Set appropriate limits
 
-**Query Parameters:**
-- page (optional): number
-- limit (optional): number
-- status (optional): 'draft' | 'active' | 'completed' | 'failed'
+2. **Credit Management**
+- Monitor credit balance
+- Purchase before depletion
+- Track usage patterns
 
-**Response:**
-```json
-{
-  "data": [
-    {
-      "id": "string",
-      "name": "string",
-      "status": "string",
-      "sentCount": number,
-      "openCount": number,
-      "clickCount": number
-    }
-  ],
-  "total": number,
-  "currentPage": number,
-  "totalPages": number,
-  "hasMore": boolean
-}
-```
-
-### POST /api/campaigns
-Create a new campaign.
-
-**Request Body:**
-```json
-{
-  "name": "string",
-  "niche": "string",
-  "totalEmails": number
-}
-```
-
-### POST /api/campaigns/{id}/send
-Start sending a campaign.
-
-**Request Body:**
-```json
-{
-  "templateId": "string"
-}
-```
-
-## Email Templates
-
-### GET /api/templates
-Get email templates for a niche.
-
-**Query Parameters:**
-- niche: string
-
-**Response:**
-```json
-{
-  "templates": [
-    {
-      "id": "string",
-      "name": "string",
-      "subject": "string",
-      "body": "string",
-      "performance": {
-        "openRate": number,
-        "clickRate": number
-      }
-    }
-  ]
-}
-```
-
-## Analytics
-
-### GET /api/analytics/campaign/{id}
-Get campaign analytics.
-
-**Response:**
-```json
-{
-  "sentCount": number,
-  "openRate": number,
-  "clickRate": number,
-  "bounceRate": number,
-  "timeSeriesData": [
-    {
-      "date": "string",
-      "opens": number,
-      "clicks": number
-    }
-  ]
-}
-```
-
-### GET /api/analytics/user
-Get user's overall analytics.
-
-**Response:**
-```json
-{
-  "totalCampaigns": number,
-  "avgOpenRate": number,
-  "avgClickRate": number,
-  "nichePerformance": [
-    {
-      "niche": "string",
-      "campaigns": number,
-      "avgOpenRate": number
-    }
-  ]
-}
-```
-
-## Payments
-
-### POST /api/payments/initialize
-Initialize a payment.
-
-**Request Body:**
-```json
-{
-  "amount": number,
-  "planId": "string",
-  "interval": "monthly" | "yearly"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "paymentUrl": "string",
-  "transactionId": "string"
-}
-```
-
-### GET /api/payments/verify/{transactionId}
-Verify payment status.
-
-**Response:**
-```json
-{
-  "success": true,
-  "status": "completed" | "pending" | "failed"
-}
-```
-
-## Shopify Verification
-
-### POST /api/verify-shopify
-Start Shopify store verification.
-
-**Request Body:**
-```json
-{
-  "storeDomain": "string"
-}
-```
-
-### GET /api/verify-shopify
-Check verification status.
-
-**Response:**
-```json
-{
-  "success": true,
-  "isVerified": boolean
-}
-```
-
-## Rate Limits
-
-All API endpoints are rate-limited. The limits are:
-- Authentication endpoints: 5 requests per minute
-- Campaign endpoints: 60 requests per minute
-- Analytics endpoints: 100 requests per minute
-
-Rate limit headers are included in all responses:
-- X-RateLimit-Limit: Maximum requests allowed in the window
-- X-RateLimit-Remaining: Remaining requests in the current window
-- X-RateLimit-Reset: Time when the rate limit resets (Unix timestamp)
-
-## Error Responses
-
-All endpoints may return the following error responses:
-
-### 400 Bad Request
-```json
-{
-  "error": "Description of the error"
-}
-```
-
-### 401 Unauthorized
-```json
-{
-  "error": "Authentication required"
-}
-```
-
-### 403 Forbidden
-```json
-{
-  "error": "Insufficient permissions"
-}
-```
-
-### 429 Too Many Requests
-```json
-{
-  "error": "Rate limit exceeded",
-  "resetAt": "timestamp"
-}
-```
-
-### 500 Internal Server Error
-```json
-{
-  "error": "Internal server error"
-}
-```
-
-## Webhooks
-
-### POST /api/webhooks/sendgrid
-SendGrid email event webhook.
-
-### POST /api/webhooks/crypto-payment
-NOWPayments IPN webhook.
-
-## Authentication
-
-All API endpoints (except authentication endpoints) require a Bearer token in the Authorization header:
-
-```
-Authorization: Bearer <token>
-```
-
-## Testing
-
-For testing the API in development, use the following base URL:
-```
-http://localhost:3000/api
-```
-
-For production:
-```
-https://your-domain.com/api
-``` 
+Start your free trial today and enhance your lead generation capabilities with our API.
