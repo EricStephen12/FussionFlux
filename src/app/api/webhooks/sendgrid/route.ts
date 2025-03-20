@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { firestoreService } from '@/services/firestore';
+import { db } from '@/utils/firebase-admin';
 import { verifyWebhookSignature } from '@/utils/resend-webhook';
 
 interface ResendEvent {
@@ -46,28 +46,45 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get campaign document reference
+    const campaignRef = db.collection('campaigns').doc(campaignId);
+    const campaignDoc = await campaignRef.get();
+
+    if (!campaignDoc.exists) {
+      return NextResponse.json(
+        { error: 'Campaign not found' },
+        { status: 404 }
+      );
+    }
+
     // Update campaign stats based on event type
+    const updateData: Record<string, any> = {
+      lastUpdatedAt: new Date().toISOString()
+    };
+
     switch (event.type) {
       case 'delivered':
-        await firestoreService.incrementCampaignStats(campaignId, {
-          sentCount: 1,
-        });
+        updateData.sentCount = (campaignDoc.data()?.sentCount || 0) + 1;
         break;
       case 'opened':
-        await firestoreService.incrementCampaignStats(campaignId, {
-          openCount: 1,
-        });
+        updateData.openCount = (campaignDoc.data()?.openCount || 0) + 1;
+        if (!campaignDoc.data()?.firstOpenAt) {
+          updateData.firstOpenAt = new Date().toISOString();
+        }
         break;
       case 'clicked':
-        await firestoreService.incrementCampaignStats(campaignId, {
-          clickCount: 1,
-        });
+        updateData.clickCount = (campaignDoc.data()?.clickCount || 0) + 1;
+        if (!campaignDoc.data()?.firstClickAt) {
+          updateData.firstClickAt = new Date().toISOString();
+        }
         break;
       case 'bounced':
-        // Handle bounces by marking the email as invalid
-        console.log(`Email bounced for campaign ${campaignId}: ${event.email}`);
+        // Add the bounced email to a list of invalid emails
+        updateData.bouncedEmails = [...(campaignDoc.data()?.bouncedEmails || []), event.email];
         break;
     }
+
+    await campaignRef.update(updateData);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -79,6 +96,5 @@ export async function POST(request: Request) {
   }
 }
 
-// Disable body parsing since we need the raw body for signature verification
-export const dynamic = 'force-dynamic';
-export const runtime = 'edge'; 
+// Only keep dynamic flag, remove edge runtime
+export const dynamic = 'force-dynamic'; 

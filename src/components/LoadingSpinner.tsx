@@ -1,25 +1,9 @@
-import React from 'react';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
-interface LoadingSpinnerProps {
-  size?: 'small' | 'medium' | 'large';
-  className?: string;
-}
-
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  size = 'medium',
-  className = ''
-}) => {
-  const sizeClasses = {
-    small: 'h-4 w-4',
-    medium: 'h-8 w-8',
-    large: 'h-12 w-12'
-  };
-
+export default function LoadingSpinner() {
   return (
-    <div className={`flex justify-center items-center ${className}`}>
-      <div className={`animate-spin rounded-full border-t-2 border-b-2 border-indigo-500 ${sizeClasses[size]}`}></div>
+    <div className="flex justify-center items-center min-h-[200px]">
+      <ArrowPathIcon className="h-8 w-8 text-gray-400 animate-spin" />
     </div>
   );
-};
-
-export default LoadingSpinner; 
+} 

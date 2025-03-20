@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/utils/firebase';
-import { firestoreService } from '@/services/firestore';
+import { db } from '@/utils/firebase-admin';
 import { verifyApiKey } from '@/utils/api-auth';
-import { apiUsageService } from '@/services/api-usage';
-import { RateLimitService } from '@/services/rate-limit';
 import { apolloService } from '@/services/apollo';
-import { creditsService } from '@/services/trial';
-
-const rateLimitService = new RateLimitService();
 
 export async function GET(request: Request) {
   try {
@@ -23,11 +17,21 @@ export async function GET(request: Request) {
     }
 
     // 2. Check credits
-    const eligibility = await creditsService.checkTrialEligibility(userId);
-    if (!eligibility.canUse) {
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    
+    if (!userDoc.exists) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const userData = userDoc.data()!;
+    const usedLeads = userData.usedLeads || 0;
+    const totalLeads = userData.totalLeads || 100;
+
+    if (usedLeads >= totalLeads) {
       return NextResponse.json({ 
         error: 'Insufficient credits',
-        message: eligibility.message
+        message: 'You have used all your available leads. Please upgrade your plan.'
       }, { status: 403 });
     }
 
@@ -44,14 +48,17 @@ export async function GET(request: Request) {
       limit
     });
 
-    // 5. Deduct credits
-    await creditsService.trackUsage(userId, 'email', 1);
+    // 5. Update usage
+    await userRef.update({
+      usedLeads: usedLeads + 1,
+      lastLeadUsedAt: new Date().toISOString()
+    });
 
     // 6. Return results
     return NextResponse.json({
       success: true,
       data: contacts,
-      remaining_credits: eligibility.remainingEmail
+      remaining_credits: totalLeads - (usedLeads + 1)
     });
 
   } catch (error: any) {
@@ -78,24 +85,40 @@ export async function POST(request: Request) {
     }
 
     // Check if user has Pro subscription or is in trial
-    const user = await firestoreService.getUserDocument(userId);
-    const tier = user?.subscriptionTier === 'pro' ? 'pro' : 
-                user?.subscription?.status === 'trial' ? 'trial' : 'default';
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    
+    if (!userDoc.exists) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
-    // Check rate limit
-    const rateLimitResult = await rateLimitService.isRateLimited(userId, tier);
-    if (rateLimitResult.limited) {
+    const userData = userDoc.data()!;
+    const tier = userData.subscriptionTier === 'pro' ? 'pro' : 
+                userData.subscription?.status === 'trial' ? 'trial' : 'default';
+
+    // Check rate limits based on tier
+    const rateLimit = {
+      pro: 1000,
+      trial: 100,
+      default: 0
+    }[tier];
+
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+
+    // Get today's usage
+    const usageRef = db.collection('api_usage')
+      .where('userId', '==', userId)
+      .where('timestamp', '>=', startOfDay);
+    
+    const usageSnapshot = await usageRef.get();
+    const todayUsage = usageSnapshot.size;
+
+    if (todayUsage >= rateLimit) {
       return NextResponse.json({
         error: 'Rate limit exceeded',
-        resetTime: rateLimitResult.resetTime,
-      }, {
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': rateLimitService.getRateLimitConfig(tier).max.toString(),
-          'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-          'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-        }
-      });
+        resetTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString(),
+      }, { status: 429 });
     }
 
     if (tier === 'default') {
@@ -103,7 +126,11 @@ export async function POST(request: Request) {
     }
 
     // Track API usage
-    await apiUsageService.trackRequest(userId, 'POST /api/v1/leads');
+    await db.collection('api_usage').add({
+      userId,
+      endpoint: 'POST /api/v1/leads',
+      timestamp: new Date().toISOString()
+    });
 
     const body = await request.json();
     
@@ -116,17 +143,23 @@ export async function POST(request: Request) {
     }
 
     // Add lead
-    const lead = await firestoreService.addLead(userId, body);
+    const leadRef = await db.collection('leads').add({
+      ...body,
+      userId,
+      createdAt: new Date().toISOString(),
+      status: 'new'
+    });
+
+    const lead = {
+      id: leadRef.id,
+      ...body,
+      createdAt: new Date().toISOString()
+    };
 
     return NextResponse.json({
       success: true,
-      data: lead
-    }, {
-      headers: {
-        'X-RateLimit-Limit': rateLimitService.getRateLimitConfig(tier).max.toString(),
-        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-        'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-      }
+      data: lead,
+      remaining: rateLimit - (todayUsage + 1)
     });
   } catch (error: any) {
     console.error('API Error:', error);

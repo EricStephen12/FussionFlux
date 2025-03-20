@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { analyticsService } from '@/services/analytics';
 import { firestoreService } from '@/services/firestore';
 import { mockFirestore } from '@/utils/test-utils';

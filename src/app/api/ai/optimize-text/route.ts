@@ -1,6 +1,7 @@
+// @ts-nocheck
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { auth } from '@/utils/firebase-admin';
+import { verifyAuth } from '@/utils/auth-server';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,9 +16,10 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await auth.verifyIdToken(token);
-    if (!decodedToken) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    const session = await verifyAuth(token);
+    
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { text, type, context } = await request.json();

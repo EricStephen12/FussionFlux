@@ -614,7 +614,7 @@ export const presetTemplates: Record<string, Template> = {
         id: 'featured-products',
         type: 'product-grid',
         content: {
-          title: 'Bestsellers You\'ll Love',
+          title: "Bestsellers You'll Love",
           products: [
             {
               imageUrl: '/images/product-1.jpg',
@@ -756,4 +756,440 @@ export const templateFeatures = {
     availableBlocks: ['text', 'image', 'button', 'spacer', 'divider', 'social', 'video', 'countdown', 'product-grid', 'custom-html', 'advanced-layout'],
     customization: 'full'
   }
+};
+
+// Preset email templates for dropshipping
+export const templateCategories = {
+  'Product Launch': [
+    {
+      id: 'product-launch-1',
+      name: 'New Product Announcement',
+      category: 'Product Launch',
+      description: 'Announce new products with a clean, visually appealing layout',
+      status: 'active',
+      stats: {
+        openRate: 42.5,
+        clickRate: 12.8
+      },
+      updatedAt: new Date().toISOString(),
+      thumbnail: 'https://source.unsplash.com/random/300x400?product',
+      blocks: [
+        {
+          id: 'header-1',
+          type: 'header',
+          content: {
+            title: 'Introducing Our Latest Product',
+            subtitle: 'Limited Time Offer - 20% Off for Early Birds',
+            alignment: 'center',
+            background: '#ffffff',
+            textColor: '#000000'
+          }
+        },
+        {
+          id: 'image-1',
+          type: 'image',
+          content: {
+            src: 'https://source.unsplash.com/random/600x400?product',
+            alt: 'Product image',
+            width: '600px',
+            alignment: 'center',
+            link: '#'
+          }
+        },
+        {
+          id: 'text-1',
+          type: 'text',
+          content: {
+            text: "We're excited to announce our newest addition to the collection. This product has been designed with you in mind, combining quality materials with practical functionality.",
+            alignment: 'left',
+            textColor: '#333333',
+            fontSize: '16px'
+          }
+        },
+        {
+          id: 'button-1',
+          type: 'button',
+          content: {
+            text: 'Shop Now',
+            link: '#',
+            alignment: 'center',
+            backgroundColor: '#4F46E5',
+            textColor: '#ffffff',
+            borderRadius: '4px',
+            width: '200px'
+          }
+        }
+      ]
+    },
+    {
+      id: 'product-launch-2',
+      name: 'Flash Sale Announcement',
+      category: 'Product Launch',
+      description: 'Create urgency with a time-limited flash sale template',
+      status: 'active',
+      stats: {
+        openRate: 45.2,
+        clickRate: 15.6
+      },
+      updatedAt: new Date().toISOString(),
+      thumbnail: 'https://source.unsplash.com/random/300x400?sale',
+      blocks: [
+        {
+          id: 'header-2',
+          type: 'header',
+          content: {
+            title: '⚡ 24-HOUR FLASH SALE ⚡',
+            subtitle: 'Up to 50% Off - Today Only!',
+            alignment: 'center',
+            background: '#ff3b30',
+            textColor: '#ffffff'
+          }
+        },
+        {
+          id: 'countdown-1',
+          type: 'countdown',
+          content: {
+            endDate: new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString(),
+            title: 'Sale Ends In:',
+            alignment: 'center',
+            background: '#f8f9fa',
+            textColor: '#000000'
+          }
+        },
+        {
+          id: 'products-1',
+          type: 'products',
+          content: {
+            title: 'Featured Products',
+            products: [
+              {
+                name: 'Product 1',
+                image: 'https://source.unsplash.com/random/300x300?product1',
+                price: '$29.99',
+                salePrice: '$19.99',
+                link: '#'
+              },
+              {
+                name: 'Product 2',
+                image: 'https://source.unsplash.com/random/300x300?product2',
+                price: '$39.99',
+                salePrice: '$24.99',
+                link: '#'
+              }
+            ],
+            alignment: 'center'
+          }
+        },
+        {
+          id: 'button-2',
+          type: 'button',
+          content: {
+            text: 'SHOP THE SALE',
+            link: '#',
+            alignment: 'center',
+            backgroundColor: '#000000',
+            textColor: '#ffffff',
+            borderRadius: '0px',
+            width: '250px'
+          }
+        }
+      ]
+    }
+  ],
+  'Abandoned Cart': [
+    {
+      id: 'abandoned-cart-1',
+      name: 'Cart Reminder',
+      category: 'Abandoned Cart',
+      description: 'Remind customers about items left in their cart with a friendly nudge',
+      status: 'active',
+      stats: {
+        openRate: 48.3,
+        clickRate: 22.7
+      },
+      updatedAt: new Date().toISOString(),
+      thumbnail: 'https://source.unsplash.com/random/300x400?cart',
+      blocks: [
+        {
+          id: 'header-3',
+          type: 'header',
+          content: {
+            title: 'You left something in your cart!',
+            subtitle: 'Your items are waiting for you',
+            alignment: 'center',
+            background: '#ffffff',
+            textColor: '#333333'
+          }
+        },
+        {
+          id: 'cart-1',
+          type: 'cart',
+          content: {
+            title: 'Your Cart Items',
+            products: [
+              {
+                name: 'Sample Product',
+                image: 'https://source.unsplash.com/random/150x150?product',
+                price: '$29.99',
+                quantity: 1,
+                link: '#'
+              }
+            ],
+            alignment: 'center'
+          }
+        },
+        {
+          id: 'text-2',
+          type: 'text',
+          content: {
+            text: "We noticed you left some items in your cart. Don't worry, we've saved them for you! Complete your purchase now to avoid missing out.",
+            alignment: 'left',
+            textColor: '#333333',
+            fontSize: '16px'
+          }
+        },
+        {
+          id: 'button-3',
+          type: 'button',
+          content: {
+            text: 'Complete Your Purchase',
+            link: '#',
+            alignment: 'center',
+            backgroundColor: '#4F46E5',
+            textColor: '#ffffff',
+            borderRadius: '4px',
+            width: '250px'
+          }
+        }
+      ]
+    }
+  ],
+  'Welcome': [
+    {
+      id: 'welcome-1',
+      name: 'New Subscriber Welcome',
+      category: 'Welcome',
+      description: 'Welcome new subscribers with a special discount',
+      status: 'active',
+      stats: {
+        openRate: 52.7,
+        clickRate: 18.3
+      },
+      updatedAt: new Date().toISOString(),
+      thumbnail: 'https://source.unsplash.com/random/300x400?welcome',
+      blocks: [
+        {
+          id: 'header-4',
+          type: 'header',
+          content: {
+            title: 'Welcome to Our Store!',
+            subtitle: 'Thanks for joining our community',
+            alignment: 'center',
+            background: '#ffffff',
+            textColor: '#333333'
+          }
+        },
+        {
+          id: 'image-2',
+          type: 'image',
+          content: {
+            src: 'https://source.unsplash.com/random/600x300?welcome',
+            alt: 'Welcome image',
+            width: '600px',
+            alignment: 'center',
+            link: '#'
+          }
+        },
+        {
+          id: 'text-3',
+          type: 'text',
+          content: {
+            text: "We're thrilled to have you as part of our community! As a thank you for signing up, we'd like to offer you a special discount on your first purchase.",
+            alignment: 'left',
+            textColor: '#333333',
+            fontSize: '16px'
+          }
+        },
+        {
+          id: 'coupon-1',
+          type: 'coupon',
+          content: {
+            code: 'WELCOME15',
+            discount: '15% OFF',
+            expiry: '30 days',
+            alignment: 'center',
+            backgroundColor: '#f8f9fa',
+            borderColor: '#e9ecef'
+          }
+        },
+        {
+          id: 'button-4',
+          type: 'button',
+          content: {
+            text: 'Shop Now',
+            link: '#',
+            alignment: 'center',
+            backgroundColor: '#4F46E5',
+            textColor: '#ffffff',
+            borderRadius: '4px',
+            width: '200px'
+          }
+        }
+      ]
+    }
+  ],
+  'Follow-up': [
+    {
+      id: 'follow-up-1',
+      name: 'Post-Purchase Follow-up',
+      category: 'Follow-up',
+      description: 'Follow up with customers after their purchase',
+      status: 'active',
+      stats: {
+        openRate: 41.8,
+        clickRate: 12.5
+      },
+      updatedAt: new Date().toISOString(),
+      thumbnail: 'https://source.unsplash.com/random/300x400?thanks',
+      blocks: [
+        {
+          id: 'header-5',
+          type: 'header',
+          content: {
+            title: 'Thank You for Your Purchase!',
+            subtitle: 'We hope you love your new items',
+            alignment: 'center',
+            background: '#ffffff',
+            textColor: '#333333'
+          }
+        },
+        {
+          id: 'text-4',
+          type: 'text',
+          content: {
+            text: "We wanted to reach out and thank you for your recent purchase. We hope you're enjoying your new items! We'd love to hear your feedback.",
+            alignment: 'left',
+            textColor: '#333333',
+            fontSize: '16px'
+          }
+        },
+        {
+          id: 'review-1',
+          type: 'review',
+          content: {
+            title: 'Share Your Experience',
+            productImage: 'https://source.unsplash.com/random/200x200?product',
+            productName: 'Your Recent Purchase',
+            alignment: 'center'
+          }
+        },
+        {
+          id: 'social-1',
+          type: 'social',
+          content: {
+            title: 'Follow Us',
+            platforms: ['facebook', 'instagram', 'tiktok'],
+            alignment: 'center',
+            iconColor: '#4F46E5'
+          }
+        },
+        {
+          id: 'button-5',
+          type: 'button',
+          content: {
+            text: 'Write a Review',
+            link: '#',
+            alignment: 'center',
+            backgroundColor: '#4F46E5',
+            textColor: '#ffffff',
+            borderRadius: '4px',
+            width: '200px'
+          }
+        }
+      ]
+    }
+  ],
+  'Promotional': [
+    {
+      id: 'promo-1',
+      name: 'Seasonal Sale',
+      category: 'Promotional',
+      description: 'Promote seasonal sales with eye-catching design',
+      status: 'active',
+      stats: {
+        openRate: 38.5,
+        clickRate: 16.2
+      },
+      updatedAt: new Date().toISOString(),
+      thumbnail: 'https://source.unsplash.com/random/300x400?seasonal',
+      blocks: [
+        {
+          id: 'header-6',
+          type: 'header',
+          content: {
+            title: 'Season\'s Biggest Sale!',
+            subtitle: 'Up to 60% Off Storewide',
+            alignment: 'center',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            textColor: '#ffffff'
+          }
+        },
+        {
+          id: 'image-3',
+          type: 'image',
+          content: {
+            src: 'https://source.unsplash.com/random/600x400?sale',
+            alt: 'Sale image',
+            width: '600px',
+            alignment: 'center',
+            link: '#'
+          }
+        },
+        {
+          id: 'products-2',
+          type: 'products',
+          content: {
+            title: 'Bestsellers On Sale',
+            products: [
+              {
+                name: 'Product 1',
+                image: 'https://source.unsplash.com/random/200x200?product1',
+                price: '$49.99',
+                salePrice: '$29.99',
+                link: '#'
+              },
+              {
+                name: 'Product 2',
+                image: 'https://source.unsplash.com/random/200x200?product2',
+                price: '$59.99',
+                salePrice: '$34.99',
+                link: '#'
+              },
+              {
+                name: 'Product 3',
+                image: 'https://source.unsplash.com/random/200x200?product3',
+                price: '$39.99',
+                salePrice: '$19.99',
+                link: '#'
+              }
+            ],
+            alignment: 'center'
+          }
+        },
+        {
+          id: 'button-6',
+          type: 'button',
+          content: {
+            text: 'Shop All Deals',
+            link: '#',
+            alignment: 'center',
+            backgroundColor: '#ffffff',
+            textColor: '#764ba2',
+            borderRadius: '30px',
+            width: '200px'
+          }
+        }
+      ]
+    }
+  ]
 }; 

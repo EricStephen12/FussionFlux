@@ -1,8 +1,22 @@
 import { NextResponse } from 'next/server';
-import { firestoreService } from '@/services/firestore';
+import { verifyAuth } from '@/utils/auth-server';
+import { db } from '@/utils/firebase-admin';
 
 export async function POST(request: Request) {
   try {
+    // Verify authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    const session = await verifyAuth(token);
+    
+    if (!session) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
     const data = await request.json();
     const { firstName, lastName, email, phone, company, message } = data;
 
@@ -14,8 +28,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Store the contact submission in Firestore
-    await firestoreService.addDocument('contact_submissions', {
+    // Store the contact submission in Firestore using Admin SDK
+    const contactSubmissionsRef = db.collection('contact_submissions');
+    await contactSubmissionsRef.add({
+      userId: session.sub,
       firstName,
       lastName,
       email,

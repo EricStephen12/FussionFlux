@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { firestoreService } from '@/services/firestore';
+import { db } from '@/utils/firebase-admin';
 import { verifyWebhookSignature } from '@/utils/webhook';
 
 export async function POST(request: Request) {
@@ -14,39 +14,50 @@ export async function POST(request: Request) {
 
     const event = JSON.parse(body);
 
+    // Get user document reference
+    const userRef = db.collection('users').doc(event.userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     // Handle different subscription events
+    const updateData: Record<string, any> = {
+      updatedAt: new Date().toISOString()
+    };
+
     switch (event.type) {
       case 'subscription.created':
       case 'subscription.updated':
-        await firestoreService.updateUserDocument(event.userId, {
+        Object.assign(updateData, {
           subscriptionStatus: event.status,
           subscriptionPlan: event.planId,
           subscriptionInterval: event.interval,
           subscriptionStartDate: event.startDate,
-          subscriptionEndDate: event.endDate,
-          updatedAt: new Date().toISOString(),
+          subscriptionEndDate: event.endDate
         });
         break;
 
       case 'subscription.cancelled':
-        await firestoreService.updateUserDocument(event.userId, {
+        Object.assign(updateData, {
           subscriptionStatus: 'cancelled',
-          subscriptionCancelledAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          subscriptionCancelledAt: new Date().toISOString()
         });
         break;
 
       case 'subscription.trial_ending':
-        // Send trial ending notification
-        await firestoreService.updateUserDocument(event.userId, {
-          trialEndingNotified: true,
-          updatedAt: new Date().toISOString(),
+        Object.assign(updateData, {
+          trialEndingNotified: true
         });
         break;
 
       default:
         console.warn('Unhandled webhook event type:', event.type);
     }
+
+    // Update user document
+    await userRef.update(updateData);
 
     return NextResponse.json({ success: true });
   } catch (error) {

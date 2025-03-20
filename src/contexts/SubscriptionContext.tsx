@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { firestoreService } from '@/services/firestore';
+import { getDoc, doc, updateDoc } from 'firebase/firestore';
+import { SUBSCRIPTION_TIERS } from '@/types/subscription';
 
 interface Subscription {
   userId: string;
@@ -49,84 +51,127 @@ export const useSubscription = () => useContext(SubscriptionContext);
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadSubscription = async (userId: string) => {
-    try {
-      setLoading(true);
-      setError(null);
+  useEffect(() => {
+    if (user) {
+      loadSubscription();
+    }
+  }, [user]);
 
-      const userDoc = await firestoreService.getUserDocument(userId);
-      
-      if (!userDoc) {
-        // Initialize free tier subscription for new users
-        const freeTierSubscription: Subscription = {
-          userId,
+  const loadSubscription = async () => {
+    setIsLoading(true);
+    try {
+      if (!user) throw new Error('User not authenticated');
+
+      const userDoc = await getDoc(doc(firestoreService.db, 'users', user.uid));
+      const userData = userDoc.data();
+
+      if (!userData) {
+        setError('User data not found.');
+        return;
+      }
+
+      // Check for subscription data
+      const subscriptionData = userData.subscriptionData;
+
+      if (!subscriptionData) {
+        // Set up default subscription for free tier with 14-day trial
+        const trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + 14);
+        
+        const defaultSubscription: Subscription = {
+          userId: user.uid,
           tier: 'free',
-          limits: 100,
-          maxEmails: 250,
-          maxContacts: 100,
-          maxSMS: 50,
-          features: {
-            followUpEmails: true,
-            abTesting: true,
-            aiOptimization: true,
-            analytics: true,
-            customDomain: false,
-            previewLeads: true,
-            importContacts: true,
-            fullLeadAccess: false,
-            bulkOperations: false,
-          },
-          expiresAt: null,
-          usageStats: {
-            usedEmails: 0,
-            usedSMS: 0,
-            usedLeads: 0,
-          },
+          limits: SUBSCRIPTION_TIERS.free.limits,
+          maxEmails: SUBSCRIPTION_TIERS.free.maxEmails,
+          maxContacts: SUBSCRIPTION_TIERS.free.maxContacts,
+          maxSMS: SUBSCRIPTION_TIERS.free.maxSMS,
+          features: SUBSCRIPTION_TIERS.free.features,
+          expiresAt: trialEndDate.toISOString(),
         };
 
-        await firestoreService.createUserDocument(userId, {
-          subscription: freeTierSubscription,
+        // Save the default subscription to Firestore
+        await updateDoc(doc(firestoreService.db, 'users', user.uid), {
+          subscriptionData: defaultSubscription,
         });
 
-        setSubscription(freeTierSubscription);
-      } else {
-        setSubscription(userDoc.subscription);
+        setSubscription(defaultSubscription);
+        return;
       }
-    } catch (err) {
-      console.error('Error loading subscription:', err);
-      setError('Failed to load subscription data');
+
+      // Check if trial has expired
+      if (subscriptionData.tier === 'free' && subscriptionData.expiresAt) {
+        const expiryDate = new Date(subscriptionData.expiresAt);
+        if (expiryDate < new Date()) {
+          // Trial has expired, update to free tier without trial benefits
+          const expiredSubscription: Subscription = {
+            userId: user.uid,
+            tier: 'free',
+            limits: 0,
+            maxEmails: 0,
+            maxContacts: 0,
+            maxSMS: 0,
+            features: {
+              followUpEmails: false,
+              abTesting: false,
+              aiOptimization: false,
+              analytics: false,
+              customDomain: false,
+              previewLeads: false,
+              importContacts: false,
+              fullLeadAccess: false,
+              bulkOperations: false,
+            },
+            expiresAt: null,
+          };
+
+          // Update the subscription in Firestore
+          await updateDoc(doc(firestoreService.db, 'users', user.uid), {
+            subscriptionData: expiredSubscription,
+          });
+
+          setSubscription(expiredSubscription);
+          return;
+        }
+      }
+
+      // Continue with existing logic for users with subscription data
+      const tierData = SUBSCRIPTION_TIERS[subscriptionData.tier];
+      const currentSubscription: Subscription = {
+        userId: user.uid,
+        tier: subscriptionData.tier,
+        limits: tierData.limits,
+        maxEmails: tierData.maxEmails,
+        maxContacts: tierData.maxContacts,
+        maxSMS: tierData.maxSMS,
+        features: tierData.features,
+        expiresAt: subscriptionData.expiresAt,
+      };
+
+      setSubscription(currentSubscription);
+    } catch (error) {
+      console.error('Failed to load subscription:', error);
+      setError('Failed to load subscription');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const refreshSubscription = async () => {
-    if (user) {
-      await loadSubscription(user.uid);
-    }
+    await loadSubscription();
   };
 
-  useEffect(() => {
-    if (user) {
-      loadSubscription(user.uid);
-    } else {
-      setSubscription(null);
-      setLoading(false);
-    }
-  }, [user]);
+  const value = {
+    subscription,
+    isLoading,
+    error,
+    refreshSubscription,
+  };
 
   return (
-    <SubscriptionContext.Provider
-      value={{
-        subscription,
-        loading,
-        error,
-        refreshSubscription,
-      }}
-    >
+    <SubscriptionContext.Provider value={value}>
       {children}
     </SubscriptionContext.Provider>
   );

@@ -14,6 +14,7 @@ import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { classNames } from '@/lib/utils';
 import { apolloService } from '@/services/apollo';
+import Image from 'next/image';
 
 interface Template {
   id: string;
@@ -257,9 +258,11 @@ export default function TemplateSelector({
 
             {template.thumbnail && (
               <div className="mt-4 aspect-[4/3] relative overflow-hidden rounded-lg">
-                <img
+                <Image
                   src={template.thumbnail}
                   alt={template.name}
+                  width={400}
+                  height={300}
                   className="h-full w-full object-cover"
                 />
               </div>

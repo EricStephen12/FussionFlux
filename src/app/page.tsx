@@ -17,6 +17,7 @@ import {
   BoltIcon,
 } from '@heroicons/react/24/outline';
 import { YouTubeService } from '@/services/youtube';
+import HomeSEO from '@/components/SEO/HomeSEO';
 
 const features = [
   {
@@ -109,6 +110,8 @@ export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
+    <>
+      <HomeSEO />
     <main className="flex-grow">
       {/* Hero Section */}
       <section className="hero-section min-h-[90vh] flex items-center justify-center relative overflow-hidden bg-gradient-to-b from-indigo-50 via-purple-50 to-white">
@@ -118,9 +121,9 @@ export default function HomePage() {
             {/* Special Offer Banner */}
             <div className="mt-12 mb-6 text-center">
               <div className="inline-flex items-center rounded-full bg-red-600 text-white px-4 py-1 mb-4">
-                <span className="text-lg font-semibold">🔥 Special Launch Offer: 50% Off + $500 in Bonuses</span>
+                <span className="text-lg font-semibold">🔥 Special Launch Offer: 50% Off for 3 Months + $500 in Bonuses</span>
               </div>
-              <p className="text-sm text-gray-500">Limited time offer includes: <strong>Unlimited Email Templates</strong>, <strong>AI Copywriting Credits</strong>, and <strong>Priority Support</strong></p>
+              <p className="text-sm text-gray-500">Limited time offer until May 1, 2024 includes: <strong>Unlimited Email Templates</strong>, <strong>AI Copywriting Credits</strong>, and <strong>Priority Support</strong></p>
             </div>
 
             <h1 className="hero-title mb-8">
@@ -322,6 +325,12 @@ export default function HomePage() {
               <span className="bg-gradient-to-r from-[#2980fe] to-[#00ff88] bg-clip-text text-transparent text-2xl font-bold">NOWPayments</span>
             </div>
           </div>
+          {/* Limited spots notification */}
+          <div className="mt-8 text-center">
+            <div className="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 px-4 py-1">
+              <span className="text-sm font-medium">🔥 Only 37 spots left at current pricing!</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -427,36 +436,70 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Social Proof Section */}
+          {/* Pricing Preview Section */}
           <div className="mt-16 text-center">
             <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                Trusted by 2,500+ Successful Businesses
+                Plans That Grow With Your Business
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white rounded-lg p-6">
-                  <div className="text-4xl font-bold text-indigo-600 mb-2">300%</div>
-                  <p className="text-gray-600">Average Revenue Increase</p>
+                  <div className="text-xl font-bold text-indigo-600 mb-2">Starter</div>
+                  <div className="text-3xl font-bold">$39<span className="text-sm text-gray-500">/mo</span></div>
+                  <p className="text-gray-600 mt-2">Perfect for new dropshippers</p>
+                  <div className="mt-4 text-sm text-gray-600">
+                    <div className="flex items-center mb-1">
+                      <CheckIcon className="h-4 w-4 text-green-500 mr-1" />
+                      5,000 emails/month
+                    </div>
+                    <div className="flex items-center mb-1">
+                      <CheckIcon className="h-4 w-4 text-green-500 mr-1" />
+                      A/B testing
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-6 ring-2 ring-indigo-500 relative">
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-indigo-600 text-white px-3 py-1 text-xs rounded-full">Most Popular</div>
+                  <div className="text-xl font-bold text-indigo-600 mb-2">Growth</div>
+                  <div className="text-3xl font-bold">$99<span className="text-sm text-gray-500">/mo</span></div>
+                  <p className="text-gray-600 mt-2">For established dropshippers</p>
+                  <div className="mt-4 text-sm text-gray-600">
+                    <div className="flex items-center mb-1">
+                      <CheckIcon className="h-4 w-4 text-green-500 mr-1" />
+                      15,000 emails/month
+                    </div>
+                    <div className="flex items-center mb-1">
+                      <CheckIcon className="h-4 w-4 text-green-500 mr-1" />
+                      AI optimization
+                    </div>
+                  </div>
                 </div>
                 <div className="bg-white rounded-lg p-6">
-                  <div className="text-4xl font-bold text-green-600 mb-2">97%</div>
-                  <p className="text-gray-600">Email Deliverability</p>
-                </div>
-                <div className="bg-white rounded-lg p-6">
-                  <div className="text-4xl font-bold text-purple-600 mb-2">24/7</div>
-                  <p className="text-gray-600">Expert Support</p>
+                  <div className="text-xl font-bold text-indigo-600 mb-2">Pro</div>
+                  <div className="text-3xl font-bold">$199<span className="text-sm text-gray-500">/mo</span></div>
+                  <p className="text-gray-600 mt-2">For power users and agencies</p>
+                  <div className="mt-4 text-sm text-gray-600">
+                    <div className="flex items-center mb-1">
+                      <CheckIcon className="h-4 w-4 text-green-500 mr-1" />
+                      50,000 emails/month
+                    </div>
+                    <div className="flex items-center mb-1">
+                      <CheckIcon className="h-4 w-4 text-green-500 mr-1" />
+                      Premium support
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="mt-8">
                 <Link 
-                  href="/login" 
+                  href="/pricing" 
                   className="inline-flex items-center px-6 py-3 text-lg font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all"
                 >
-                  Start Your Free Trial
+                  View All Features & Pricing
                   <ArrowRightIcon className="ml-2 h-5 w-5" />
                 </Link>
                 <p className="mt-4 text-sm text-gray-600">
-                  No credit card required • Set up in minutes • Cancel anytime
+                  Start with a 14-day free trial • No credit card required • Cancel anytime
                 </p>
               </div>
             </div>
@@ -518,6 +561,11 @@ export default function HomePage() {
                       <span className="block text-xs mt-1">Soon</span>
                     </>
                   </div>
+                </div>
+              </div>
+              <div className="mt-24 text-center">
+                <div className="inline-flex items-center rounded-full bg-green-100 text-green-800 px-4 py-1">
+                  <span className="text-sm font-medium">👉 Top experts trust our platform - shouldn't you?</span>
                 </div>
               </div>
             </div>
@@ -651,16 +699,38 @@ export default function HomePage() {
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               Ready to grow your dropshipping business?
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 mb-2 max-w-xl mx-auto">
               Join thousands of successful dropshippers who are scaling their business with our platform.
+            </p>
+            <p className="text-sm text-red-600 mb-6">
+              <strong>Limited Time:</strong> Lock in 50% off for first 3 months before offer expires on May 1st
             </p>
             <Link href="/login" className="btn-primary w-full sm:w-auto">
               Start your free trial
               <ArrowRightIcon className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Link>
+            <div className="mt-4 flex flex-wrap justify-center gap-3 items-center text-xs text-gray-500">
+              <span className="flex items-center">
+                <CheckIcon className="h-4 w-4 text-green-500 mr-1" />
+                No credit card
+              </span>
+              <span className="flex items-center">
+                <CheckIcon className="h-4 w-4 text-green-500 mr-1" />
+                14-day trial
+              </span>
+              <span className="flex items-center">
+                <CheckIcon className="h-4 w-4 text-green-500 mr-1" />
+                Cancel anytime
+              </span>
+              <span className="flex items-center">
+                <CheckIcon className="h-4 w-4 text-green-500 mr-1" />
+                24/7 support
+              </span>
+            </div>
           </div>
         </div>
       </section>
     </main>
+    </>
   );
 } 

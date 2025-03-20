@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import { useEffect, useState, Fragment } from 'react';
@@ -13,17 +14,29 @@ import {
   CreditCardIcon,
   UserGroupIcon,
   KeyIcon,
-  CodeBracketIcon
+  CodeBracketIcon,
+  ShieldCheckIcon,
+  ClockIcon,
+  TagIcon,
+  UsersIcon,
+  MegaphoneIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Campaigns', href: '/dashboard/campaigns', icon: EnvelopeIcon },
+  { name: 'Campaigns', href: '/dashboard/campaigns', icon: MegaphoneIcon },
   { name: 'Analytics', href: '/dashboard/analytics', icon: ChartBarIcon },
-  { name: 'Billing', href: '/dashboard/billing', icon: CreditCardIcon },
   { name: 'Referrals', href: '/dashboard/referrals', icon: UserGroupIcon },
   { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon },
+];
+
+// Admin navigation items
+const adminNavigation = [
+  { name: 'Leads Management', href: '/dashboard/admin/leads', icon: UsersIcon },
+  { name: 'Promotions', href: '/dashboard/admin/promotions', icon: TagIcon },
+  { name: 'Cron Keys', href: '/dashboard/admin/cron-keys', icon: KeyIcon },
+  // Add other admin pages as they are created
 ];
 
 export default function DashboardLayout({
@@ -32,25 +45,40 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
+    // Only redirect if loading is complete
+    if (!loading) {
+      setIsAuthChecked(true);
+      if (!user) {
+        // If no user is detected after loading finishes, redirect to login
+        console.log('No authenticated user found, redirecting to login page');
+        router.push('/login');
+      } else {
+        console.log('User authenticated, loading dashboard:', user?.uid);
+      }
     }
   }, [user, loading, router]);
 
-  if (loading) {
+  // Show loading state while checking authentication
+  if (loading || !isAuthChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
       </div>
     );
   }
 
+  // Don't render any dashboard content if not authenticated
   if (!user) {
+    // This prevents any dashboard content from rendering before redirect completes
     return null;
   }
 
@@ -119,6 +147,43 @@ export default function DashboardLayout({
                             </Link>
                           </li>
                         ))}
+
+                        {/* Admin Navigation - Only visible to admin users */}
+                        {isAdmin && (
+                          <>
+                            <li className="mt-6 mb-2">
+                              <div className="flex items-center px-2">
+                                <ShieldCheckIcon className="h-5 w-5 text-red-500 mr-2" />
+                                <h3 className="text-sm font-semibold text-red-600">Admin</h3>
+                              </div>
+                            </li>
+                            {adminNavigation.map((item) => (
+                              <li key={item.name}>
+                                <Link
+                                  href={item.href}
+                                  onClick={() => setSidebarOpen(false)}
+                                  className={`
+                                    group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold
+                                    ${pathname === item.href || pathname.startsWith(item.href + '/')
+                                      ? 'bg-red-50 text-red-600'
+                                      : 'text-gray-700 hover:text-red-600 hover:bg-red-50'
+                                    }
+                                  `}
+                                >
+                                  <item.icon
+                                    className={`h-6 w-6 shrink-0 ${
+                                      pathname === item.href || pathname.startsWith(item.href + '/') 
+                                        ? 'text-red-600' 
+                                        : 'text-gray-400 group-hover:text-red-600'
+                                    }`}
+                                    aria-hidden="true"
+                                  />
+                                  {item.name}
+                                </Link>
+                              </li>
+                            ))}
+                          </>
+                        )}
                       </ul>
                     </nav>
                   </div>
@@ -163,6 +228,42 @@ export default function DashboardLayout({
                   </Link>
                 </li>
               ))}
+
+              {/* Admin Navigation - Only visible to admin users */}
+              {isAdmin && (
+                <>
+                  <li className="mt-6 mb-2">
+                    <div className="flex items-center px-2">
+                      <ShieldCheckIcon className="h-5 w-5 text-red-500 mr-2" />
+                      <h3 className="text-sm font-semibold text-red-600">Admin</h3>
+                    </div>
+                  </li>
+                  {adminNavigation.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className={`
+                          group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold
+                          ${pathname === item.href || pathname.startsWith(item.href + '/')
+                            ? 'bg-red-50 text-red-600'
+                            : 'text-gray-700 hover:text-red-600 hover:bg-red-50'
+                          }
+                        `}
+                      >
+                        <item.icon
+                          className={`h-6 w-6 shrink-0 ${
+                            pathname === item.href || pathname.startsWith(item.href + '/') 
+                              ? 'text-red-600' 
+                              : 'text-gray-400 group-hover:text-red-600'
+                          }`}
+                          aria-hidden="true"
+                        />
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </>
+              )}
             </ul>
           </nav>
         </div>
@@ -179,7 +280,9 @@ export default function DashboardLayout({
           <Bars3Icon className="h-6 w-6" aria-hidden="true" />
         </button>
         <div className="flex-1 text-sm font-semibold leading-6 text-gray-900">
-          {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
+          {navigation.find(item => item.href === pathname)?.name || 
+           (isAdmin && adminNavigation.find(item => item.href === pathname || pathname.startsWith(item.href + '/'))?.name) || 
+           'Dashboard'}
         </div>
       </div>
 

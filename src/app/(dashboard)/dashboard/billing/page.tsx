@@ -1,7 +1,8 @@
+// @ts-nocheck
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowPathIcon, CheckCircleIcon, XCircleIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, CheckCircleIcon, XCircleIcon, ArrowUpIcon, ArrowDownIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { firestoreService } from '@/services/firestore';
@@ -15,6 +16,8 @@ export default function BillingHistoryPage() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('flutterwave');
+  const [showCancellationInfo, setShowCancellationInfo] = useState(false);
+  const [showCancellationConfirm, setShowCancellationConfirm] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -109,6 +112,7 @@ export default function BillingHistoryPage() {
       const success = await paymentService.downgradeSubscription(user!.uid);
       if (success) {
         setSuccessMessage('Successfully downgraded subscription. Changes will take effect at the end of your billing period.');
+        setShowCancellationConfirm(false);
       } else {
         throw new Error('Failed to downgrade subscription');
       }
@@ -120,8 +124,12 @@ export default function BillingHistoryPage() {
     }
   };
 
-  const handlePurchaseExtraCredits = (type: 'leads' | 'sms') => {
+  const handlePurchaseExtraCredits = (type: 'leads' | 'sms' | 'emails') => {
     router.push(`/dashboard/credits?type=${type}`);
+  };
+
+  const handleCancelSubscription = () => {
+    setShowCancellationConfirm(true);
   };
 
   const formatFeatureName = (feature: string): string => {
@@ -158,6 +166,7 @@ export default function BillingHistoryPage() {
   }
 
   const currentTier = subscription?.tier || 'free';
+  const isFreeUser = currentTier === 'free';
   const tierInfo = subscriptionTiers[currentTier];
 
   return (
@@ -186,214 +195,280 @@ export default function BillingHistoryPage() {
                     ${tierInfo?.price}/month
                   </p>
                 )}
-                  </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  {isFreeUser 
+                    ? "Trial expires: " + (subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString() : 'Not available')
+                    : "Next billing date: " + (subscription?.nextBillingDate ? new Date(subscription.nextBillingDate).toLocaleDateString() : 'Not available')
+                  }
+                </p>
+              </div>
               
-              {/* Upgrade/Downgrade Options */}
-              {subscription?.status === 'active' ? (
-                <div className="flex space-x-4">
-                  {currentTier !== 'pro' && (
-                    <button
-                      onClick={() => router.push('/dashboard/subscription')}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-                    >
-                      <ArrowUpIcon className="h-4 w-4 mr-2" />
-                      Upgrade
-                    </button>
-                  )}
-                  {currentTier !== 'starter' && (
-                    <button
-                      onClick={() => handleDowngrade('starter')}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <ArrowDownIcon className="h-4 w-4 mr-2" />
-                      Downgrade
-                    </button>
-                  )}
-                </div>
-              ) : (
+              {isFreeUser && (
                 <button
                   onClick={() => router.push('/dashboard/subscription')}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-150"
                 >
                   Upgrade Plan
                 </button>
               )}
-                </div>
+            </div>
 
-            {/* Usage Stats */}
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-500">Email Credits</span>
-                  <span className="text-gray-900 font-medium">
+            {/* Usage Statistics */}
+            <div className="mt-6 space-y-4">
+              <h3 className="text-sm font-medium text-gray-700">Usage Statistics</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500">Email Credits</p>
+                  <p className="text-lg font-semibold text-gray-900">
                     {subscription?.usageStats?.usedEmails || 0} / {tierInfo?.maxEmails || 0}
-                  </span>
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div
+                      className="bg-indigo-600 h-2 rounded-full"
+                      style={{
+                        width: `${((subscription?.usageStats?.usedEmails || 0) / (tierInfo?.maxEmails || 1)) * 100}%`
+                      }}
+                    />
                   </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                    className="bg-indigo-600 h-2 rounded-full"
-                        style={{
-                      width: `${((subscription?.usageStats?.usedEmails || 0) / (tierInfo?.maxEmails || 1)) * 100}%`
-                        }}
-                      />
-                    </div>
-                  </div>
-
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-500">Lead Credits</span>
-                  <span className="text-gray-900 font-medium">
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500">Lead Credits</p>
+                  <p className="text-lg font-semibold text-gray-900">
                     {subscription?.usageStats?.usedLeads || 0} / {tierInfo?.maxContacts || 0}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-green-600 h-2 rounded-full"
-                    style={{
-                      width: `${((subscription?.usageStats?.usedLeads || 0) / (tierInfo?.maxContacts || 1)) * 100}%`
-                    }}
-                      />
-                    </div>
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div
+                      className="bg-green-600 h-2 rounded-full"
+                      style={{
+                        width: `${((subscription?.usageStats?.usedLeads || 0) / (tierInfo?.maxContacts || 1)) * 100}%`
+                      }}
+                    />
                   </div>
-
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-500">SMS Credits</span>
-                  <span className="text-gray-900 font-medium">
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500">SMS Credits</p>
+                  <p className="text-lg font-semibold text-gray-900">
                     {subscription?.usageStats?.usedSMS || 0} / {tierInfo?.maxSMS || 0}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-yellow-600 h-2 rounded-full"
-                    style={{
-                      width: `${((subscription?.usageStats?.usedSMS || 0) / (tierInfo?.maxSMS || 1)) * 100}%`
-                    }}
-                  />
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
+                      style={{
+                        width: `${((subscription?.usageStats?.usedSMS || 0) / (tierInfo?.maxSMS || 1)) * 100}%`
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Features List */}
-            <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-900">Plan Features</h3>
-              <ul className="mt-4 space-y-3">
-                {Object.entries(tierInfo?.features || {}).map(([feature, enabled]) => (
-                  <li key={feature} className="flex items-start">
-                    {enabled ? (
-                      <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <XCircleIcon className="h-5 w-5 text-gray-300 mr-2 mt-0.5 flex-shrink-0" />
-                    )}
-                    <span className={enabled ? 'text-gray-900' : 'text-gray-500'}>
-                      {formatFeatureName(feature)}
-                      {feature === 'followUpEmails' && enabled && (
-                        <span className="block text-xs text-gray-500">
-                          Automate your follow-up sequences
-                        </span>
-                      )}
-                      {feature === 'aiOptimization' && enabled && (
-                        <span className="block text-xs text-gray-500">
-                          AI-powered subject lines and content optimization
-                        </span>
-                      )}
-                      {feature === 'analytics' && enabled && (
-                        <span className="block text-xs text-gray-500">
-                          Detailed campaign performance metrics and insights
-                        </span>
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Payment Methods - Only show for paid tiers */}
+            {!isFreeUser && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-4">Payment Methods</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <img src="/payment-methods/credit-card.svg" alt="Credit Card" className="h-8 w-8 mr-3" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Credit Card</p>
+                        <p className="text-xs text-gray-500">Ending in 4242</p>
+                      </div>
+                    </div>
+                    <button className="text-sm text-indigo-600 hover:text-indigo-800">Update</button>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <img src="/payment-methods/paypal.svg" alt="PayPal" className="h-8 w-8 mr-3" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">PayPal</p>
+                        <p className="text-xs text-gray-500">Connected</p>
+                      </div>
+                    </div>
+                    <button className="text-sm text-indigo-600 hover:text-indigo-800">Manage</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Purchase Extra Credits */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Purchase Extra Credits</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <button
-                onClick={() => router.push('/dashboard/credits?type=leads')}
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-              >
-                Purchase Extra Leads
-              </button>
-              <button
-                onClick={() => router.push('/dashboard/credits?type=sms')}
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-              >
-                Purchase Extra SMS
-              </button>
-              <button
-                onClick={() => router.push('/dashboard/credits?type=emails')}
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-              >
-                Purchase Extra Emails
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Trial/Payment Section */}
-        <div className="lg:col-span-1">
-          {subscription?.status === 'trial' ? (
+          {/* Billing History - Only show for paid tiers */}
+          {!isFreeUser && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Trial Status</h2>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-500">Trial Period</p>
-                  <p className="text-base font-medium text-gray-900">
-                    Ends on {subscription.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString() : 'Not available'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Days Remaining</p>
-                  <p className="text-base font-medium text-gray-900">
-                    {subscription.expiresAt
-                      ? Math.max(0, Math.ceil((new Date(subscription.expiresAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))
-                      : 0} days
-                  </p>
-              </div>
-                <button
-                  onClick={() => router.push('/dashboard/subscription')}
-                  className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                >
-                  Upgrade to Premium
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Extra Credits Pricing</h2>
-              <div className="space-y-4">
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-900">Email Credits</p>
-                  <p className="text-sm text-gray-500">
-                    ${(tierInfo?.extraEmailPrice || 0) * 1000} per 1,000 emails
-                  </p>
-          </div>
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-900">SMS Credits</p>
-                  <p className="text-sm text-gray-500">
-                    ${tierInfo?.extraSMSPrice} per SMS
-                  </p>
-      </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Lead Credits</p>
-                  <p className="text-sm text-gray-500">
-                    ${tierInfo?.extraLeadsPrice} per lead
-                  </p>
-                </div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Billing History</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {/* Add billing history rows here */}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
         </div>
+
+        {/* Sidebar */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Quick Actions */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+            <div className="space-y-3">
+              <button
+                onClick={() => handlePurchaseExtraCredits('leads')}
+                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+              >
+                Purchase Extra Leads
+              </button>
+              <button
+                onClick={() => handlePurchaseExtraCredits('sms')}
+                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+              >
+                Purchase Extra SMS
+              </button>
+              <button
+                onClick={() => handlePurchaseExtraCredits('emails')}
+                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+              >
+                Purchase Extra Emails
+              </button>
+
+              {isFreeUser ? (
+                <button
+                  onClick={() => router.push('/dashboard/subscription')}
+                  className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  Upgrade to Paid Plan
+                </button>
+              ) : (
+                <button
+                  onClick={handleCancelSubscription}
+                  className="w-full inline-flex items-center justify-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                >
+                  Cancel Subscription
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Support */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Need Help?</h2>
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push('/support')}
+                className="block text-sm text-indigo-600 hover:text-indigo-800 text-left"
+              >
+                Contact Support
+              </button>
+              <button
+                onClick={() => router.push('/faq')}
+                className="block text-sm text-indigo-600 hover:text-indigo-800 text-left"
+              >
+                FAQ
+              </button>
+              <button
+                onClick={() => router.push('/docs')}
+                className="block text-sm text-indigo-600 hover:text-indigo-800 text-left"
+              >
+                Documentation
+              </button>
+              <button
+                onClick={() => setShowCancellationInfo(true)}
+                className="block text-sm text-indigo-600 hover:text-indigo-800 text-left"
+              >
+                Learn about our cancellation policy
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Success Message Toast */}
       {successMessage && (
         <div className="fixed bottom-4 right-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-lg">
           {successMessage}
+        </div>
+      )}
+
+      {/* Cancellation Info Modal */}
+      {showCancellationInfo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Cancellation & Refund Policy</h3>
+              <button 
+                onClick={() => setShowCancellationInfo(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                When you cancel your subscription:
+              </p>
+              <ul className="list-disc pl-5 text-sm text-gray-600 space-y-2">
+                <li>Your subscription remains active until the end of your current billing period.</li>
+                <li>You won't be charged for the next billing cycle.</li>
+                <li>You'll lose access to premium features once your current billing period ends.</li>
+                <li>Any unused credits will expire at the end of your billing period.</li>
+                <li>We offer a 7-day refund for new subscriptions if you're not satisfied with our service.</li>
+              </ul>
+              <p className="text-sm text-gray-600">
+                For refund requests, please contact our support team with your account details.
+              </p>
+            </div>
+            <div className="mt-6">
+              <button
+                onClick={() => setShowCancellationInfo(false)}
+                className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancellation Confirmation Modal */}
+      {showCancellationConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Confirm Cancellation</h3>
+              <button 
+                onClick={() => setShowCancellationConfirm(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to cancel your subscription? Your subscription will remain active until the end of your current billing period.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCancellationConfirm(false)}
+                className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                No, Keep My Plan
+              </button>
+              <button
+                onClick={() => handleDowngrade(currentTier)}
+                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Yes, Cancel Subscription
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1,0 +1,25 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="128" fill="url(#gradient)" />
+  
+  <!-- Icon shapes -->
+  <path d="M156 205C156 196.163 163.163 189 172 189H340C348.837 189 356 196.163 356 205V307C356 315.837 348.837 323 340 323H172C163.163 323 156 315.837 156 307V205Z" fill="white" fill-opacity="0.9" />
+  
+  <!-- F Letters (stylized for Fussion) -->
+  <path d="M216 189L216 323" stroke="#4F46E5" stroke-width="24" stroke-linecap="round" />
+  <path d="M186 239L246 239" stroke="#4F46E5" stroke-width="24" stroke-linecap="round" />
+  <path d="M296 189L296 323" stroke="#4F46E5" stroke-width="24" stroke-linecap="round" />
+  <path d="M266 239L326 239" stroke="#4F46E5" stroke-width="24" stroke-linecap="round" />
+  
+  <!-- Flux wave element -->
+  <path d="M146 361C146 361 186 329 256 329C326 329 366 361 366 361" stroke="#4F46E5" stroke-width="16" stroke-linecap="round" />
+  <path d="M176 383C176 383 208 357 256 357C304 357 336 383 336 383" stroke="#7C3AED" stroke-width="12" stroke-linecap="round" />
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4F46E5" />
+      <stop offset="1" stop-color="#7C3AED" />
+    </linearGradient>
+  </defs>
+</svg> 

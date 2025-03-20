@@ -1,17 +1,15 @@
-// This file configures the initialization of Sentry on the server side.
+// This file configures the initialization of Sentry on the server.
+// The config you add here will be used whenever the server handles a request.
+// https://docs.sentry.io/platforms/javascript/guides/nextjs/
+
 import * as Sentry from "@sentry/nextjs";
 
-const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN;
-
 Sentry.init({
-  dsn: SENTRY_DSN,
-  
-  // Performance Monitoring
-  tracesSampleRate: 1.0,
-  
-  // Set sampling rate for profiling - this is relative to tracesSampleRate
-  profilesSampleRate: 1.0,
+  dsn: "https://376d431677b41440240da16a36916802@o4508790911467520.ingest.de.sentry.io/4508791061610576",
 
-  // Enable automatic instrumentation of Next.js routing and API
-  integrations: [new Sentry.Integrations.Http({ tracing: true })],
-}); 
+  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+  tracesSampleRate: 1,
+
+  // Setting this option to true will print useful information to the console while you're setting up Sentry.
+  debug: false,
+});

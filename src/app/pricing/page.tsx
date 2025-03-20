@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { CheckIcon, SparklesIcon, RocketLaunchIcon, ShieldCheckIcon, ChartBarIcon, UserGroupIcon, EnvelopeIcon, DevicePhoneMobileIcon, ArrowRightIcon, StarIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { useSubscription, SUBSCRIPTION_TIERS, SubscriptionTier } from '@/hooks/useSubscription';
+import { useSubscription, SUBSCRIPTION_TIERS, SubscriptionTier, isSpecialOfferActive } from '@/hooks/useSubscription';
+import PricingSEO from '@/components/SEO/PricingSEO';
 
 const pricingTiers: Record<string, SubscriptionTier> = SUBSCRIPTION_TIERS;
 
@@ -46,6 +47,73 @@ const guarantees = [
   }
 ];
 
+// Feature comparison table for each tier
+const tierFeatureComparison = [
+  {
+    feature: 'Monthly Emails',
+    free: '250',
+    starter: '5,000',
+    growth: '15,000',
+    pro: '50,000',
+  },
+  {
+    feature: 'SMS Messages',
+    free: '50',
+    starter: '500',
+    growth: '1,500',
+    pro: '5,000',
+  },
+  {
+    feature: 'Contacts',
+    free: '100',
+    starter: '1,000',
+    growth: '5,000',
+    pro: '15,000',
+  },
+  {
+    feature: 'Follow-up Emails',
+    free: '✗',
+    starter: '✓',
+    growth: '✓',
+    pro: '✓',
+  },
+  {
+    feature: 'A/B Testing',
+    free: '✗',
+    starter: '✓',
+    growth: '✓',
+    pro: '✓',
+  },
+  {
+    feature: 'AI Optimization',
+    free: '✗',
+    starter: '✗',
+    growth: '✓',
+    pro: '✓',
+  },
+  {
+    feature: 'Analytics Dashboard',
+    free: '✓',
+    starter: '✓',
+    growth: '✓',
+    pro: '✓',
+  },
+  {
+    feature: 'Custom Domain',
+    free: '✗',
+    starter: '✗',
+    growth: '✓',
+    pro: '✓',
+  },
+  {
+    feature: 'Bulk Operations',
+    free: '✗',
+    starter: '✗',
+    growth: '✓',
+    pro: '✓',
+  },
+];
+
 function CountdownTimer({ expiryDate }: { expiryDate: string }) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -53,42 +121,65 @@ function CountdownTimer({ expiryDate }: { expiryDate: string }) {
     minutes: 0,
     seconds: 0
   });
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    // Initial calculation
+    const calculateTimeLeft = () => {
       const now = new Date().getTime();
       const expiry = new Date(expiryDate).getTime();
       const distance = expiry - now;
 
       if (distance < 0) {
-        clearInterval(timer);
-        return;
+        setIsExpired(true);
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
       }
 
-      setTimeLeft({
+      return {
         days: Math.floor(distance / (1000 * 60 * 60 * 24)),
         hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
         minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
         seconds: Math.floor((distance % (1000 * 60)) / 1000)
-      });
+      };
+    };
+
+    // Set initial time
+    setTimeLeft(calculateTimeLeft());
+
+    // Update every second
+    const timer = setInterval(() => {
+      const newTimeLeft = calculateTimeLeft();
+      setTimeLeft(newTimeLeft);
+      
+      // Clear interval if expired
+      if (newTimeLeft.days === 0 && newTimeLeft.hours === 0 && 
+          newTimeLeft.minutes === 0 && newTimeLeft.seconds === 0) {
+        clearInterval(timer);
+      }
     }, 1000);
 
     return () => clearInterval(timer);
   }, [expiryDate]);
 
+  if (isExpired) return null;
+
   return (
-    <div className="flex items-center gap-4 text-lg font-semibold">
+    <div className="flex items-center gap-2 md:gap-4">
       <div className="text-center">
-        <div className="bg-indigo-100 text-indigo-600 rounded px-3 py-1">{timeLeft.days}d</div>
+        <div className="bg-indigo-100 text-indigo-600 rounded px-2 py-1 md:px-3 md:py-1 text-sm md:text-lg font-semibold">{timeLeft.days}d</div>
+        <div className="text-xs text-white/80 mt-1">Days</div>
       </div>
       <div className="text-center">
-        <div className="bg-indigo-100 text-indigo-600 rounded px-3 py-1">{timeLeft.hours}h</div>
+        <div className="bg-indigo-100 text-indigo-600 rounded px-2 py-1 md:px-3 md:py-1 text-sm md:text-lg font-semibold">{timeLeft.hours}h</div>
+        <div className="text-xs text-white/80 mt-1">Hours</div>
       </div>
       <div className="text-center">
-        <div className="bg-indigo-100 text-indigo-600 rounded px-3 py-1">{timeLeft.minutes}m</div>
+        <div className="bg-indigo-100 text-indigo-600 rounded px-2 py-1 md:px-3 md:py-1 text-sm md:text-lg font-semibold">{timeLeft.minutes}m</div>
+        <div className="text-xs text-white/80 mt-1">Mins</div>
       </div>
       <div className="text-center">
-        <div className="bg-indigo-100 text-indigo-600 rounded px-3 py-1">{timeLeft.seconds}s</div>
+        <div className="bg-indigo-100 text-indigo-600 rounded px-2 py-1 md:px-3 md:py-1 text-sm md:text-lg font-semibold">{timeLeft.seconds}s</div>
+        <div className="text-xs text-white/80 mt-1">Secs</div>
       </div>
     </div>
   );
@@ -96,9 +187,28 @@ function CountdownTimer({ expiryDate }: { expiryDate: string }) {
 
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false);
-  const { subscription, isLoading, error } = useSubscription();
+  const { subscription, isLoading, error, subscriptionTiers } = useSubscription();
   const [timeLeft, setTimeLeft] = useState(3600); // 1 hour in seconds
   const [showExitPopup, setShowExitPopup] = useState(false);
+  const [hasActivePromotion, setHasActivePromotion] = useState(false);
+  const [promoExpiryDate, setPromoExpiryDate] = useState('');
+
+  useEffect(() => {
+    // Check if any tier has an active promotion
+    const checkForActivePromotions = () => {
+      for (const tierId in SUBSCRIPTION_TIERS) {
+        const tier = SUBSCRIPTION_TIERS[tierId];
+        if (tier.specialOffer && isSpecialOfferActive(tier)) {
+          setHasActivePromotion(true);
+          setPromoExpiryDate(tier.specialOffer.expiryDate);
+          return;
+        }
+      }
+      setHasActivePromotion(false);
+    };
+    
+    checkForActivePromotions();
+  }, []);
 
   const handleExitIntent = () => {
     setShowExitPopup(true);
@@ -145,292 +255,436 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-indigo-50">
-      <div className="max-w-7xl mx-auto">
-        {/* Hero Section with USP */}
-        <div className="text-center mb-16">
-          <div className="mb-8 inline-flex items-center rounded-full bg-green-100 px-4 py-1">
-            <StarIcon className="h-5 w-5 text-green-600 mr-2" />
-            <span className="text-sm font-semibold text-green-600">
-              Average customer generates $3,427 extra revenue per month
-            </span>
-          </div>
-          
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-            <span className="block">Choose Your Path to</span>
-            <span className="block text-indigo-600">Dropshipping Success</span>
-          </h1>
-          <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-            Join <span className="text-indigo-600 font-semibold">2,500+ successful dropshippers</span> who achieve 
-            <span className="text-indigo-600 font-semibold"> 300% average ROI</span> with our AI-powered platform
-          </p>
-
-          {/* Performance Metrics */}
-          <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="text-4xl font-bold text-indigo-600">45%</div>
-              <div className="text-sm text-gray-600 mt-2">Average Open Rate</div>
-              <div className="text-xs text-gray-500">(Industry avg: 15%)</div>
+    <>
+      <PricingSEO />
+      <div className="min-h-screen py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-indigo-50">
+        <div className="max-w-7xl mx-auto">
+          {/* Hero Section with USP */}
+          <div className="text-center mb-16">
+            <div className="mb-8 inline-flex items-center rounded-full bg-green-100 px-4 py-1">
+              <StarIcon className="h-5 w-5 text-green-600 mr-2" />
+              <span className="text-sm font-semibold text-green-600">
+                Average customer generates $3,427 extra revenue per month
+              </span>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="text-4xl font-bold text-indigo-600">15%</div>
-              <div className="text-sm text-gray-600 mt-2">Click-Through Rate</div>
-              <div className="text-xs text-gray-500">(Industry avg: 2.5%)</div>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="text-4xl font-bold text-indigo-600">300%</div>
-              <div className="text-sm text-gray-600 mt-2">Average ROI</div>
-              <div className="text-xs text-gray-500">(Within 60 days)</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Special Offer Banner */}
-        {subscription && subscription.specialOffer?.enabled && (
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-8 px-4 mb-12">
-            <div className="max-w-7xl mx-auto text-center">
-              <div className="text-2xl font-bold mb-4">
-                🔥 Special Launch Offer
+            
+            {/* Special Offer Banner - Only show if active */}
+            {hasActivePromotion && (
+              <div className="mb-8 inline-flex items-center rounded-full bg-red-600 text-white px-4 py-1">
+                <span className="text-sm font-semibold">🔥 Special Launch Offer: 50% Off for 3 Months + $500 in Bonuses</span>
               </div>
-              <div className="text-xl mb-4">
-                Get {subscription.specialOffer.discountPercentage}% off your first {subscription.specialOffer.durationMonths} months + ${subscription.specialOffer.bonusAmount} in bonuses
-              </div>
-              <div className="mb-6">
-                <span className="text-lg">Offer ends in:</span>
-                <CountdownTimer expiryDate={subscription.specialOffer.expiryDate} />
-              </div>
-              <div className="flex justify-center gap-4 text-lg">
-                {subscription.specialOffer.bonusFeatures.map((feature, index) => (
-                  <div key={index} className="bg-white/10 rounded-full px-4 py-1">
-                    {feature}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Free Trial Banner */}
-        <div className="max-w-7xl mx-auto px-4 text-center mb-12">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-2xl font-bold mb-2">Start with full access to all features</h2>
-            <p className="text-gray-600 mb-4">
-              No credit card required. After {SUBSCRIPTION_TIERS.free.trialDuration} days, choose the plan that fits your needs or continue with limited features.
+            )}
+            
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+              <span className="block">Choose Your Path to</span>
+              <span className="block text-indigo-600">Dropshipping Success</span>
+            </h1>
+            <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+              Join <span className="text-indigo-600 font-semibold">2,500+ successful dropshippers</span> who achieve 
+              <span className="text-indigo-600 font-semibold"> 300% average ROI</span> with our AI-powered platform
             </p>
-            <div className="flex justify-center gap-4">
-              <div className="flex items-center gap-2">
-                <CheckIcon className="h-5 w-5 text-green-500" />
-                <span>{SUBSCRIPTION_TIERS.free.maxEmails} Emails</span>
+
+            {/* Performance Metrics */}
+            <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="text-4xl font-bold text-indigo-600">45%</div>
+                <div className="text-sm text-gray-600 mt-2">Average Open Rate</div>
+                <div className="text-xs text-gray-500">(Industry avg: 15%)</div>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckIcon className="h-5 w-5 text-green-500" />
-                <span>All Features Unlocked</span>
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="text-4xl font-bold text-indigo-600">15%</div>
+                <div className="text-sm text-gray-600 mt-2">Click-Through Rate</div>
+                <div className="text-xs text-gray-500">(Industry avg: 2.5%)</div>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckIcon className="h-5 w-5 text-green-500" />
-                <span>No Credit Card</span>
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="text-4xl font-bold text-indigo-600">300%</div>
+                <div className="text-sm text-gray-600 mt-2">Average ROI</div>
+                <div className="text-xs text-gray-500">(Within 60 days)</div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Billing Toggle */}
-        <div className="text-center mb-12">
-          <div className="flex justify-center items-center gap-x-4">
-            <span className={`text-sm ${!isAnnual ? 'text-indigo-600 font-semibold' : 'text-gray-500'}`}>
-              Monthly billing
-            </span>
-            <button
-              type="button"
-              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                isAnnual ? 'bg-indigo-600' : 'bg-gray-200'
-              }`}
-              onClick={() => setIsAnnual(!isAnnual)}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                  isAnnual ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-            <span className={`text-sm ${isAnnual ? 'text-indigo-600 font-semibold' : 'text-gray-500'}`}>
-              Annual billing <span className="text-green-500 font-medium">(Save 17% + 2 months free)</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-          {Object.values(pricingTiers).map((tier: SubscriptionTier) => (
-            <div key={tier.name} className={`relative rounded-2xl ${
-              tier.popular
-                ? 'bg-white ring-4 ring-indigo-500 shadow-xl scale-105 z-10'
-                : 'bg-white shadow-lg'
-            } p-8 flex flex-col`}> 
-              {tier.popular && (
-                <div className="absolute top-0 right-6 transform -translate-y-1/2">
-                  <div className="inline-flex items-center rounded-full bg-indigo-600 px-4 py-1 text-sm font-semibold text-white">
-                    Most Popular
+          {/* Limited Time Offer Banner - Only show if active */}
+          {hasActivePromotion && (
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-8 px-4 mb-12 rounded-xl">
+              <div className="max-w-7xl mx-auto text-center">
+                <div className="text-2xl font-bold mb-4">
+                  🔥 Special Launch Offer - Expires {new Date(promoExpiryDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})}
+                </div>
+                <div className="text-xl mb-4">
+                  Get 50% off your first 3 months + $500 in bonuses
+                </div>
+                <div className="flex flex-col items-center justify-center mb-6">
+                  <span className="text-lg mb-3">Offer ends in:</span>
+                  <div className="flex justify-center">
+                    <CountdownTimer expiryDate={promoExpiryDate} />
                   </div>
                 </div>
-              )}
-              <h3 className="text-2xl font-bold text-gray-900">{tier.name}</h3>
-              <p className="mt-2 text-sm text-gray-500">{tier.description}</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 max-w-2xl mx-auto">
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <div className="text-xl font-bold">Unlimited</div>
+                    <div className="text-sm">Email Templates</div>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <div className="text-xl font-bold">AI Copywriting</div>
+                    <div className="text-sm">Credits</div>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <div className="text-xl font-bold">Priority</div>
+                    <div className="text-sm">Support</div>
+                  </div>
+                </div>
+                <div className="mt-4 inline-flex items-center rounded-full bg-yellow-300 text-yellow-800 px-4 py-1">
+                  <span className="text-sm font-medium">🔥 Only 37 spots left at current pricing!</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Free Trial Banner */}
+          <div className="max-w-7xl mx-auto px-4 text-center mb-12">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-2xl font-bold mb-2">Start with full access to all features</h2>
+              <p className="text-gray-600 mb-4">
+                No credit card required. After 14 days, choose the plan that fits your needs or continue with limited features.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <div className="flex items-center gap-2">
+                  <CheckIcon className="h-5 w-5 text-green-500" />
+                  <span>{SUBSCRIPTION_TIERS.free.maxEmails} Emails</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckIcon className="h-5 w-5 text-green-500" />
+                  <span>{SUBSCRIPTION_TIERS.free.maxSMS} SMS</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckIcon className="h-5 w-5 text-green-500" />
+                  <span>All Features Unlocked</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckIcon className="h-5 w-5 text-green-500" />
+                  <span>No Credit Card</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Billing Toggle */}
+          <div className="text-center mb-12">
+            <div className="flex justify-center items-center gap-x-4">
+              <span className={`text-sm ${!isAnnual ? 'text-indigo-600 font-semibold' : 'text-gray-500'}`}>
+                Monthly billing
+              </span>
+              <button
+                type="button"
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  isAnnual ? 'bg-indigo-600' : 'bg-gray-200'
+                }`}
+                onClick={() => setIsAnnual(!isAnnual)}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    isAnnual ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+              <span className={`text-sm ${isAnnual ? 'text-indigo-600 font-semibold' : 'text-gray-500'}`}>
+                Annual billing <span className="text-green-500 font-medium">(Save 17% + 2 months free)</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Feature Comparison Table */}
+          <div className="overflow-x-auto mb-16">
+            <table className="min-w-full bg-white rounded-xl shadow-md">
+              <thead>
+                <tr>
+                  <th className="py-6 px-6 text-left text-gray-500 font-medium bg-gray-50 rounded-tl-xl">Features</th>
+                  <th className="py-6 px-6 text-center text-gray-500 font-medium bg-gray-50">Free Trial</th>
+                  <th className="py-6 px-6 text-center text-gray-500 font-medium bg-gray-50">Starter <span className="block text-sm font-normal text-indigo-600">$39/mo</span></th>
+                  <th className="py-6 px-6 text-center text-gray-900 font-bold bg-indigo-50">
+                    <div className="relative">
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-indigo-600 text-white px-3 py-1 text-xs rounded-full">Most Popular</div>
+                      Growth <span className="block text-sm font-normal text-indigo-600">$99/mo</span>
+                    </div>
+                  </th>
+                  <th className="py-6 px-6 text-center text-gray-500 font-medium bg-gray-50 rounded-tr-xl">Pro <span className="block text-sm font-normal text-indigo-600">$199/mo</span></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {tierFeatureComparison.map((row, idx) => (
+                  <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="py-4 px-6 text-left text-gray-800 font-medium">{row.feature}</td>
+                    <td className="py-4 px-6 text-center text-gray-600">{row.free}</td>
+                    <td className="py-4 px-6 text-center text-gray-600">{row.starter}</td>
+                    <td className="py-4 px-6 text-center font-medium text-gray-900 bg-indigo-50">{row.growth}</td>
+                    <td className="py-4 px-6 text-center text-gray-600">{row.pro}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pricing Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+            {/* Free Tier */}
+            <div className="relative rounded-2xl bg-white shadow-lg p-8 flex flex-col">
+              <h3 className="text-2xl font-bold text-gray-900">{pricingTiers.free.name}</h3>
+              <p className="mt-2 text-sm text-gray-500">{pricingTiers.free.description}</p>
               <div className="mt-6">
-                <span className="text-4xl font-extrabold text-gray-900">
-                  ${isAnnual ? (Number(tier.price) * 0.83 * 12).toFixed(0) : tier.price}
-                </span>
-                <span className="text-base font-medium text-gray-500">
-                  {isAnnual ? '/year' : '/month'}
-                </span>
-                {isAnnual && (
-                  <span className="ml-2 text-sm text-green-500">
-                    Save ${((Number(tier.price) * 0.17 * 12).toFixed(0))}
-                  </span>
-                )}
+                <span className="text-4xl font-extrabold text-gray-900">$0</span>
+                <span className="text-base font-medium text-gray-500">/14 days</span>
               </div>
               <div className="mt-8 space-y-4">
                 <div className="flex items-center">
                   <EnvelopeIcon className="h-5 w-5 text-indigo-500 mr-2" />
-                  <span className="text-gray-600">{tier.maxEmails.toLocaleString()} Emails/month</span>
+                  <span className="text-gray-600">{pricingTiers.free.maxEmails.toLocaleString()} Emails</span>
                 </div>
                 <div className="flex items-center">
                   <UserGroupIcon className="h-5 w-5 text-indigo-500 mr-2" />
-                  <span className="text-gray-600">{tier.maxContacts?.toLocaleString() || 0} Contacts</span>
+                  <span className="text-gray-600">{pricingTiers.free.maxContacts?.toLocaleString() || 0} Contacts</span>
                 </div>
                 <div className="flex items-center">
                   <DevicePhoneMobileIcon className="h-5 w-5 text-indigo-500 mr-2" />
-                  <span className="text-gray-600">{tier.maxSMS.toLocaleString()} SMS/month</span>
+                  <span className="text-gray-600">{pricingTiers.free.maxSMS.toLocaleString()} SMS</span>
                 </div>
               </div>
               <ul className="mt-8 space-y-4 flex-grow">
-                {Object.entries(tier.features).map(([featureName, isEnabled]) => (
+                {Object.entries(pricingTiers.free.features).map(([featureName, isEnabled]) => (
                   isEnabled && (
                     <li key={featureName} className="flex items-start gap-x-3">
                       <CheckIcon className="h-6 w-6 flex-shrink-0 text-green-500" />
-                      <span className="text-gray-600">{featureName}</span>
+                      <span className="text-gray-600">{featureName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</span>
                     </li>
                   )
                 ))}
               </ul>
               <Link
                 href="/login"
-                className={`mt-8 w-full inline-flex justify-center items-center px-6 py-3 rounded-lg text-base font-semibold transition-all duration-200 ${
-                  tier.popular
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-                }`}
+                className="mt-8 w-full inline-flex justify-center items-center px-6 py-3 rounded-lg text-base font-semibold transition-all duration-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
               >
-                {tier.cta}
+                Start Free Trial
                 <ArrowRightIcon className="ml-2 h-5 w-5" />
               </Link>
-              {tier.popular && (
-                <p className="mt-4 text-sm text-center text-gray-500">
-                  Most dropshippers choose this plan
-                </p>
-              )}
             </div>
-          ))}
-        </div>
-
-        {/* Guarantees Section */}
-        <div className="mt-16 max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
-            Triple Guarantee
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {guarantees.map((guarantee, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-lg text-center">
-                <ShieldCheckIcon className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{guarantee.title}</h3>
-                <p className="text-gray-600">{guarantee.description}</p>
-              </div>
-            ))}
+            
+            {/* Paid Tiers */}
+            {['starter', 'growth', 'pro'].map((tierId) => {
+              const tier = pricingTiers[tierId as keyof typeof pricingTiers];
+              const hasActiveOffer = tier.specialOffer && isSpecialOfferActive(tier);
+              
+              return (
+                <div key={tierId} className={`relative rounded-2xl ${
+                  tier.popular
+                    ? 'bg-white ring-4 ring-indigo-500 shadow-xl scale-105 z-10'
+                    : 'bg-white shadow-lg'
+                } p-8 flex flex-col`}> 
+                  {tier.popular && (
+                    <div className="absolute top-0 right-6 transform -translate-y-1/2">
+                      <div className="inline-flex items-center rounded-full bg-indigo-600 px-4 py-1 text-sm font-semibold text-white">
+                        Most Popular
+                      </div>
+                    </div>
+                  )}
+                  <h3 className="text-2xl font-bold text-gray-900">{tier.name}</h3>
+                  <p className="mt-2 text-sm text-gray-500">{tier.description}</p>
+                  <div className="mt-6">
+                    <span className="text-4xl font-extrabold text-gray-900">
+                      ${isAnnual ? (Number(tier.price) * 0.83 * 12).toFixed(0) : tier.price}
+                    </span>
+                    <span className="text-base font-medium text-gray-500">
+                      {isAnnual ? '/year' : '/month'}
+                    </span>
+                    {isAnnual && (
+                      <span className="ml-2 text-sm text-green-500">
+                        Save ${((Number(tier.price) * 0.17 * 12).toFixed(0))}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Special Offer Tag - Only show if active */}
+                  {hasActiveOffer && (
+                    <div className="mt-2 text-sm text-red-600 font-semibold">
+                      Limited Time: 50% off for first 3 months
+                    </div>
+                  )}
+                  
+                  <div className="mt-8 space-y-4">
+                    <div className="flex items-center">
+                      <EnvelopeIcon className="h-5 w-5 text-indigo-500 mr-2" />
+                      <span className="text-gray-600">{tier.maxEmails.toLocaleString()} Emails/month</span>
+                    </div>
+                    <div className="flex items-center">
+                      <UserGroupIcon className="h-5 w-5 text-indigo-500 mr-2" />
+                      <span className="text-gray-600">{tier.maxContacts?.toLocaleString() || 0} Contacts</span>
+                    </div>
+                    <div className="flex items-center">
+                      <DevicePhoneMobileIcon className="h-5 w-5 text-indigo-500 mr-2" />
+                      <span className="text-gray-600">{tier.maxSMS.toLocaleString()} SMS/month</span>
+                    </div>
+                  </div>
+                  <ul className="mt-8 space-y-4 flex-grow">
+                    {Object.entries(tier.features).map(([featureName, isEnabled]) => (
+                      isEnabled && (
+                        <li key={featureName} className="flex items-start gap-x-3">
+                          <CheckIcon className="h-6 w-6 flex-shrink-0 text-green-500" />
+                          <span className="text-gray-600">{featureName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</span>
+                        </li>
+                      )
+                    ))}
+                  </ul>
+                  <Link
+                    href="/login"
+                    className={`mt-8 w-full inline-flex justify-center items-center px-6 py-3 rounded-lg text-base font-semibold transition-all duration-200 ${
+                      tier.popular
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                    }`}
+                  >
+                    {hasActiveOffer ? 'Claim 50% Off' : (tier.cta || 'Subscribe')}
+                    <ArrowRightIcon className="ml-2 h-5 w-5" />
+                  </Link>
+                  {tier.popular && (
+                    <p className="mt-4 text-sm text-center text-gray-500">
+                      Most dropshippers choose this plan
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </div>
 
-        {/* Success Stories */}
-        <div className="mt-16 max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
-            Join 2,500+ Successful Dropshippers
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {successStories.map((story, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-lg">
-                <div className="flex items-center mb-4">
-                  <img
-                    src={story.image}
-                    alt={story.author}
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
-                  <div className="ml-4">
-                    <p className="font-semibold text-gray-900">{story.author}</p>
-                    <p className="text-sm text-gray-500">{story.business}</p>
+          {/* Guarantees Section */}
+          <div className="mt-16 max-w-5xl mx-auto">
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
+              Triple Guarantee
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {guarantees.map((guarantee, index) => (
+                <div key={index} className="bg-white p-6 rounded-lg shadow-lg text-center">
+                  <ShieldCheckIcon className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{guarantee.title}</h3>
+                  <p className="text-gray-600">{guarantee.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Success Stories - Improved Layout */}
+          <div className="mt-16 max-w-5xl mx-auto">
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
+              Join 2,500+ Successful Dropshippers
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {successStories.map((story, index) => (
+                <div key={index} className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 relative hover:shadow-xl transition-shadow duration-300">
+                  {/* Large quote mark */}
+                  <div className="absolute top-4 right-4 text-indigo-100 text-6xl font-serif">"</div>
+                  
+                  <div className="flex items-center mb-6">
+                    <img
+                      src={story.image}
+                      alt={story.author}
+                      className="h-16 w-16 rounded-full object-cover border-2 border-indigo-100 shadow-sm"
+                    />
+                    <div className="ml-4">
+                      <p className="font-bold text-gray-900 text-lg">{story.author}</p>
+                      <p className="text-indigo-600">{story.business}</p>
+                    </div>
+                  </div>
+                  
+                  <blockquote className="text-gray-700 mb-6 text-lg relative z-10 italic">
+                    "{story.quote}"
+                  </blockquote>
+                  
+                  <div className="flex items-center justify-center bg-indigo-50 p-3 rounded-lg">
+                    <span className="font-semibold text-indigo-700">{story.metrics}</span>
                   </div>
                 </div>
-                <p className="text-gray-600 mb-4">{story.quote}</p>
-                <div className="text-sm text-indigo-600 font-medium">{story.metrics}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* FAQ Section - Improved Layout */}
+          <div className="mt-16 max-w-3xl mx-auto">
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
+              Frequently Asked Questions
+            </h2>
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="divide-y divide-gray-200">
+                <div className="p-6 hover:bg-gray-50 transition duration-150">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <span className="flex-shrink-0 flex items-center justify-center bg-indigo-100 text-indigo-600 h-8 w-8 rounded-full mr-3">Q</span>
+                    How does the 14-day trial work?
+                  </h3>
+                  <p className="mt-3 text-gray-600 ml-11">
+                    Start with full access to all features. No credit card required. After 14 days, choose the plan that fits your needs or continue with the free tier with limited features.
+                  </p>
+                </div>
+                
+                <div className="p-6 hover:bg-gray-50 transition duration-150">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <span className="flex-shrink-0 flex items-center justify-center bg-indigo-100 text-indigo-600 h-8 w-8 rounded-full mr-3">Q</span>
+                    What's included in each plan?
+                  </h3>
+                  <p className="mt-3 text-gray-600 ml-11">
+                    All plans include core features like email campaigns, templates, and analytics. Higher tiers unlock advanced features like AI optimization, SMS marketing, and priority support.
+                  </p>
+                </div>
+                
+                <div className="p-6 hover:bg-gray-50 transition duration-150">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <span className="flex-shrink-0 flex items-center justify-center bg-indigo-100 text-indigo-600 h-8 w-8 rounded-full mr-3">Q</span>
+                    How does the 50% discount special offer work?
+                  </h3>
+                  <p className="mt-3 text-gray-600 ml-11">
+                    When you subscribe to any paid plan before May 1st, 2024, you'll receive 50% off your first 3 months plus $500 in bonuses including unlimited email templates, AI copywriting credits, and priority support.
+                  </p>
+                </div>
+                
+                <div className="p-6 hover:bg-gray-50 transition duration-150">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <span className="flex-shrink-0 flex items-center justify-center bg-indigo-100 text-indigo-600 h-8 w-8 rounded-full mr-3">Q</span>
+                    Can I upgrade or downgrade anytime?
+                  </h3>
+                  <p className="mt-3 text-gray-600 ml-11">
+                    Yes! Switch plans anytime. Upgrades take effect immediately, while downgrades take effect at the end of your billing cycle.
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="mt-16 max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-medium text-gray-900">How does the 14-day trial work?</h3>
-              <p className="mt-2 text-gray-600">
-                Start with full access to all features. No credit card required. After 14 days, choose the plan that fits your needs or continue with the free plan.
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-medium text-gray-900">What's included in each plan?</h3>
-              <p className="mt-2 text-gray-600">
-                All plans include core features like email campaigns, templates, and analytics. Higher tiers unlock advanced features like AI optimization, SMS marketing, and priority support.
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-medium text-gray-900">Can I upgrade or downgrade anytime?</h3>
-              <p className="mt-2 text-gray-600">
-                Yes! Switch plans anytime. Upgrades take effect immediately, while downgrades take effect at the end of your billing cycle.
-              </p>
             </div>
           </div>
-        </div>
 
-        {/* Final CTA */}
-        <div className="mt-16 text-center">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-8 max-w-3xl mx-auto text-white">
-            <h3 className="text-2xl font-bold mb-4">
-              Start Growing Your Dropshipping Business Today
-            </h3>
-            <p className="text-indigo-100 mb-6">
-              Join thousands of successful dropshippers who are already generating profit with our platform
-            </p>
-            <Link
-              href="/login"
-              className="inline-flex items-center px-6 py-3 rounded-lg text-base font-semibold bg-white text-indigo-600 hover:bg-indigo-50 transition-all duration-200"
-            >
-              Start Your Free Trial
-              <ArrowRightIcon className="ml-2 h-5 w-5" />
-            </Link>
-            <div className="mt-4 text-sm text-indigo-100">
-              No credit card required • Cancel anytime • 14-day free trial
+          {/* Final CTA */}
+          <div className="mt-16 text-center">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-8 max-w-3xl mx-auto text-white">
+              <h3 className="text-2xl font-bold mb-4">
+                Start Growing Your Dropshipping Business Today
+              </h3>
+              <p className="text-indigo-100 mb-6">
+                Join thousands of successful dropshippers who are already generating profit with our platform
+              </p>
+              <Link
+                href="/login"
+                className="inline-flex items-center px-6 py-3 rounded-lg text-base font-semibold bg-white text-indigo-600 hover:bg-indigo-50 transition-all duration-200"
+              >
+                Start Your Free Trial
+                <ArrowRightIcon className="ml-2 h-5 w-5" />
+              </Link>
+              <div className="mt-4 text-sm text-indigo-100">
+                No credit card required • Cancel anytime • 14-day free trial
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Trust Badges */}
-        <div className="mt-12 text-center">
-          <div className="flex justify-center items-center space-x-6 text-gray-500">
-            <div>🔒 Secure Checkout</div>
-            <div>💯 Money-back Guarantee</div>
-            <div>🚀 Instant Access</div>
-            <div>💬 24/7 Support</div>
+          {/* Trust Badges */}
+          <div className="mt-12 text-center">
+            <div className="flex flex-wrap justify-center items-center gap-4 text-gray-500">
+              <div>🔒 Secure Checkout</div>
+              <div>💯 Money-back Guarantee</div>
+              <div>🚀 Instant Access</div>
+              <div>💬 24/7 Support</div>
+            </div>
           </div>
         </div>
       </div>
@@ -466,5 +720,6 @@ export default function PricingPage() {
         </div>
       )}
     </div>
+  </>
   );
 } 

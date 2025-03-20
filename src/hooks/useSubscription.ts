@@ -62,16 +62,16 @@ export interface SubscriptionTier {
 
 export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
   free: {
-    name: '14-Day Trial',
+    name: 'Free Trial',
     price: 0,
     limits: 100,
     maxEmails: 250,
     maxSMS: 50,
     maxContacts: 100,
     features: {
-      followUpEmails: true,
-      abTesting: true,
-      aiOptimization: true,
+      followUpEmails: false,
+      abTesting: false,
+      aiOptimization: false,
       analytics: true,
       customDomain: false,
       previewLeads: true,
@@ -79,7 +79,7 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
       fullLeadAccess: false,
       bulkOperations: false,
     },
-    description: 'Try all features free for 14 days',
+    description: 'Try our platform risk-free for 14 days',
     extraEmailPrice: 0.004,
     extraSMSPrice: 0.03,
     extraLeadsPrice: 0.06,
@@ -98,7 +98,7 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
         'AI Copywriting Credits',
         'Priority Support'
       ],
-      expiryDate: '2024-05-01' // Set this to your desired expiry date
+      expiryDate: '2025-12-31'
     },
     limits: 1000,
     maxEmails: 5000,
@@ -107,7 +107,7 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
     features: {
       followUpEmails: true,
       abTesting: true,
-      aiOptimization: true,
+      aiOptimization: false,
       analytics: true,
       customDomain: false,
       previewLeads: true,
@@ -115,13 +115,13 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
       fullLeadAccess: true,
       bulkOperations: false,
     },
-    description: 'Perfect for growing businesses',
+    description: 'Perfect for new dropshippers starting their journey',
     extraEmailPrice: 0.003,
     extraSMSPrice: 0.02,
     extraLeadsPrice: 0.05,
   },
-  grower: {
-    name: 'Grower',
+  growth: {
+    name: 'Growth',
     price: 99,
     limits: 5000,
     maxEmails: 15000,
@@ -138,10 +138,10 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
       fullLeadAccess: true,
       bulkOperations: true,
     },
-    description: 'Perfect for growing businesses',
-    extraEmailPrice: 0.002, // $2 per 1000 emails
-    extraSMSPrice: 0.015,   // 1.5 cents per SMS
-    extraLeadsPrice: 0.04,  // 4 cents per lead
+    description: 'Most chosen by successful dropshippers',
+    extraEmailPrice: 0.002,
+    extraSMSPrice: 0.015,
+    extraLeadsPrice: 0.04,
     popular: true,
   },
   pro: {
@@ -163,9 +163,9 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
       bulkOperations: true,
     },
     description: 'For power users and agencies',
-    extraEmailPrice: 0.001, // $1 per 1000 emails
-    extraSMSPrice: 0.01,    // 1 cent per SMS
-    extraLeadsPrice: 0.03,  // 3 cents per lead
+    extraEmailPrice: 0.001,
+    extraSMSPrice: 0.01,
+    extraLeadsPrice: 0.03,
   },
 };
 
@@ -198,7 +198,10 @@ export const useSubscription = () => {
       const subscriptionData = userData.subscriptionData;
 
       if (!subscriptionData) {
-        // Set up default subscription for free tier
+        // Set up default subscription for free tier with 14-day trial
+        const trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + 14);
+        
         setSubscription({
           userId: user.uid,
           tier: 'free',
@@ -207,9 +210,39 @@ export const useSubscription = () => {
           maxContacts: SUBSCRIPTION_TIERS.free.maxContacts,
           maxSMS: SUBSCRIPTION_TIERS.free.maxSMS,
           features: SUBSCRIPTION_TIERS.free.features,
-          expiresAt: null,
+          expiresAt: trialEndDate.toISOString(),
         });
         return;
+      }
+
+      // Check if trial has expired
+      if (subscriptionData.tier === 'free' && subscriptionData.expiresAt) {
+        const expiryDate = new Date(subscriptionData.expiresAt);
+        if (expiryDate < new Date()) {
+          // Trial has expired, update to free tier without trial benefits
+          // but keep analytics available as promised
+          setSubscription({
+            userId: user.uid,
+            tier: 'free',
+            limits: 0,
+            maxEmails: 0,
+            maxContacts: 0,
+            maxSMS: 0,
+            features: {
+              followUpEmails: false,
+              abTesting: false,
+              aiOptimization: false,
+              analytics: true, // Keep analytics available for free tier
+              customDomain: false,
+              previewLeads: false,
+              importContacts: false,
+              fullLeadAccess: false,
+              bulkOperations: false,
+            },
+            expiresAt: null,
+          });
+          return;
+        }
       }
 
       // Continue with existing logic for users with subscription data
@@ -234,6 +267,20 @@ export const useSubscription = () => {
 
   const checkFeatureAccess = (feature: keyof Subscription['features']) => {
     if (!subscription) return false;
+    
+    // For free tier users
+    if (subscription.tier === 'free') {
+      // Basic analytics should be available for free tier users regardless of trial status
+      if (feature === 'analytics') {
+        return true;
+      }
+      
+      // For other premium features, check if trial is still active
+      if (!subscription.expiresAt) {
+        return false;
+      }
+    }
+    
     return subscription.features[feature];
   };
 
@@ -260,7 +307,8 @@ export const useSubscription = () => {
   const isTrialValid = () => {
     if (!subscription || subscription.tier !== 'free') return false;
     if (!subscription.expiresAt) return false;
-    return new Date(subscription.expiresAt) > new Date() && subscription.limits > 0 && subscription.maxEmails > 0;
+    const expiryDate = new Date(subscription.expiresAt);
+    return expiryDate > new Date() && subscription.limits > 0;
   };
 
   return {
@@ -300,4 +348,14 @@ function calculateSMSUsed(contacts: number, splitA: number, splitB: number, smsA
   }
 
   return smsUsed;
+}
+
+export function isSpecialOfferActive(tier: SubscriptionTier): boolean {
+  if (!tier.specialOffer?.enabled) return false;
+  if (!tier.specialOffer.expiryDate) return true;
+  
+  const expiryDate = new Date(tier.specialOffer.expiryDate);
+  const today = new Date();
+  
+  return expiryDate > today;
 } 

@@ -1,54 +1,43 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { creditsService } from '@/services/trial';
-import { stripeService } from '@/services/stripe';
+import { db } from '@/utils/firebase';
+import { doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { userId, creditType, amount } = await request.json();
+
+    if (!userId || !creditType || !amount) {
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    const { type, amount } = await request.json();
-    
-    // Validate input
-    if (!type || !amount || !['EMAIL', 'SMS'].includes(type)) {
-      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists()) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    if (amount < 1) {
-      return NextResponse.json({ error: 'Amount must be positive' }, { status: 400 });
-    }
-
-    // Calculate price
-    const priceDetails = creditsService.calculateExtraCreditPrice(type, amount);
-
-    // Create Stripe payment intent
-    const paymentIntent = await stripeService.createPaymentIntent({
-      amount: Math.round(priceDetails.finalPrice * 100), // Convert to cents
-      currency: 'usd',
-      metadata: {
-        userId: session.user.id,
-        type,
-        amount,
-        basePrice: priceDetails.basePrice,
-        discount: priceDetails.discount
-      }
+    // Update user's credits
+    const creditField = `total${creditType.charAt(0).toUpperCase() + creditType.slice(1)}s`;
+    await updateDoc(userRef, {
+      [creditField]: increment(amount),
     });
 
-    return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
-      priceDetails
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
-
   } catch (error) {
-    console.error('Error processing extra credit purchase:', error);
-    return NextResponse.json(
-      { error: 'Failed to process purchase' },
-      { status: 500 }
-    );
+    console.error('Error processing credit purchase:', error);
+    return new Response(JSON.stringify({ error: 'Failed to process purchase' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
 

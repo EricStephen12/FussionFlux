@@ -1,0 +1,8 @@
+/* 
+This is a placeholder for the favicon.ico file.
+In a real environment, you would generate this from the SVG using a tool like:
+- https://realfavicongenerator.net/
+- Or using command line tools like ImageMagick
+
+The actual favicon.ico is a binary file that contains multiple sizes: 16x16, 32x32, 48x48 
+*/ 

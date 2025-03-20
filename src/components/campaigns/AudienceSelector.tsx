@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   UserGroupIcon,
   ChartPieIcon,
@@ -8,16 +8,22 @@ import {
   ArrowUpTrayIcon,
   ShieldCheckIcon,
   RocketLaunchIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  MagnifyingGlassIcon,
+  AdjustmentsHorizontalIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useRouter } from 'next/navigation';
 import Papa from 'papaparse';
 import { creditsService } from '../../services/trial';
 import LoadingSpinner from '../LoadingSpinner';
-import { apolloService } from '@/services/apollo';
-import { fetchScoredLeads } from '../../services/apollo';
+import { apolloClientService } from '@/services/apollo-client';
 import { useAuth } from '@/contexts/AuthContext'; // Importing the authentication context
+import { leadService } from '@/services/LeadService';
+import { Lead, LeadSource } from '@/models/LeadTypes';
+import { debounce } from 'lodash';
+import { Slider } from '@mui/material';
 
 interface AudienceSelectorProps {
   onSelect: (selectedCount: number, contacts: any[]) => void;
@@ -82,7 +88,7 @@ export default function AudienceSelector({
   const [step, setStep] = useState<'select' | 'review'>('select');
   const [previewLeads, setPreviewLeads] = useState<any[]>([]);
   const [totalLeadsAvailable, setTotalLeadsAvailable] = useState<number>(0);
-  const [selectedSource, setSelectedSource] = useState<'discover' | 'import' | 'retargeting' | 'lookalike'>('discover');
+  const [selectedSource, setSelectedSource] = useState<'discover' | 'import' | 'retargeting' | 'lookalike' | 'followup'>('discover');
   const [selectedNiche, setSelectedNiche] = useState('');
   const [trialStatus, setTrialStatus] = useState<{
     isActive: boolean;
@@ -104,6 +110,14 @@ export default function AudienceSelector({
     base: 0,
     extra: 0
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [title, setTitle] = useState('');
+  const [location, setLocation] = useState('');
+  const [results, setResults] = useState<Lead[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [minScore, setMinScore] = useState(50);
+  const [leadSources, setLeadSources] = useState<LeadSource[]>(['apollo', 'facebook', 'tiktok']);
 
   console.log('AudienceSelector component rendered');
   console.log('Subscription data:', subscription);
@@ -204,7 +218,15 @@ export default function AudienceSelector({
         return;
       }
 
-      const fetchedLeads = await fetchScoredLeads(requestedCount);
+      // Use the client-side Apollo service to fetch leads
+      const industries = selectedNiche ? apolloClientService.getIndustriesForNiche(selectedNiche) : ['Software'];
+      const titles = selectedNiche ? apolloClientService.getTitlesForNiche(selectedNiche) : ['Manager'];
+      
+      const fetchedLeads = await apolloClientService.searchContacts({
+        industry: industries,
+        title: titles,
+        limit: requestedCount
+      });
       
       // Update UI
       setPreviewLeads(fetchedLeads);
@@ -364,8 +386,16 @@ export default function AudienceSelector({
   const fetchRetargetingLeads = async () => {
     try {
         setLoading(true);
-        // Example query to fetch leads that have interacted with previous campaigns
-        const retargetingLeads = await apolloService.fetchRetargetingLeads(userId);
+        // Example implementation using client-side service
+        const industries = selectedNiche ? apolloClientService.getIndustriesForNiche(selectedNiche) : ['Software'];
+        const titles = selectedNiche ? apolloClientService.getTitlesForNiche(selectedNiche) : ['Manager'];
+        
+        const retargetingLeads = await apolloClientService.searchContacts({
+          industry: industries,
+          title: titles,
+          limit: 50
+        });
+        
         setRetargetingLeads(retargetingLeads);
         onSelect(retargetingLeads.length, retargetingLeads);
     } catch (error) {
@@ -379,8 +409,16 @@ export default function AudienceSelector({
   const fetchLookalikeLeads = async () => {
     try {
         setLoading(true);
-        // Example query to fetch lookalike leads based on existing high-engagement leads
-        const lookalikeLeads = await apolloService.fetchLookalikeLeads(userId);
+        // Example implementation using client-side service
+        const industries = selectedNiche ? apolloClientService.getIndustriesForNiche(selectedNiche) : ['Software'];
+        const titles = selectedNiche ? apolloClientService.getTitlesForNiche(selectedNiche) : ['Manager'];
+        
+        const lookalikeLeads = await apolloClientService.searchContacts({
+          industry: industries,
+          title: titles,
+          limit: 50
+        });
+        
         setLookalikeLeads(lookalikeLeads);
         onSelect(lookalikeLeads.length, lookalikeLeads);
     } catch (error) {
@@ -391,7 +429,34 @@ export default function AudienceSelector({
     }
   };
 
-  const handleAudienceSourceChange = async (source: 'discover' | 'import' | 'retargeting' | 'lookalike') => {
+  const fetchFollowupLeads = async () => {
+    try {
+      setLoading(true);
+      // Example implementation using client-side service to fetch from previous campaign contacts
+      const industries = selectedNiche ? apolloClientService.getIndustriesForNiche(selectedNiche) : ['Software'];
+      const titles = selectedNiche ? apolloClientService.getTitlesForNiche(selectedNiche) : ['Manager'];
+      
+      // Here we'd normally fetch contacts from previous campaigns who've engaged 
+      // For now, we'll simulate with Apollo client
+      const followupLeads = await apolloClientService.searchContacts({
+        industry: industries,
+        title: titles,
+        limit: 50,
+        // In real implementation, filter by previous engagement
+        engagementRate: 0.3 
+      });
+      
+      setLeads(followupLeads);
+      onSelect(followupLeads.length, followupLeads);
+    } catch (error) {
+      console.error('Error fetching follow-up leads:', error);
+      setError('Failed to load follow-up leads');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAudienceSourceChange = async (source: 'discover' | 'import' | 'retargeting' | 'lookalike' | 'followup') => {
     const isFreeTier = subscription?.tier === 'free';
     const hasFullAccess = subscription?.features.fullLeadAccess || false;
     const hasImportFeature = subscription?.features.importContacts || false;
@@ -405,8 +470,8 @@ export default function AudienceSelector({
       return;
     }
 
-    if (!hasFullAccess && (source === 'retargeting' || source === 'lookalike')) {
-      setError(`${source === 'retargeting' ? 'Retargeting' : 'Lookalike audiences'} require a paid subscription. Please upgrade to access this feature.`);
+    if (!hasFullAccess && (source === 'retargeting' || source === 'lookalike' || source === 'followup')) {
+      setError(`${source === 'retargeting' ? 'Retargeting' : source === 'lookalike' ? 'Lookalike audiences' : 'Follow-up campaigns'} require a paid subscription. Please upgrade to access this feature.`);
       return;
     }
 
@@ -438,12 +503,75 @@ export default function AudienceSelector({
           }
           await fetchLookalikeLeads();
           break;
+        case 'followup':
+          if (subscription?.tier === 'free') {
+            setError('Follow-up campaigns require a paid subscription');
+            return;
+          }
+          await fetchFollowupLeads();
+          break;
       }
     } catch (error) {
       console.error(`Error loading ${source} leads:`, error);
       setError(`Failed to load ${source} leads`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearch = debounce(async () => {
+    if (!searchQuery && !industry && !title && !location) {
+      setResults([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+
+      // Use the new leadService instead of directly calling Apollo
+      const leads = await leadService.getLeads({
+        industry: industry ? [industry] : undefined,
+        title: title ? [title] : undefined,
+        location: location ? [location] : undefined,
+        minScore,
+        sources: leadSources,
+        limit: 50
+      });
+
+      setResults(leads);
+    } catch (error) {
+      console.error('Search error:', error);
+      setError('Failed to search for leads. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, 500);
+
+  useEffect(() => {
+    handleSearch();
+  }, [searchQuery, industry, title, location, minScore, leadSources]);
+
+  const handleSelectAudience = (audience: Lead) => {
+    // Check if already selected
+    const isSelected = leads.some(a => a.id === audience.id);
+    
+    if (isSelected) {
+      onSelect(leads.length - 1, leads.filter(a => a.id !== audience.id));
+    } else {
+      onSelect(leads.length + 1, [...leads, audience]);
+    }
+  };
+
+  const isSelected = (audience: Lead) => {
+    return leads.some(a => a.id === audience.id);
+  };
+
+  const handleSourceToggle = (source: LeadSource) => {
+    if (leadSources.includes(source)) {
+      setLeadSources(leadSources.filter(s => s !== source));
+    } else {
+      setLeadSources([...leadSources, source]);
     }
   };
 
@@ -467,128 +595,233 @@ export default function AudienceSelector({
 
   return (
     <div className="space-y-8">
-      <div>
-        <button onClick={() => handleAudienceSourceChange('retargeting')}>Retargeting Audience</button>
-        <button onClick={() => handleAudienceSourceChange('lookalike')}>Lookalike Audience</button>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <button 
+          onClick={() => handleAudienceSourceChange('discover')}
+          className={`flex flex-col items-center p-3 rounded-lg border ${
+            selectedSource === 'discover' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'
+          }`}
+        >
+          <UserGroupIcon className="h-6 w-6 text-indigo-600 mb-1" />
+          <span className="text-sm font-medium">New Contacts</span>
+        </button>
+        
+        <button 
+          onClick={() => handleAudienceSourceChange('retargeting')}
+          className={`flex flex-col items-center p-3 rounded-lg border ${
+            selectedSource === 'retargeting' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'
+          }`}
+        >
+          <ChartPieIcon className="h-6 w-6 text-indigo-600 mb-1" />
+          <span className="text-sm font-medium">Engaged Visitors</span>
+        </button>
+        
+        <button 
+          onClick={() => handleAudienceSourceChange('lookalike')}
+          className={`flex flex-col items-center p-3 rounded-lg border ${
+            selectedSource === 'lookalike' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'
+          }`}
+        >
+          <SparklesIcon className="h-6 w-6 text-indigo-600 mb-1" />
+          <span className="text-sm font-medium">Similar Profiles</span>
+        </button>
+        
+        <button 
+          onClick={() => handleAudienceSourceChange('followup')}
+          className={`flex flex-col items-center p-3 rounded-lg border ${
+            selectedSource === 'followup' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'
+          }`}
+        >
+          <RocketLaunchIcon className="h-6 w-6 text-indigo-600 mb-1" />
+          <span className="text-sm font-meter">Previous Campaigns</span>
+        </button>
       </div>
       {step === 'select' ? (
         <>
-          {/* Lead Preview Section */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Available Leads
-              </h3>
-              
-              {loading ? (
-                <LoadingSpinner />
-              ) : error ? (
-                <p className="text-red-600">{error}</p>
-              ) : (
-                <>
-                  {/* Preview Table */}
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Name
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Title
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Company
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {previewLeads.map((lead, index) => (
-                          <tr key={index} className={index >= 3 ? 'opacity-40' : ''}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {index < 3 ? (
-                                <div className="text-sm font-medium text-gray-900">
-                                  {lead.firstName} {lead.lastName}
-                                </div>
-                              ) : (
-                                <div className="text-sm font-medium text-gray-900">
-                                  ••••• •••••
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-500">
-                                {index < 3 ? lead.title : '•••••'}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-500">
-                                {index < 3 ? lead.company : '•••••'}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Upgrade Banner */}
-                  {!subscription || subscription.tier === 'free' ? (
-                    <div className="mt-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-6 text-white">
-                      <div className="flex flex-col space-y-4">
-                        <div>
-                          <h4 className="font-semibold text-xl">
-                            🚀 All-in-One Platform for Dropshippers
-                          </h4>
-                          <p className="text-sm opacity-90 mt-2">
-                            • AI-Powered Lead Generation
-                            • Smart Email Marketing
-                            • SMS Integration
-                            • {totalLeadsAvailable.toLocaleString()} More Verified Leads
-                          </p>
-                        </div>
-                        <div className="flex justify-between items-center pt-2">
-                          <p className="text-sm opacity-90">
-                            Start converting more leads into customers today!
-                          </p>
-                          <button
-                            onClick={() => router.push('/dashboard/subscription')}
-                            className="px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium text-sm hover:bg-indigo-50"
-                          >
-                            Upgrade Now →
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-                </>
-              )}
+          {/* Search and filter controls */}
+          <div className="flex flex-col space-y-4">
+            <div className="relative flex items-center">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3" />
+              <input
+                type="text"
+                placeholder="Search for leads..."
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button
+                onClick={() => setFilterOpen(!filterOpen)}
+                className="ml-2 p-2 text-gray-500 hover:text-gray-700 bg-gray-100 rounded-lg"
+              >
+                <AdjustmentsHorizontalIcon className="h-5 w-5" />
+              </button>
             </div>
+
+            {filterOpen && (
+              <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                    <input
+                      type="text"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                      placeholder="e.g., Retail"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                    <input
+                      type="text"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="e.g., Marketing Manager"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input
+                      type="text"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="e.g., New York"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Minimum Lead Score: {minScore}
+                  </label>
+                  <Slider
+                    value={minScore}
+                    onChange={(_, value) => setMinScore(value as number)}
+                    aria-labelledby="lead-score-slider"
+                    min={0}
+                    max={100}
+                    valueLabelDisplay="auto"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Data Sources
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { id: 'apollo', name: 'Business Data' },
+                      { id: 'facebook', name: 'Social Media 1' },
+                      { id: 'tiktok', name: 'Social Media 2' },
+                      { id: 'instagram', name: 'Social Media 3' },
+                      { id: 'google', name: 'Search & Maps' }
+                    ].map((source) => (
+                      <button
+                        key={source.id}
+                        onClick={() => handleSourceToggle(source.id as LeadSource)}
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          leadSources.includes(source.id as LeadSource)
+                            ? 'bg-indigo-100 text-indigo-800'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        {source.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Import Section */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Import Your Own Contacts
+          {/* Results */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">
+              {results.length} leads found
+              {leads.length > 0 && ` (${leads.length} selected)`}
             </h3>
-            <div className="space-y-4">
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleCsvUpload}
-                className="block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-full file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-indigo-50 file:text-indigo-700
-                  hover:file:bg-indigo-100"
-              />
-              {importedContacts.length > 0 && (
-                <p className="text-sm text-gray-600">
-                  {importedContacts.length} valid contacts found
-                </p>
-              )}
-            </div>
+            
+            {error && (
+              <div className="p-4 bg-red-50 text-red-700 rounded-lg mb-4">
+                {error}
+              </div>
+            )}
+            
+            {loading ? (
+              <div className="flex justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              </div>
+            ) : (
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <ul className="divide-y divide-gray-200">
+                  {results.map((lead) => (
+                    <li
+                      key={lead.id}
+                      className={`p-4 hover:bg-gray-50 cursor-pointer ${
+                        isSelected(lead) ? 'bg-indigo-50' : ''
+                      }`}
+                      onClick={() => handleSelectAudience(lead)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <h4 className="text-sm font-medium text-gray-900">
+                              {lead.firstName} {lead.lastName}
+                            </h4>
+                            <span className="ml-2 px-2 inline-flex text-xs leading-5 font-medium rounded-full bg-gray-100 text-gray-800">
+                              {lead.source}
+                            </span>
+                            <span className="ml-2 px-2 inline-flex text-xs leading-5 font-medium rounded-full bg-blue-100 text-blue-800">
+                              Score: {lead.score}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-gray-500">
+                            {lead.title} {lead.company && `at ${lead.company}`}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {lead.email}
+                          </p>
+                          <div className="mt-1">
+                            {lead.industry && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+                                {lead.industry}
+                              </span>
+                            )}
+                            {lead.location && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                {lead.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="ml-4 flex-shrink-0">
+                          {isSelected(lead) ? (
+                            <CheckIcon className="h-5 w-5 text-indigo-600" />
+                          ) : (
+                            <button
+                              className="text-sm text-indigo-600 hover:text-indigo-900"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectAudience(lead);
+                              }}
+                            >
+                              Select
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                  {results.length === 0 && !loading && (
+                    <li className="p-8 text-center text-gray-500">
+                      No leads found. Try adjusting your search criteria.
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         </>
       ) : (

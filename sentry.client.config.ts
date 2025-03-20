@@ -1,18 +1,28 @@
-// This file configures the initialization of Sentry on the client side.
+// This file configures the initialization of Sentry on the client.
+// The config you add here will be used whenever a users loads a page in their browser.
+// https://docs.sentry.io/platforms/javascript/guides/nextjs/
+
 import * as Sentry from "@sentry/nextjs";
 
-const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN;
-
 Sentry.init({
-  dsn: SENTRY_DSN,
-  
-  // Performance Monitoring
-  tracesSampleRate: 1.0, // Capture 100% of the transactions
-  
-  // Session Replay
-  replaysSessionSampleRate: 0.1, // Sample rate for all sessions (10%)
-  replaysOnErrorSampleRate: 1.0, // Sample rate for sessions with errors (100%)
+  dsn: "https://376d431677b41440240da16a36916802@o4508790911467520.ingest.de.sentry.io/4508791061610576",
 
-  // Enable automatic instrumentation of Next.js routing
-  integrations: [new Sentry.BrowserTracing()],
-}); 
+  // Add optional integrations for additional features
+  integrations: [
+    Sentry.replayIntegration(),
+  ],
+
+  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+  tracesSampleRate: 1,
+
+  // Define how likely Replay events are sampled.
+  // This sets the sample rate to be 10%. You may want this to be 100% while
+  // in development and sample at a lower rate in production
+  replaysSessionSampleRate: 0.1,
+
+  // Define how likely Replay events are sampled when an error occurs.
+  replaysOnErrorSampleRate: 1.0,
+
+  // Setting this option to true will print useful information to the console while you're setting up Sentry.
+  debug: false,
+});

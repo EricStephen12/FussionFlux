@@ -1,8 +1,10 @@
 // @ts-nocheck
 
-import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, where, increment, addDoc, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { SUBSCRIPTION_TIERS } from '@/types/subscription';
 
-const db = getFirestore(); // Initialize Firestore instance here
+const dbFirestore = getFirestore(); // Initialize Firestore instance here
 
 interface UserLimits {
   userId: string;
@@ -45,27 +47,27 @@ interface LimitTransaction {
 const LIMIT_CONFIG = {
   PACKAGES: [
     { 
-      emailLimits: 1000,
+      emailLimits: 5000,
       smsLimits: 500,
-      price: 99,
+      price: 39,
       features: ['Advanced targeting', 'Advanced templates', 'Basic analytics']
     },    // Starter
     { 
-      emailLimits: 5000,
-      smsLimits: 2500,
-      price: 199,
+      emailLimits: 15000,
+      smsLimits: 1500,
+      price: 99,
       features: ['Premium targeting', 'Premium templates', 'Advanced analytics']
     },  // Growth
     { 
-      emailLimits: 15000,
-      smsLimits: 7500,
-      price: 399,
+      emailLimits: 50000,
+      smsLimits: 5000,
+      price: 199,
       features: ['Enterprise targeting', 'All templates', 'Full analytics suite']
     }  // Professional
   ],
   EXTRA_LIMITS: {
     EMAIL: {
-      PRICE_PER_LIMIT: 0.10,
+      PRICE_PER_LIMIT: 0.004,
       MIN_PURCHASE: 500,
       BULK_DISCOUNTS: [
         { amount: 2500, discount: 0.10 },
@@ -74,7 +76,7 @@ const LIMIT_CONFIG = {
       ]
     } as ExtraLimitConfig,
     SMS: {
-      PRICE_PER_LIMIT: 0.20,
+      PRICE_PER_LIMIT: 0.03,
       MIN_PURCHASE: 250,
       BULK_DISCOUNTS: [
         { amount: 1000, discount: 0.10 },
@@ -84,9 +86,9 @@ const LIMIT_CONFIG = {
     } as ExtraLimitConfig
   },
   TRIAL: {
-    PREVIEW_LEADS: 50,
-    IMPORTED_CONTACTS: 250,
-    EMAILS_PER_DAY: 50,
+    PREVIEW_LEADS: 100,
+    IMPORTED_CONTACTS: 100,
+    EMAILS_PER_DAY: 250,
     DURATION_DAYS: 14,
     FEATURES: ['preview_leads', 'import_contacts', 'basic_templates', 'campaign_tracking']
   },
@@ -95,10 +97,10 @@ const LIMIT_CONFIG = {
     SMS: 250
   },
   CONVERSION_METRICS: {
-    EXPECTED_OPEN_RATE: 0.25, // 25% open rate for targeted dropshipping
-    EXPECTED_CLICK_RATE: 0.08, // 8% click rate for e-commerce
-    EXPECTED_CONVERSION: 0.02, // 2% conversion rate (industry standard for dropshipping)
-    AVG_ORDER_VALUE: 35, // Average order value in USD
+    EXPECTED_OPEN_RATE: 0.25,
+    EXPECTED_CLICK_RATE: 0.08,
+    EXPECTED_CONVERSION: 0.02,
+    AVG_ORDER_VALUE: 35,
   }
 };
 
@@ -108,7 +110,7 @@ async function getUserSubscriptionTier(userId: string): Promise<string> {
         throw new Error('Invalid userId provided');
     }
     console.log('Fetching subscription tier for userId:', userId);
-    const userDoc = await getDoc(doc(db, 'users', userId));
+    const userDoc = await getDoc(doc(dbFirestore, 'users', userId));
     if (!userDoc.exists()) {
         console.error('User not found for userId:', userId);
         throw new Error('User not found');
@@ -117,381 +119,270 @@ async function getUserSubscriptionTier(userId: string): Promise<string> {
 }
 
 export class TrialService {
-  private creditsRef = collection(db, 'user_credits');
+  private static readonly TRIAL_DURATION_DAYS = 14;
+  private static readonly TRIAL_EMAIL_LIMIT = 250;
+  private static readonly TRIAL_CONTACT_LIMIT = 100;
+  private static readonly TRIAL_SMS_LIMIT = 50;
 
-  async getUserLimits(userId: string): Promise<UserLimits | null> {
-    const userDoc = await getDoc(doc(this.creditsRef, userId));
-    return userDoc.exists() ? (userDoc.data() as UserLimits) : null;
-  }
+  static async initializeTrial(userId: string) {
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + this.TRIAL_DURATION_DAYS);
 
-  async updateUserLimits(userId: string, limits: Partial<UserLimits>): Promise<void> {
-    const userRef = doc(this.creditsRef, userId);
-    await updateDoc(userRef, limits);
-  }
-
-  async purchaseExtraLimits(
-    userId: string,
-    type: 'email' | 'sms',
-    amount: number,
-    paymentId: string
-  ): Promise<{
-    success: boolean;
-    newBalance: number;
-    transactionId: string;
-  }> {
-    // Logic to purchase extra limits
-  }
-
-  async getRemainingLimits(userId: string): Promise<{
-    email: number;
-    sms: number;
-    trial?: {
-      previews: number;
-      imports: number;
-      emails: number;
+    const trialData = {
+      tier: 'free',
+      limits: this.TRIAL_EMAIL_LIMIT,
+      maxEmails: this.TRIAL_EMAIL_LIMIT,
+      maxContacts: this.TRIAL_CONTACT_LIMIT,
+      maxSMS: this.TRIAL_SMS_LIMIT,
+      features: SUBSCRIPTION_TIERS.free.features,
+      expiresAt: trialEndDate.toISOString(),
+      usageStats: {
+        usedEmails: 0,
+        usedSMS: 0,
+        usedLeads: 0,
+      },
     };
-  }> {
-    const doc = await this.creditsRef.doc(userId).get();
-    const userData = doc.data();
-    
-    if (userData?.trialUsage && this.isTrialActive(userData.trialUsage)) {
-      return {
-        email: 0,
-        sms: 0,
-        trial: {
-          previews: LIMIT_CONFIG.TRIAL.PREVIEW_LEADS - userData.trialUsage.previewLeads,
-          imports: LIMIT_CONFIG.TRIAL.IMPORTED_CONTACTS - userData.trialUsage.importedContacts,
-          emails: LIMIT_CONFIG.TRIAL.EMAILS_PER_DAY - userData.trialUsage.emailsSent
-        }
-      };
-    }
-    
-    return {
-      email: userData?.emailLimits || 0,
-      sms: userData?.smsLimits || 0
-    };
-  }
 
-  async checkFeatureAccess(userId: string, feature: string): Promise<boolean> {
-    const userLimits = await this.getUserLimits(userId);
-    if (!userLimits) return false;
-
-    const tierFeatures = SUBSCRIPTION_TIERS[userLimits.tier].features;
-    return tierFeatures.includes(feature);
-  }
-}
-
-export class CreditsService {
-  private db: Firestore;
-  private userId: string;
-
-  constructor(userId: string) {
-    this.db = getFirestore(); // Initialize Firestore instance here
-    this.userId = userId; // Store userId for later use
-  }
-
-  async getUserSubscriptionTier(): Promise<string> {
-    if (typeof this.userId !== 'string' || !this.userId) {
-      console.error('Invalid userId:', this.userId);
-      throw new Error('Invalid userId provided');
-    }
-    console.log('Fetching subscription tier for userId:', this.userId);
-    const userDoc = await getDoc(doc(this.db, 'users', this.userId));
-    if (!userDoc.exists()) {
-      console.error('User not found for userId:', this.userId);
-      throw new Error('User not found');
-    }
-    return userDoc.data()?.tier || 'basic'; // Default to 'basic' if no tier is found
-  }
-
-  async initializeUser(userId: string): Promise<void> {
-    if (typeof userId !== 'string' || !userId) {
-        console.error('Invalid userId:', userId);
-        throw new Error('Invalid userId provided');
-    }
-    try {
-        await this.db.collection('users').doc(userId).set({
-            emailLimits: 0,
-            smsLimits: 0,
-            createdAt: new Date().toISOString(),
-            trialUsage: {
-                previewLeads: 0,
-                importedContacts: 0,
-                emailsSent: 0,
-                lastReset: new Date().toISOString(),
-                startDate: new Date().toISOString(),
-                endDate: new Date(Date.now() + (LIMIT_CONFIG.TRIAL.DURATION_DAYS * 24 * 60 * 60 * 1000)).toISOString()
-            }
-        });
-    } catch (error) {
-        console.error('Initialize user error:', error);
-        throw new Error('Failed to initialize user');
-    }
-  }
-
-  async addCredits(userId: string, type: 'email' | 'sms', amount: number): Promise<void> {
-    if (typeof userId !== 'string' || !userId) {
-        console.error('Invalid userId:', userId);
-        throw new Error('Invalid userId provided');
-    }
-    if (await this.getUserSubscriptionTier() === 'basic') {
-        throw new Error('This feature is only available for premium users.');
-    }
-    const userRef = this.db.collection('users').doc(userId);
-    const creditsField = type === 'email' ? 'emailLimits' : 'smsLimits';
-    await userRef.update({
-        [creditsField]: this.db.FieldValue.increment(amount),
-        lastPurchase: new Date().toISOString()
+    await updateDoc(doc(db, 'users', userId), {
+      subscriptionData: trialData,
     });
+
+    return trialData;
   }
 
-  async deductCredits(userId: string, amount: number): Promise<boolean> {
-    if (typeof userId !== 'string' || !userId) {
-        console.error('Invalid userId:', userId);
-        throw new Error('Invalid userId provided');
+  static async isTrialActive(userId: string): Promise<boolean> {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    const userData = userDoc.data();
+
+    if (!userData?.subscriptionData) return false;
+
+    const { tier, expiresAt, usageStats } = userData.subscriptionData;
+
+    if (tier !== 'free' || !expiresAt) return false;
+
+    const expiryDate = new Date(expiresAt);
+    const isExpired = expiryDate < new Date();
+    const hasExceededLimits = usageStats?.usedEmails >= this.TRIAL_EMAIL_LIMIT;
+
+    if (isExpired || hasExceededLimits) {
+      // Update to expired trial state
+      await this.handleTrialExpiration(userId);
+      return false;
     }
-    const userRef = this.db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-        console.error('User not found for userId:', userId);
-        return false;
-    }
-    const currentCredits = userDoc.data()?.credits || 0;
-    if (currentCredits < amount) return false;
-    await userRef.update({
-        credits: currentCredits - amount
-    });
+
     return true;
   }
 
-  getCreditPackages() {
-    return LIMIT_CONFIG.PACKAGES;
-  }
+  static async getRemainingLimits(userId: string) {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    const userData = userDoc.data();
 
-  getMinimumPurchase() {
-    return LIMIT_CONFIG.MIN_PURCHASE;
-  }
-
-  async checkTrialEligibility(userId: string): Promise<{
-    canUse: boolean;
-    remainingPreviews: number;
-    remainingImports: number;
-    remainingEmails: number;
-    message: string;
-  }> {
-    if (await this.getUserSubscriptionTier() === 'basic') {
-      throw new Error('Trial features are only available for premium users.');
-    }
-    const doc = await this.db.collection('users').doc(userId).get();
-    const userData = doc.data();
-    
-    if (!userData?.trialUsage) {
-      return { 
-        canUse: false,
-        remainingPreviews: 0,
-        remainingImports: 0,
-        remainingEmails: 0,
-        message: 'Trial not initialized'
-      };
-    }
-
-    const trial = userData.trialUsage;
-    const now = new Date();
-    const lastReset = new Date(trial.lastReset);
-    const isNewDay = lastReset.getDate() !== now.getDate();
-
-    if (isNewDay) {
-      await this.resetDailyUsage(userId);
-      trial.emailsSent = 0;
-    }
-
-    const isExpired = new Date(trial.endDate) < now;
-    const reachedPreviewLimit = trial.previewLeads >= LIMIT_CONFIG.TRIAL.PREVIEW_LEADS;
-    const reachedImportLimit = trial.importedContacts >= LIMIT_CONFIG.TRIAL.IMPORTED_CONTACTS;
-    const reachedDailyEmailLimit = trial.emailsSent >= LIMIT_CONFIG.TRIAL.EMAILS_PER_DAY;
-
-    if (isExpired) {
+    if (!userData?.subscriptionData) {
       return {
-        canUse: false,
-        remainingPreviews: 0,
-        remainingImports: 0,
-        remainingEmails: 0,
-        message: 'Trial period has expired. Upgrade to continue!'
+        emails: 0,
+        contacts: 0,
+        sms: 0,
+      };
+    }
+
+    const { usageStats } = userData.subscriptionData;
+    const isActive = await this.isTrialActive(userId);
+
+    if (!isActive) {
+      return {
+        emails: 0,
+        contacts: 0,
+        sms: 0,
       };
     }
 
     return {
-      canUse: true,
-      remainingPreviews: LIMIT_CONFIG.TRIAL.PREVIEW_LEADS - trial.previewLeads,
-      remainingImports: LIMIT_CONFIG.TRIAL.IMPORTED_CONTACTS - trial.importedContacts,
-      remainingEmails: LIMIT_CONFIG.TRIAL.EMAILS_PER_DAY - trial.emailsSent,
-      message: 'Trial active'
+      emails: this.TRIAL_EMAIL_LIMIT - (usageStats?.usedEmails || 0),
+      contacts: this.TRIAL_CONTACT_LIMIT - (usageStats?.usedLeads || 0),
+      sms: this.TRIAL_SMS_LIMIT - (usageStats?.usedSMS || 0),
     };
   }
 
-  private async resetDailyUsage(userId: string): Promise<void> {
-    await this.db.collection('users').doc(userId).update({
-      'trialUsage.emailsSent': 0,
-      'trialUsage.lastReset': new Date().toISOString()
-    });
-  }
+  static async checkFeatureAccess(userId: string, feature: string): Promise<boolean> {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    const userData = userDoc.data();
 
-  async trackUsage(userId: string, type: 'preview' | 'import' | 'email', count: number): Promise<void> {
-    const userRef = this.db.collection('users').doc(userId);
-    
-    await this.db.runTransaction(async (transaction: Transaction) => {
-      const doc = await transaction.get(userRef);
-      const userData = doc.data();
-      
-      if (!userData) throw new Error('User not found');
+    if (!userData?.subscriptionData) return false;
 
-      const updates: any = {};
+    const { tier, features } = userData.subscriptionData;
 
-      if (userData.trialUsage && this.isTrialActive(userData.trialUsage)) {
-        switch (type) {
-          case 'preview':
-            updates['trialUsage.previewLeads'] = userData.trialUsage.previewLeads + count;
-            break;
-          case 'import':
-            updates['trialUsage.importedContacts'] = userData.trialUsage.importedContacts + count;
-            break;
-          case 'email':
-            updates['trialUsage.emailsSent'] = userData.trialUsage.emailsSent + count;
-            break;
-        }
-      } else {
-        // Handle paid user usage
-        const creditsField = type === 'email' ? 'emailLimits' : 'smsLimits';
-        const currentCredits = userData[creditsField] || 0;
-        
-        if (currentCredits < count) {
-          throw new Error(`Insufficient ${type} limits`);
-        }
-        
-        updates[creditsField] = currentCredits - count;
-      }
-
-      transaction.update(userRef, updates);
-    });
-  }
-
-  private isTrialActive(trialUsage: any): boolean {
-    return (
-      new Date(trialUsage.endDate) > new Date() &&
-      trialUsage.previewLeads < LIMIT_CONFIG.TRIAL.PREVIEW_LEADS &&
-      trialUsage.importedContacts < LIMIT_CONFIG.TRIAL.IMPORTED_CONTACTS
-    );
-  }
-
-  calculateExtraCreditPrice(type: 'EMAIL' | 'SMS', amount: number): {
-    basePrice: number;
-    discount: number;
-    finalPrice: number;
-    pricePerLimit: number;
-  } {
-    const config = LIMIT_CONFIG.EXTRA_LIMITS[type];
-    
-    if (amount < config.MIN_PURCHASE) {
-      throw new Error(`Minimum purchase is ${config.MIN_PURCHASE} ${type.toLowerCase()} limits`);
+    if (tier === 'free') {
+      const isActive = await this.isTrialActive(userId);
+      if (!isActive) return false;
     }
 
-    const basePrice = amount * config.PRICE_PER_LIMIT;
-    let discount = 0;
+    return features?.[feature] || false;
+  }
 
-    // Find the highest applicable discount
-    for (const tier of config.BULK_DISCOUNTS.sort((a: BulkDiscount, b: BulkDiscount) => b.amount - a.amount)) {
-      if (amount >= tier.amount) {
-        discount = basePrice * tier.discount;
-        break;
-      }
-    }
-
-    const finalPrice = basePrice - discount;
-    const pricePerLimit = finalPrice / amount;
-
-    return {
-      basePrice,
-      discount,
-      finalPrice,
-      pricePerLimit
+  private static async handleTrialExpiration(userId: string) {
+    const expiredSubscription = {
+      tier: 'free',
+      limits: 0,
+      maxEmails: 0,
+      maxContacts: 0,
+      maxSMS: 0,
+      features: {
+        followUpEmails: false,
+        abTesting: false,
+        aiOptimization: false,
+        analytics: false,
+        customDomain: false,
+        previewLeads: false,
+        importContacts: false,
+        fullLeadAccess: false,
+        bulkOperations: false,
+      },
+      expiresAt: null,
     };
-  }
 
-  async purchaseExtraCredits(
-    userId: string,
-    type: 'email' | 'sms',
-    amount: number,
-    paymentId: string
-  ): Promise<{
-    success: boolean;
-    newBalance: number;
-    transactionId: string;
-  }> {
-    const userRef = this.db.collection('users').doc(userId) as DocumentReference<DocumentData>;
-    
+    await updateDoc(doc(db, 'users', userId), {
+      subscriptionData: expiredSubscription,
+    });
+  }
+}
+
+class CreditsService {
+  async getTrialCredits(userId: string) {
     try {
-      const result = await this.db.runTransaction(async (transaction: Transaction) => {
-        const userDoc = await transaction.get(userRef);
-        if (!userDoc.exists) {
-          throw new Error('User not found');
-        }
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        throw new Error('User not found');
+      }
 
-        const userData = userDoc.data() as DocumentData;
-        const creditsField = type === 'email' ? 'emailLimits' : 'smsLimits';
-        const currentCredits = userData[creditsField] || 0;
-        const newBalance = currentCredits + amount;
-
-        // Update user limits
-        transaction.update(userRef, {
-          [creditsField]: newBalance,
-          lastPurchase: new Date().toISOString()
-        });
-
-        // Record the transaction
-        const transactionRef = this.db.collection('creditTransactions').doc() as DocumentReference<DocumentData>;
-        transaction.set(transactionRef, {
-          userId,
-          type,
-          amount,
-          paymentId,
-          timestamp: new Date().toISOString(),
-          previousBalance: currentCredits,
-          newBalance,
-          source: 'extra_purchase'
-        });
-
-        return {
-          success: true,
-          newBalance,
-          transactionId: transactionRef.id
-        };
-      });
-
-      return result;
+      const userData = userDoc.data();
+      return {
+        emailCredits: userData.totalEmails || 0,
+        smsCredits: userData.totalSMS || 0,
+        leadCredits: userData.totalLeads || 0,
+      };
     } catch (error) {
-      console.error('Error purchasing extra limits:', error);
+      console.error('Error getting trial credits:', error);
       throw error;
     }
   }
 
-  async getExtraCreditPurchaseHistory(userId: string): Promise<LimitTransaction[]> {
+  async addTrialCredits(userId: string, type: 'email' | 'sms' | 'lead', amount: number) {
     try {
-      const snapshot = await this.db.collection('creditTransactions')
-        .where('userId', '==', userId)
-        .where('source', '==', 'extra_purchase')
-        .orderBy('timestamp', 'desc')
-        .limit(50)
-        .get();
+      const userRef = doc(db, 'users', userId);
+      const field = `total${type.charAt(0).toUpperCase() + type.slice(1)}s`;
+      
+      await updateDoc(userRef, {
+        [field]: increment(amount),
+      });
 
-      return snapshot.docs.map((doc: QueryDocumentSnapshot) => ({
+      return true;
+    } catch (error) {
+      console.error('Error adding trial credits:', error);
+      throw error;
+    }
+  }
+
+  calculateExtraCreditPrice(type: string, amount: number) {
+    const basePrices = {
+      EMAIL: 0.004, // $0.004 per email
+      SMS: 0.03,    // $0.03 per SMS
+      LEAD: 0.06    // $0.06 per lead
+    };
+
+    const basePrice = basePrices[type] || 0;
+    const baseTotal = basePrice * amount;
+    
+    // Apply bulk discounts
+    let discount = 0;
+    const discountTiers = [
+      { threshold: 100000, discount: 0.25 }, // 25% off for 100k+
+      { threshold: 50000, discount: 0.20 },  // 20% off for 50k+
+      { threshold: 10000, discount: 0.15 },  // 15% off for 10k+
+      { threshold: 5000, discount: 0.10 },   // 10% off for 5k+
+      { threshold: 1000, discount: 0.05 }    // 5% off for 1k+
+    ];
+
+    for (const tier of discountTiers) {
+      if (amount >= tier.threshold) {
+        discount = baseTotal * tier.discount;
+        break;
+      }
+    }
+
+    // Apply subscription tier bonus
+    const subscriptionBonus = {
+      pro: 0.10,    // 10% bonus for Pro users
+      grower: 0.05, // 5% bonus for Grower users
+      starter: 0.02 // 2% bonus for Starter users
+    };
+
+    const finalPrice = baseTotal * (1 - discount);
+    const pricePerCredit = finalPrice / amount;
+
+    return {
+      basePrice: baseTotal,
+      discount,
+      finalPrice,
+      pricePerCredit,
+      subscriptionBonus
+    };
+  }
+
+  async addExtraCredits(userId: string, type: 'email' | 'sms' | 'lead', amount: number) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const field = `total${type.charAt(0).toUpperCase() + type.slice(1)}s`;
+      
+      // Add transaction record
+      const transactionRef = await addDoc(collection(db, 'transactions'), {
+        userId,
+        type: 'credit_purchase',
+        creditType: type,
+        amount,
+        timestamp: new Date().toISOString(),
+        status: 'completed'
+      });
+
+      // Update user credits
+      await updateDoc(userRef, {
+        [field]: increment(amount),
+        lastCreditPurchase: new Date().toISOString()
+      });
+
+      return {
+        success: true,
+        transactionId: transactionRef.id
+      };
+    } catch (error) {
+      console.error('Error adding extra credits:', error);
+      throw error;
+    }
+  }
+
+  async getCreditHistory(userId: string) {
+    try {
+      const transactionsRef = collection(db, 'transactions');
+      const q = query(
+        transactionsRef,
+        where('userId', '==', userId),
+        where('type', '==', 'credit_purchase'),
+        orderBy('timestamp', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
         id: doc.id,
-        ...(doc.data() as Omit<LimitTransaction, 'id'>)
+        ...doc.data()
       }));
     } catch (error) {
-      console.error('Error getting purchase history:', error);
-      return [];
+      console.error('Error getting credit history:', error);
+      throw error;
     }
   }
 }
+
+export const creditsService = new CreditsService();
 
 export { LIMIT_CONFIG }; 

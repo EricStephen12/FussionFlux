@@ -7,15 +7,23 @@ import { paymentService } from '@/services/payment';
 import { useRouter } from 'next/navigation';
 import { useSubscription } from '@/hooks/useSubscription';
 import Image from 'next/image';
+import { defaultImageProps, getImagePlaceholder } from '@/utils/imageUtils';
+
+const tierIcons = {
+  'Free Trial': '/images/tiers/free-trial.webp',
+  'Starter': '/images/tiers/starter.webp',
+  'Pro': '/images/tiers/pro.webp',
+  'Enterprise': '/images/tiers/enterprise.webp'
+};
 
 const tiers = [
   {
     name: 'Free Trial',
     price: '0',
-    limits: 50,
-    maxEmails: 10,
-    maxSMS: 0,
-    maxContacts: 10,
+    limits: 100,
+    maxEmails: 250,
+    maxSMS: 50,
+    maxContacts: 100,
     description: 'Try our platform risk-free for 14 days',
     features: [
       'Basic Analytics Dashboard',
@@ -31,7 +39,8 @@ const tiers = [
     },
     cta: 'Start Free Trial',
     popular: false,
-    highlight: 'No Credit Card Required'
+    highlight: 'No Credit Card Required',
+    icon: tierIcons['Free Trial']
   },
   {
     name: 'Starter',
@@ -39,7 +48,7 @@ const tiers = [
     limits: 1000,
     maxEmails: 5000,
     maxSMS: 500,
-    maxContacts: 500,
+    maxContacts: 1000,
     description: 'Perfect for new dropshippers starting their journey',
     features: [
       'Follow-up Emails',
@@ -62,12 +71,12 @@ const tiers = [
     highlight: '97% Email Deliverability'
   },
   {
-    name: 'Grower',
+    name: 'Growth',
     price: '99',
     limits: 5000,
     maxEmails: 15000,
-    maxSMS: 1000,
-    maxContacts: 2000,
+    maxSMS: 1500,
+    maxContacts: 5000,
     description: 'Most chosen by successful dropshippers',
     features: [
       'All Starter Features',
@@ -91,32 +100,29 @@ const tiers = [
   },
   {
     name: 'Pro',
-    price: '249',
-    limits: 10000,
+    price: '199',
+    limits: 15000,
     maxEmails: 50000,
     maxSMS: 5000,
-    maxContacts: 5000,
-    description: 'For serious dropshippers ready to scale',
+    maxContacts: 15000,
+    description: 'For established dropshippers with high volume needs',
     features: [
-      'All Growth Features',
-      'Premium AI Features',
-      'Unlimited Templates',
-      '24/7 Priority Support',
-      'Custom Integration',
-      'White Label Options',
-      'Enterprise Security',
-      'Advanced API Access',
-      'Revenue Analytics',
-      'Bulk Automation',
+      'All templates',
+      'AI optimization',
+      'Full analytics suite',
+      'Unlimited A/B tests',
+      'Premium support',
+      'API access',
+      'Custom integrations'
     ],
     stats: {
-      expectedOrders: '100-200',
-      potentialRevenue: '$3,500-$7,000',
-      roi: '23-47x',
+      expectedOrders: '5-10',
+      potentialRevenue: '$175-$350',
+      roi: '6-12x',
     },
-    cta: 'Go Pro',
+    cta: 'Get Pro',
     popular: false,
-    highlight: 'Highest ROI Potential'
+    highlight: 'Best Value'
   }
 ];
 
@@ -235,180 +241,115 @@ export default function SubscriptionTiers() {
   };
 
   return (
-    <div className="bg-white py-12 sm:py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Billing Frequency Toggle */}
-        <div className="mt-8 flex justify-center">
-          <div className="relative flex rounded-full bg-gray-100 p-1">
-            <button
-              type="button"
-              className={classNames(
-                frequency === 'monthly'
-                  ? 'bg-white shadow-sm'
-                  : 'hover:bg-gray-50',
-                'relative rounded-full py-2 px-6 text-sm font-semibold text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-              )}
-              onClick={() => setFrequency('monthly')}
-            >
-              Monthly
-            </button>
-            <button
-              type="button"
-              className={classNames(
-                frequency === 'yearly'
-                  ? 'bg-white shadow-sm'
-                  : 'hover:bg-gray-50',
-                'relative ml-0.5 rounded-full py-2 px-6 text-sm font-semibold text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-              )}
-              onClick={() => setFrequency('yearly')}
-            >
-              Yearly
-              <span className="absolute -right-2 -top-2 rounded-full bg-green-500 px-2 py-0.5 text-xs text-white">
-                Save 17%
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* Payment Method Selection */}
-        <div className="mt-8">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Select Payment Method</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {paymentMethods.map((method) => (
-              <button
-                key={method.id}
-                onClick={() => setSelectedPayment(method.id)}
-                className={classNames(
-                  'flex flex-col items-center p-4 rounded-lg border-2 transition-all',
-                  selectedPayment === method.id
-                    ? 'border-indigo-600 bg-indigo-50'
-                    : 'border-gray-200 hover:border-indigo-200'
-                )}
-              >
+    <div className="bg-white py-24 sm:py-32">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        {tiers.map((tier) => (
+          <div key={tier.name} className="relative">
+            {tier.icon && (
+              <div className="absolute -top-4 -left-4 z-10">
                 <Image
-                  src={method.logo}
-                  alt={method.name}
-                  width={120}
-                  height={40}
-                  className="h-10 object-contain"
+                  src={tier.icon}
+                  alt={`${tier.name} tier icon`}
+                  width={64}
+                  height={64}
+                  className="rounded-full shadow-lg"
+                  {...defaultImageProps}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = getImagePlaceholder('avatar');
+                  }}
                 />
-                <p className="mt-2 text-sm font-medium text-gray-900">{method.name}</p>
-                <p className="text-xs text-gray-500">{method.description}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {error && (
-          <div className="mt-8 text-center">
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          </div>
-        )}
-
-        {/* Pricing Tiers */}
-        <div className="isolate mx-auto mt-10 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-2 md:grid-cols-3">
-          {tiers.map((tier) => (
-            <div
-              key={tier.name}
-              className={classNames(
-                tier.popular
-                  ? 'ring-2 ring-indigo-600 scale-105'
-                  : 'ring-1 ring-gray-200',
-                'rounded-3xl p-8 xl:p-10'
-              )}
-            >
-              <div className="flex items-center justify-between gap-x-4">
-                <h3
-                  id={tier.name}
-                  className={classNames(
-                    tier.popular ? 'text-indigo-600' : 'text-gray-900',
-                    'text-lg font-semibold leading-8'
-                  )}
-                >
-                  {tier.name}
-                </h3>
-                {tier.popular ? (
-                  <p className="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600">
-                    Most popular
-                  </p>
-                ) : (
-                  <p className="rounded-full bg-gray-50 px-2.5 py-1 text-xs font-semibold leading-5 text-gray-600">
-                    {tier.highlight}
-                  </p>
-                )}
               </div>
-
-              <p className="mt-4 text-sm leading-6 text-gray-600">
-                {tier.description}
-              </p>
-              <p className="mt-6 flex items-baseline gap-x-1">
-                <span className="text-4xl font-bold tracking-tight text-gray-900">
-                  ${frequency === 'monthly' ? tier.price : (Number(tier.price) * 0.83 * 12).toFixed(0)}
-                </span>
-                <span className="text-sm font-semibold leading-6 text-gray-600">
-                  /{frequency === 'monthly' ? 'month' : 'year'}
-                </span>
-              </p>
-
-              {/* Usage Limits */}
-              <div className="mt-8 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Credits</span>
-                  <span className="font-semibold text-gray-900">{tier.limits.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Max Emails</span>
-                  <span className="font-semibold text-gray-900">{subscription?.maxEmails.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Max Contacts</span>
-                  <span className="font-semibold text-gray-900">{subscription?.maxContacts.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Max SMS</span>
-                  <span className="font-semibold text-gray-900">{subscription?.maxSMS.toLocaleString()}</span>
-                </div>
-              </div>
-
-              {/* ROI Stats */}
-              <div className="mt-4 space-y-2 text-left">
-                <h4 className="font-medium text-gray-900">Expected Monthly Results:</h4>
-                <ul className="list-disc list-inside">
-                  <li>{tier.stats.expectedOrders} Orders</li>
-                  <li>${tier.stats.potentialRevenue} Revenue</li>
-                  <li>{tier.stats.roi}x ROI</li>
-                </ul>
-              </div>
-
-              <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
-                {tier.features.map((feature) => (
-                  <li key={feature} className="flex gap-x-3">
-                    <CheckIcon
-                      className="h-6 w-5 flex-none text-indigo-600"
-                      aria-hidden="true"
-                    />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                onClick={() => handleSubscribe(tier.name)}
-                disabled={loadingTier === tier.name}
+            )}
+            <div className="flex items-center justify-between gap-x-4">
+              <h3
+                id={tier.name}
                 className={classNames(
-                  'mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
-                  tier.popular
-                    ? 'bg-indigo-600 text-white shadow hover:bg-indigo-500 focus-visible:outline-indigo-600'
-                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                  tier.popular ? 'text-indigo-600' : 'text-gray-900',
+                  'text-lg font-semibold leading-8'
                 )}
               >
-                {loadingTier === tier.name ? 'Processing...' : tier.cta}
-              </button>
+                {tier.name}
+              </h3>
+              {tier.popular ? (
+                <p className="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600">
+                  Most popular
+                </p>
+              ) : (
+                <p className="rounded-full bg-gray-50 px-2.5 py-1 text-xs font-semibold leading-5 text-gray-600">
+                  {tier.highlight}
+                </p>
+              )}
             </div>
-          ))}
-        </div>
+
+            <p className="mt-4 text-sm leading-6 text-gray-600">
+              {tier.description}
+            </p>
+            <p className="mt-6 flex items-baseline gap-x-1">
+              <span className="text-4xl font-bold tracking-tight text-gray-900">
+                ${frequency === 'monthly' ? tier.price : (Number(tier.price) * 0.83 * 12).toFixed(0)}
+              </span>
+              <span className="text-sm font-semibold leading-6 text-gray-600">
+                /{frequency === 'monthly' ? 'month' : 'year'}
+              </span>
+            </p>
+
+            {/* Usage Limits */}
+            <div className="mt-8 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Credits</span>
+                <span className="font-semibold text-gray-900">{tier.limits.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Max Emails</span>
+                <span className="font-semibold text-gray-900">{subscription?.maxEmails.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Max Contacts</span>
+                <span className="font-semibold text-gray-900">{subscription?.maxContacts.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Max SMS</span>
+                <span className="font-semibold text-gray-900">{subscription?.maxSMS.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* ROI Stats */}
+            <div className="mt-4 space-y-2 text-left">
+              <h4 className="font-medium text-gray-900">Expected Monthly Results:</h4>
+              <ul className="list-disc list-inside">
+                <li>{tier.stats.expectedOrders} Orders</li>
+                <li>${tier.stats.potentialRevenue} Revenue</li>
+                <li>{tier.stats.roi}x ROI</li>
+              </ul>
+            </div>
+
+            <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
+              {tier.features.map((feature) => (
+                <li key={feature} className="flex gap-x-3">
+                  <CheckIcon
+                    className="h-6 w-5 flex-none text-indigo-600"
+                    aria-hidden="true"
+                  />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={() => handleSubscribe(tier.name)}
+              disabled={loadingTier === tier.name}
+              className={classNames(
+                'mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
+                tier.popular
+                  ? 'bg-indigo-600 text-white shadow hover:bg-indigo-500 focus-visible:outline-indigo-600'
+                  : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+              )}
+            >
+              {loadingTier === tier.name ? 'Processing...' : tier.cta}
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );

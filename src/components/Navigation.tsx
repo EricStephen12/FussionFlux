@@ -8,13 +8,13 @@ import { BoltIcon, Bars3Icon, XMarkIcon, CodeBracketIcon } from '@heroicons/reac
 
 export default function Navigation({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await logout();
       router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);

@@ -32,7 +32,7 @@ export class NOWPaymentsService {
   private apiKey: string;
   private baseURL = 'https://api.nowpayments.io/v1';
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string = process.env.NOWPAYMENTS_API_KEY || '') {
     this.apiKey = apiKey;
   }
 
@@ -137,43 +137,54 @@ export class NOWPaymentsService {
       throw new Error('Failed to estimate price');
     }
   }
-
-  verifyIPNSignature(payload: string, signature: string): boolean {
-    try {
-      const crypto = require('crypto');
-      const secret = process.env.NOWPAYMENTS_IPN_SECRET;
-      
-      if (!secret) {
-        throw new Error('NOWPayments IPN secret is not configured');
-      }
-
-      const hmac = crypto.createHmac('sha512', secret);
-      hmac.update(payload);
-      const calculatedSignature = hmac.digest('hex');
-
-      return calculatedSignature === signature;
-    } catch (error) {
-      console.error('NOWPayments signature verification error:', error);
-      return false;
-    }
-  }
 }
 
 export const nowPaymentsService = new NOWPaymentsService();
 export type { CreatePaymentResponse, PaymentStatus };
 
-export function verifyIPNSignature(payload: string, signature: string): boolean {
+// Helper function to convert string to ArrayBuffer
+function str2ab(str: string) {
+  const buf = new ArrayBuffer(str.length);
+  const bufView = new Uint8Array(buf);
+  for (let i = 0, strLen = str.length; i < strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
+}
+
+// Helper function to convert ArrayBuffer to hex string
+function ab2hex(buffer: ArrayBuffer) {
+  return Array.from(new Uint8Array(buffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+export async function verifyIPNSignature(payload: string, signature: string): Promise<boolean> {
   try {
-    const crypto = require('crypto');
     const secret = process.env.NOWPAYMENTS_IPN_SECRET;
     
     if (!secret) {
       throw new Error('NOWPayments IPN secret is not configured');
     }
 
-    const hmac = crypto.createHmac('sha512', secret);
-    hmac.update(payload);
-    const calculatedSignature = hmac.digest('hex');
+    // Convert the secret to a key
+    const keyData = await crypto.subtle.importKey(
+      'raw',
+      str2ab(secret),
+      { name: 'HMAC', hash: 'SHA-512' },
+      false,
+      ['sign']
+    );
+
+    // Sign the payload
+    const signedData = await crypto.subtle.sign(
+      'HMAC',
+      keyData,
+      str2ab(payload)
+    );
+
+    // Convert the signature to hex
+    const calculatedSignature = ab2hex(signedData);
 
     return calculatedSignature === signature;
   } catch (error) {

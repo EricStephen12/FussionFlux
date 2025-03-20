@@ -82,7 +82,7 @@ export default function TemplateGrid({
       if (template) {
         // Store the template in localStorage to persist it during navigation
         localStorage.setItem('editingTemplate', JSON.stringify(template));
-        router.push(`/dashboard/templates/edit/${templateId}`);
+        router.push(`/dashboard/campaigns/edit/${templateId}`);
       }
     } catch (error) {
       console.error('Error loading template:', error);
@@ -133,7 +133,7 @@ export default function TemplateGrid({
         </div>
         {!showPresets && (
           <Link
-            href="/dashboard/templates/new"
+            href="/dashboard/campaigns/new"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
           >
             <PlusIcon className="h-5 w-5 mr-2" />

@@ -1,26 +1,25 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { auth } from '@/utils/firebase-admin';
-import { db } from '@/utils/firebase-admin';
+import { verifyAuth } from '@/utils/auth-server';
 
 export async function middleware(request: NextRequest) {
   try {
-    // Get the session cookie
-    const sessionCookie = request.cookies.get('session')?.value;
-
-    if (!sessionCookie) {
+    // Get the session token from the Authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Verify the session
-    const decodedClaims = await auth.verifySessionCookie(sessionCookie);
+    const token = authHeader.split('Bearer ')[1];
+    const session = await verifyAuth(token);
     
-    // Get user's subscription
-    const userDoc = await db.collection('users').doc(decodedClaims.uid).get();
-    const userData = userDoc.data();
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
 
-    if (!userData || (userData.subscriptionTier !== 'pro' && userData.subscription?.status !== 'trial')) {
-      // Redirect non-pro and non-trial users to upgrade page
+    // For pro routes, you can add additional checks here
+    // For example, checking a pro status claim in the JWT
+    if (!session.pro) {
       return NextResponse.redirect(new URL('/dashboard/billing', request.url));
     }
 

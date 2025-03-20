@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/utils/firebase';
-import { firestoreService } from '@/services/firestore';
-import { creditsService } from '@/services/trial';
+import { verifyAuth } from '@/utils/auth-server';
+import { db } from '@/utils/firebase-admin';
 
 interface VerifyPaymentRequest {
   transactionId: string;
@@ -18,10 +17,9 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    let decodedToken;
-    try {
-      decodedToken = await auth.verifyIdToken(token);
-    } catch (error) {
+    const session = await verifyAuth(token);
+    
+    if (!session) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
@@ -92,20 +90,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 
-    // Add both email and SMS credits
-    await creditsService.addCredits(decodedToken.uid, 'email', plan.emailCredits);
-    await creditsService.addCredits(decodedToken.uid, 'sms', plan.smsCredits);
+    // Get user document reference
+    const userRef = db.collection('users').doc(session.sub);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const userData = userDoc.data() || {};
+
+    // Update user credits
+    await userRef.update({
+      'extraCredits.extraEmails': (userData.extraCredits?.extraEmails || 0) + plan.emailCredits,
+      'extraCredits.extraSMS': (userData.extraCredits?.extraSMS || 0) + plan.smsCredits,
+      updatedAt: new Date().toISOString()
+    });
 
     // Record the transaction
-    await firestoreService.recordTransaction({
-      userId: decodedToken.uid,
+    await db.collection('transactions').add({
+      userId: session.sub,
       transactionId,
       paymentMethod,
       planId,
       emailCredits: plan.emailCredits,
       smsCredits: plan.smsCredits,
       amount: plan.price,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString()
     });
 
     return NextResponse.json({

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { firestoreService } from '@/services/firestore';
 import { rateLimit } from '@/utils/rate-limiter';
 import type { ErrorDetails } from '@/utils/error-monitoring';
+import { db } from '@/utils/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 export async function POST(request: Request) {
   try {
@@ -28,7 +29,8 @@ export async function POST(request: Request) {
     const errorData = (await request.json()) as ErrorDetails;
 
     // Store error in Firestore
-    await firestoreService.addDocument('error_logs', {
+    const errorLogsRef = collection(db, 'error_logs');
+    await addDoc(errorLogsRef, {
       ...errorData,
       ip,
       timestamp: new Date().toISOString(),

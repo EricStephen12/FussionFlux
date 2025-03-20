@@ -3,6 +3,7 @@ import { db } from '@/utils/firebase';
 import { collection, doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { NOWPaymentsService } from '@/services/nowpayments';
 import { LeadPack } from './LeadService'; // Import the LeadPack interface
+import { SUBSCRIPTION_TIERS, isSpecialOfferActive } from '@/hooks/useSubscription';
 
 interface PaymentPlan {
   id: string;
@@ -83,50 +84,60 @@ class PaymentService {
 
       return new Promise((resolve) => {
         script.onload = () => {
-          // @ts-ignore - FlutterWave types
-          const FlutterwaveCheckout = window.FlutterwaveCheckout;
-          
-          FlutterwaveCheckout({
-            public_key: this.flutterwavePublicKey,
-            tx_ref: `tx-${Date.now()}`,
-            amount: plan.price,
-            currency: 'USD',
-            payment_options: 'card,ussd,mobilemoney',
-            customer: {
-              email: email,
-            },
-            customizations: {
-              title: 'Email Campaign Credits',
-              description: `Purchase of ${plan.limits} email credits`,
-              logo: 'https://your-logo-url.com/logo.png',
-            },
-            callback: (response: any) => {
-              if (response.status === 'successful') {
-                resolve({
-                  success: true,
-                  paymentUrl: response.payment_url,
-                  transactionId: response.transaction_id,
-                });
-              } else {
+          // Create a wrapper function to handle dynamic amount updates
+          const initializePayment = (confirmedAmount: number) => {
+            // @ts-ignore - FlutterWave types
+            const FlutterwaveCheckout = window.FlutterwaveCheckout;
+            
+            FlutterwaveCheckout({
+              public_key: this.flutterwavePublicKey,
+              tx_ref: `tx-${Date.now()}`,
+              amount: confirmedAmount, // Use the confirmed amount
+              currency: 'USD',
+              payment_options: 'card,ussd,mobilemoney',
+              customer: {
+                email: email,
+              },
+              customizations: {
+                title: 'Email Campaign Credits',
+                description: `Purchase of ${plan.limits} email credits`,
+                logo: 'https://your-logo-url.com/logo.png',
+              },
+              callback: (response: any) => {
+                if (response.status === 'successful') {
+                  resolve({
+                    success: true,
+                    paymentUrl: response.payment_url,
+                    transactionId: response.transaction_id,
+                    provider: 'flutterwave'
+                  });
+                } else {
+                  resolve({
+                    success: false,
+                    error: 'Payment failed',
+                    provider: 'flutterwave'
+                  });
+                }
+              },
+              onclose: () => {
                 resolve({
                   success: false,
-                  error: 'Payment failed',
+                  error: 'Payment window closed',
+                  provider: 'flutterwave'
                 });
-              }
-            },
-            onclose: () => {
-              resolve({
-                success: false,
-                error: 'Payment window closed',
-              });
-            },
-          });
+              },
+            });
+          };
+
+          // Initialize with the current plan price
+          initializePayment(plan.price);
         };
       });
     } catch (error: any) {
       return {
         success: false,
         error: error.message || 'Payment failed',
+        provider: 'flutterwave'
       };
     }
   }
@@ -204,82 +215,127 @@ class PaymentService {
         id: 'free',
         name: 'Free Trial',
         description: 'Ideal for small campaigns',
-        price: 19,
-        limits: 250,
+        price: 0,
+        limits: 100,
         features: [
-          '1,000 Email Credits',
+          '250 Email Credits',
+          '50 SMS Credits',
+          '100 Contact Limit',
           'Basic Templates',
           'Email Support',
           'Analytics Dashboard',
+          'Basic Lead Scoring',
+          'Single Campaign',
+          'Standard Delivery',
+          'Basic Reporting'
         ],
-        amount: 19,
+        amount: 0,
         planId: 'free',
         interval: 'monthly',
-        maxEmails: 500,
-        maxSMS: 100,
+        maxEmails: 250,
+        maxSMS: 50,
       },
       {
         id: 'starter',
         name: 'Starter',
         description: 'Perfect for growing businesses',
-        price: 49,
-        limits: 500,
+        price: 39,
+        limits: 1000,
         features: [
-          '2,000 Email Credits',
+          '5,000 Email Credits',
+          '500 SMS Credits',
+          '1,000 Contact Limit',
           'Premium Templates',
           'Priority Support',
           'Advanced Analytics',
           'A/B Testing',
+          'Advanced Lead Scoring',
+          '5 Active Campaigns',
+          'Priority Delivery',
+          'Custom Email Domain',
+          'Basic API Access',
+          'Scheduled Campaigns',
+          'Basic Automation'
         ],
-        amount: 49,
+        amount: 39,
         planId: 'starter',
         interval: 'monthly',
         maxEmails: 5000,
-        maxSMS: 1000,
+        maxSMS: 500,
       },
       {
         id: 'grower',
         name: 'Grower',
         description: 'Perfect for growing businesses',
-        price: 49,
-        limits: 500,
+        price: 99,
+        limits: 5000,
         features: [
-          '2,000 Email Credits',
-          'Premium Templates',
-          'Priority Support',
+          '15,000 Email Credits',
+          '1,500 SMS Credits',
+          '5,000 Contact Limit',
+          'All Premium Templates',
+          '24/7 Priority Support',
           'Advanced Analytics',
-          'A/B Testing',
+          'Advanced A/B Testing',
+          'AI-Powered Lead Scoring',
+          'Unlimited Active Campaigns',
+          'Priority Delivery',
+          'Custom Email Domain',
+          'Full API Access',
+          'Advanced Automation',
+          'Custom Templates',
+          'Dedicated IP',
+          'Advanced Reporting',
+          'Team Collaboration',
+          'Custom Integrations'
         ],
-        amount: 49,
+        amount: 99,
         planId: 'grower',
         interval: 'monthly',
-        maxEmails: 25000,
-        maxSMS: 5000,
+        maxEmails: 15000,
+        maxSMS: 1500,
       },
       {
         id: 'pro',
         name: 'Pro',
         description: 'For established businesses',
-        price: 99, // Placeholder price
-        limits: 1000,
+        price: 199,
+        limits: 15000,
         features: [
-          '4,000 Email Credits',
-          'Premium Templates',
-          'Priority Support',
+          '50,000 Email Credits',
+          '5,000 SMS Credits',
+          '15,000 Contact Limit',
+          'All Premium Templates',
+          '24/7 Dedicated Support',
           'Advanced Analytics',
-          'A/B Testing',
+          'Advanced A/B Testing',
+          'AI-Powered Lead Scoring',
+          'Unlimited Active Campaigns',
+          'Priority Delivery',
+          'Multiple Custom Domains',
+          'Full API Access',
+          'Advanced Automation',
+          'Custom Templates',
+          'Dedicated IP',
+          'Advanced Reporting',
+          'Team Collaboration',
+          'Custom Integrations',
+          'Dedicated Account Manager',
+          'Custom Development',
+          'SLA Guarantee',
+          'Advanced Security Features'
         ],
-        amount: 99,
+        amount: 199,
         planId: 'pro',
         interval: 'monthly',
-        maxEmails: 100000,
-        maxSMS: 20000,
+        maxEmails: 50000,
+        maxSMS: 5000,
       },
       {
         id: 'enterprise',
         name: 'Enterprise',
         description: 'For large-scale operations',
-        price: 249,
+        price: 199,
         limits: 5000,
         features: [
           '20,000 Email Credits',
@@ -289,7 +345,7 @@ class PaymentService {
           'A/B Testing',
           'Dedicated Account Manager',
         ],
-        amount: 249,
+        amount: 199,
         planId: 'enterprise',
         interval: 'monthly',
         maxEmails: 20000,
@@ -479,7 +535,7 @@ class PaymentService {
 
   private calculateDiscountedPrice(plan: PaymentPlan): number {
     const tier = SUBSCRIPTION_TIERS[plan.planId];
-    if (tier?.specialOffer?.enabled) {
+    if (tier?.specialOffer?.enabled && isSpecialOfferActive(tier)) {
       const discountMultiplier = 1 - (tier.specialOffer.discountPercentage / 100);
       return plan.price * discountMultiplier;
     }
@@ -488,11 +544,12 @@ class PaymentService {
 
   async initializePayment(plan: PaymentPlan, email: string): Promise<PaymentResult> {
     try {
-      const discountedPrice = this.calculateDiscountedPrice(plan);
       const tier = SUBSCRIPTION_TIERS[plan.planId];
+      const isOfferActive = tier?.specialOffer?.enabled && isSpecialOfferActive(tier);
+      const discountedPrice = this.calculateDiscountedPrice(plan);
       
-      // Add special offer bonuses if applicable
-      const bonuses = tier?.specialOffer?.enabled ? {
+      // Add special offer bonuses if applicable and active
+      const bonuses = isOfferActive ? {
         bonusAmount: tier.specialOffer.bonusAmount,
         bonusFeatures: tier.specialOffer.bonusFeatures,
         discountDuration: tier.specialOffer.durationMonths

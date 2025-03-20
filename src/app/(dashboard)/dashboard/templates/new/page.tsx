@@ -1,31 +1,23 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import TemplateEditor from '@/components/campaigns/TemplateEditor';
-import { Template } from '@/types/template';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
-export default function NewTemplatePage() {
+export default function NewTemplateRedirectPage() {
   const router = useRouter();
-  
-  const initialTemplate: Template = {
-    id: crypto.randomUUID(),
-    name: 'New Template',
-    category: 'Custom',
-    description: 'Start from scratch',
-    status: 'draft',
-    blocks: [],
-    lastModified: new Date().toISOString()
-  };
+
+  useEffect(() => {
+    // Redirect to campaigns new template page
+    router.push('/dashboard/campaigns/new');
+  }, [router]);
 
   return (
-    <TemplateEditor
-      template={initialTemplate}
-      onSave={async (template) => {
-        // Here you would typically save the template to your backend
-        console.log('Saving new template:', template);
-        router.push('/dashboard/templates');
-      }}
-      onCancel={() => router.back()}
-    />
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <LoadingSpinner />
+        <p className="mt-4 text-gray-600">Redirecting to campaigns...</p>
+      </div>
+    </div>
   );
 } 

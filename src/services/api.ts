@@ -1,3 +1,8 @@
+import { AnalyticsService } from './analytics';
+import { firestoreService } from './firestore';
+
+const analyticsService = new AnalyticsService();
+
 export interface Template {
   id: string;
   name: string;
@@ -24,4 +29,47 @@ export const saveTemplate = async (template: Template): Promise<void> => {
   console.log('Saving template:', template);
   // Here you would typically make an API call to save the template
   // For example: await axios.post('/api/templates', template);
+};
+
+export const fetchCampaignAnalytics = async (campaignId: string) => {
+  const response = await fetch(`/api/campaigns/${campaignId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch campaign analytics');
+  }
+  return response.json();
+};
+
+export const updateCampaignStatus = async (campaignId: string, status: string) => {
+  const response = await fetch(`/api/campaigns/${campaignId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status }),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to update campaign status');
+  }
+  return response.json();
+};
+
+export const fetchUsedEmails = async (): Promise<number> => {
+  try {
+    const stats = await firestoreService.getUserStats();
+    return stats?.emailsSent || 0;
+  } catch (error) {
+    console.error('Error fetching used emails:', error);
+    return 0;
+  }
+};
+
+export const fetchUsedSMS = async (): Promise<number> => {
+  try {
+    const stats = await firestoreService.getUserStats();
+    return stats?.smsSent || 0;
+  } catch (error) {
+    console.error('Error fetching used SMS:', error);
+    return 0;
+  }
 }; 
