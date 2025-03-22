@@ -89,24 +89,20 @@ const nextConfig = {
   }
 };
 
-// Temporarily disabled Sentry for debugging build issues
-// const { withSentryConfig } = require("@sentry/nextjs");
-// module.exports = withSentryConfig(
-//   nextConfig,
-//   {
-//     org: "fussionflux",
-//     project: "javascript-nextjs",
-//     silent: process.env.NODE_ENV === 'development',
-//     hideSourceMaps: true,
-//     widenClientFileUpload: true,
-//     reactComponentAnnotation: {
-//       enabled: true,
-//     },
-//     tunnelRoute: "/monitoring",
-//     disableLogger: true,
-//     automaticVercelMonitors: true,
-//   }
-// );
-
-// Export config directly while debugging build issues
-module.exports = nextConfig;
+const { withSentryConfig } = require("@sentry/nextjs");
+module.exports = withSentryConfig(
+  nextConfig,
+  {
+    org: "fussionflux",
+    project: "javascript-nextjs",
+    silent: process.env.NODE_ENV === 'development',
+    hideSourceMaps: true,
+    widenClientFileUpload: true,
+    reactComponentAnnotation: {
+      enabled: true,
+    },
+    tunnelRoute: "/monitoring",
+    disableLogger: true,
+    automaticVercelMonitors: true,
+  }
+);
