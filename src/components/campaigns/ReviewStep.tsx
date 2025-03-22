@@ -163,7 +163,7 @@ export default function ReviewStep({
   };
   
   return (
-    <div className="space-y-6">
+        <div className="space-y-6">
       <h2 className="text-2xl font-bold">Review Campaign</h2>
       <p className="text-gray-500">
         Review your campaign details before sending to {leadsCount} recipient{leadsCount !== 1 ? 's' : ''}.
@@ -182,19 +182,19 @@ export default function ReviewStep({
             <div className="flex justify-between">
               <span className="flex items-center text-gray-500"><Mail className="h-4 w-4 mr-2" /> Campaign Name:</span>
               <span className="font-medium">{campaignDetails.name}</span>
-            </div>
+                    </div>
             <div className="flex justify-between">
               <span className="flex items-center text-gray-500"><Mail className="h-4 w-4 mr-2" /> Subject:</span>
               <span className="font-medium">{campaignDetails.subject}</span>
-            </div>
+                  </div>
             <div className="flex justify-between">
               <span className="flex items-center text-gray-500"><User className="h-4 w-4 mr-2" /> From:</span>
               <span className="font-medium">{campaignDetails.fromName} &lt;{campaignDetails.fromEmail}&gt;</span>
-            </div>
+              </div>
             <div className="flex justify-between">
               <span className="flex items-center text-gray-500"><Calendar className="h-4 w-4 mr-2" /> Schedule:</span>
               <span className="font-medium">
-                {campaignDetails.sendImmediately 
+                    {campaignDetails.sendImmediately 
                   ? 'Send immediately' 
                   : campaignDetails.scheduledDate.toLocaleString()}
               </span>
@@ -245,7 +245,7 @@ export default function ReviewStep({
                   <span className="flex items-center text-gray-500">
                     <Mail className="h-4 w-4 mr-2" /> Email Credits:
                   </span>
-                  <div className="flex items-center">
+                <div className="flex items-center">
                     <span className="font-medium mr-2">
                       {creditInfo.available.emails} available
                     </span>
@@ -268,7 +268,7 @@ export default function ReviewStep({
                         {creditInfo.sufficient ? "Sufficient" : "Insufficient"}
                       </Badge>
                     </div>
-                  </div>
+              </div>
                 )}
                 
                 <div className="p-3 rounded-md bg-gray-50 text-sm text-gray-600 mt-2">
@@ -277,8 +277,8 @@ export default function ReviewStep({
                     This campaign requires {leadsCount} email credits 
                     {smsEnabled ? ` and ${leadsCount} SMS credits` : ''}.
                   </p>
-                </div>
-                
+          </div>
+          
                 {!creditInfo.sufficient && (
                   <Alert variant="destructive" className="mt-4">
                     <AlertCircle className="h-4 w-4" />
@@ -295,8 +295,8 @@ export default function ReviewStep({
             )}
           </CardContent>
         </Card>
-      </div>
-      
+          </div>
+          
       {/* Email Preview Section */}
       <Card>
         <CardHeader>
@@ -330,13 +330,13 @@ export default function ReviewStep({
                   <div className="border-b p-3 bg-gray-50">
                     <p><strong>Subject:</strong> {campaignDetails.subject}</p>
                     <p><strong>From:</strong> {campaignDetails.fromName} &lt;{campaignDetails.fromEmail}&gt;</p>
-                    <p><strong>To:</strong> {{`{{firstName}}`}} {{`{{lastName}}`}} &lt;{{`{{email}}`}}&gt;</p>
+                    <p><strong>To:</strong> {"{firstName}"} {"{lastName}"} &lt;{"{email}"}&gt;</p>
                   </div>
                   <div 
                     className="p-4 overflow-auto max-h-[60vh]" 
                     dangerouslySetInnerHTML={{ __html: previewHtml }}
                   />
-                </div>
+          </div>
               )}
             </DialogContent>
           </Dialog>
@@ -347,20 +347,20 @@ export default function ReviewStep({
       <CardFooter className="flex justify-between px-0">
         <Button 
           disabled={loading || !creditInfo.sufficient} 
-          onClick={onSubmit}
+              onClick={onSubmit}
           className="w-full"
-        >
-          {loading ? (
-            <>
+            >
+              {loading ? (
+                <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Sending Campaign...
-            </>
-          ) : (
-            <>
+                </>
+              ) : (
+                <>
               <CheckCircle2 className="mr-2 h-4 w-4" />
               {creditInfo.sufficient ? 'Launch Campaign' : 'Insufficient Credits'}
-            </>
-          )}
+                </>
+              )}
         </Button>
       </CardFooter>
     </div>

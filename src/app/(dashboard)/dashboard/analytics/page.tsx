@@ -513,15 +513,15 @@ export default function AnalyticsPage() {
             <p className="mt-1 text-sm text-gray-600">
               Test different subject lines and send times to increase your open rates.
             </p>
-          </div>
+                </div>
           <div className="bg-white p-4 rounded shadow-sm">
             <h4 className="text-sm font-semibold text-gray-900">Boost Click Rates</h4>
             <p className="mt-1 text-sm text-gray-600">
               Make your call-to-action buttons stand out and personalize your content.
             </p>
-          </div>
-        </div>
-      </div>
+                </div>
+              </div>
+            </div>
 
       {/* Revenue Tracking - Coming Soon */}
       <div className="mt-6">
@@ -532,7 +532,7 @@ export default function AnalyticsPage() {
             <ArrowTrendingUpIcon className="h-6 w-6 text-indigo-600" />
             <h3 className="text-lg font-medium text-indigo-700">Coming Soon</h3>
           </div>
-          
+
           <p className="text-gray-700 mb-4">
             Our team is building comprehensive revenue tracking to help you measure the ROI of your email campaigns.
             This feature will be available in a future update.
@@ -542,12 +542,12 @@ export default function AnalyticsPage() {
             <div className="bg-white rounded-lg p-4 shadow-sm">
               <h4 className="font-medium text-gray-900 mb-1">Campaign Revenue</h4>
               <p className="text-sm text-gray-500">Track revenue generated from each email campaign</p>
-            </div>
+                </div>
             
             <div className="bg-white rounded-lg p-4 shadow-sm">
               <h4 className="font-medium text-gray-900 mb-1">Conversion Analytics</h4>
               <p className="text-sm text-gray-500">See which campaigns drive the most sales</p>
-            </div>
+                </div>
             
             <div className="bg-white rounded-lg p-4 shadow-sm">
               <h4 className="font-medium text-gray-900 mb-1">ROI Calculator</h4>

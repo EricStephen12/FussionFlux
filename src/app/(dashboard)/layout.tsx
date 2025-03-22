@@ -27,6 +27,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Campaigns', href: '/dashboard/campaigns', icon: MegaphoneIcon },
   { name: 'Analytics', href: '/dashboard/analytics', icon: ChartBarIcon },
+  { name: 'Billing', href: '/dashboard/billing', icon: CreditCardIcon },
   { name: 'Referrals', href: '/dashboard/referrals', icon: UserGroupIcon },
   { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon },
 ];

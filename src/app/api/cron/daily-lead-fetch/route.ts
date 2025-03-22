@@ -43,7 +43,4 @@ export async function GET() {
 
 // For Vercel Cron, we need to specify the schedule
 // This will run at midnight UTC every day
-export const config = {
-  runtime: 'edge',
-  regions: ['iad1'],  // Choose regions close to your database
-}; 
+export const runtime = "edge"; 

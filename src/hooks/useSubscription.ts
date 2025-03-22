@@ -268,19 +268,32 @@ export const useSubscription = () => {
   const checkFeatureAccess = (feature: keyof Subscription['features']) => {
     if (!subscription) return false;
     
-    // For free tier users
-    if (subscription.tier === 'free') {
-      // Basic analytics should be available for free tier users regardless of trial status
-      if (feature === 'analytics') {
-        return true;
-      }
+    // Special case for analytics - always available
+    if (feature === 'analytics') {
+      return true;
+    }
+    
+    // For free tier users with active trial
+    if (subscription.tier === 'free' && subscription.expiresAt) {
+      const expiryDate = new Date(subscription.expiresAt);
+      const isTrialActive = expiryDate > new Date();
       
-      // For other premium features, check if trial is still active
-      if (!subscription.expiresAt) {
-        return false;
+      if (isTrialActive) {
+        // During trial, give access to specific features that should be available
+        const trialFeatures: Array<keyof Subscription['features']> = [
+          'previewLeads',
+          'importContacts',
+          'abTesting',
+          'followUpEmails'
+        ];
+        
+        if (trialFeatures.includes(feature)) {
+          return true;
+        }
       }
     }
     
+    // For regular subscriptions, use the feature flag
     return subscription.features[feature];
   };
 

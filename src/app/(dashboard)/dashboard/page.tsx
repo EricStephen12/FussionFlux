@@ -157,6 +157,12 @@ export default function DashboardPage() {
       icon: ChartBarIcon,
     },
     {
+      name: 'Billing',
+      description: 'Manage your subscription and billing',
+      href: '/dashboard/billing',
+      icon: CreditCardIcon,
+    },
+    {
       name: 'Settings',
       description: 'Manage your account settings',
       href: '/dashboard/settings',

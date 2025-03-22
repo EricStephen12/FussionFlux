@@ -50,10 +50,30 @@ export const checkFeatureAccess = (
 ): boolean => {
   if (!subscription) return false;
   
-  // Get the subscription feature key for the UI feature
-  const subscriptionFeature = featureMapping[feature];
+  // Special handling for free trial users
+  if (subscription.tier === 'free' && subscription.expiresAt) {
+    const expiryDate = new Date(subscription.expiresAt);
+    const isTrialActive = expiryDate > new Date();
+    
+    if (isTrialActive) {
+      // Features available during trial period
+      const trialFeatures: UIFeature[] = [
+        'analytics',
+        'previewLeads',
+        'importContacts',
+        'abTesting',
+        'personalization',  // Limited version during trial
+        'smsIntegration'    // Limited version during trial
+      ];
+      
+      if (trialFeatures.includes(feature)) {
+        return true;
+      }
+    }
+  }
   
-  // Use the subscription's checkFeatureAccess function
+  // For paid subscriptions, use the subscription's feature flag system
+  const subscriptionFeature = featureMapping[feature];
   return checkFeatureAccessFn(subscriptionFeature);
 };
 

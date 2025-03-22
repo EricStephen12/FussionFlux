@@ -74,7 +74,7 @@ export default function CampaignsClient() {
 
   useEffect(() => {
     if (user) {
-      loadData();
+    loadData();
       subscribeToRealTimeUpdates();
       fetchCreditInfo();
     }
@@ -376,48 +376,6 @@ export default function CampaignsClient() {
     );
   };
 
-  const CreditInfoDisplay = () => {
-    return (
-      <div className="flex items-center space-x-4 mb-4 bg-white p-4 rounded-lg shadow">
-        <div className="flex-1">
-          <h3 className="text-sm font-medium text-gray-500">Available Email Credits</h3>
-          {creditInfo.loading ? (
-            <div className="animate-pulse h-6 bg-gray-200 rounded w-24 mt-1"></div>
-          ) : (
-            <p className="text-xl font-semibold">{creditInfo.available.emails.toLocaleString()}</p>
-          )}
-        </div>
-        
-        <div className="flex-1">
-          <h3 className="text-sm font-medium text-gray-500">Available SMS Credits</h3>
-          {creditInfo.loading ? (
-            <div className="animate-pulse h-6 bg-gray-200 rounded w-24 mt-1"></div>
-          ) : (
-            <p className="text-xl font-semibold">{creditInfo.available.sms.toLocaleString()}</p>
-          )}
-        </div>
-        
-        <div className="flex-1">
-          <h3 className="text-sm font-medium text-gray-500">Available Lead Credits</h3>
-          {creditInfo.loading ? (
-            <div className="animate-pulse h-6 bg-gray-200 rounded w-24 mt-1"></div>
-          ) : (
-            <p className="text-xl font-semibold">{creditInfo.available.leads.toLocaleString()}</p>
-          )}
-        </div>
-        
-        <div>
-          <a 
-            href="/dashboard/billing" 
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Add Credits
-          </a>
-        </div>
-      </div>
-    );
-  };
-
   if (loading) {
     return (
       <div className="animate-pulse">
@@ -479,13 +437,13 @@ export default function CampaignsClient() {
               <ArrowPathIcon className="h-4 w-4 mr-2" />
               Refresh
             </button>
-            <Link
-              href="/dashboard/campaigns/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              <PlusIcon className="h-5 w-5 mr-2" />
-              New Campaign
-            </Link>
+          <Link
+            href="/dashboard/campaigns/new"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            New Campaign
+          </Link>
           </div>
         </div>
 
@@ -546,9 +504,6 @@ export default function CampaignsClient() {
           </div>
         </div>
       </div>
-
-      {/* Credit Information Display */}
-      <CreditInfoDisplay />
 
       {/* Campaigns List */}
       {campaigns.length > 0 ? (
@@ -616,22 +571,22 @@ export default function CampaignsClient() {
         </div>
       ) : (
         <div className="text-center py-12 bg-white rounded-lg shadow">
-          <EnvelopeIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <EnvelopeIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-lg font-medium text-gray-900">No campaigns yet</h3>
           <p className="mt-1 text-sm text-gray-500">
             Get started by creating your first campaign.
           </p>
-          <div className="mt-6">
-            <Link
-              href="/dashboard/campaigns/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
-              New Campaign
-            </Link>
-          </div>
-        </div>
-      )}
+              <div className="mt-6">
+                <Link
+                  href="/dashboard/campaigns/new"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+                  New Campaign
+                </Link>
+              </div>
+            </div>
+          )}
 
       {/* Email Templates Section */}
       <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">

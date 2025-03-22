@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Draggable, Droppable, DragDropContext, DropResult } from 'react-beautiful-dnd';
-import { EllipsisVerticalIcon, ChevronLeftIcon, ChevronDownIcon, TrashIcon, CogIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { EllipsisVerticalIcon, ChevronLeftIcon, ChevronDownIcon, CogIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { BlockTypeButtons } from './BlockTypeButtons';
 import { BlockEditor } from './BlockEditor';
 import { useApolloClient } from '@apollo/client';
@@ -16,11 +16,33 @@ import { EditableText } from '@/components/ui/EditableText';
 import { BlockType, BlockContent, Block, Template } from '@/types/extended-template';
 import TEMPLATES from '@/data/templates';
 import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { 
   XMarkIcon,
   Bars3Icon,
   ArrowPathIcon,
   ExclamationTriangleIcon,
-  CubeTransparentIcon
+  CubeTransparentIcon,
+  QuestionMarkCircleIcon,
+  DevicePhoneMobileIcon,
+  DeviceTabletIcon,
+  ComputerDesktopIcon,
+  UserIcon,
+  ClockIcon,
+  ChartBarIcon,
+  UserGroupIcon,
+  ViewColumnsIcon,
+  ChevronRightIcon,
+  ArrowLeftIcon,
+  LockClosedIcon,
+  SparklesIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { ABTestingModal } from './ABTestingModal';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -29,11 +51,15 @@ import { PublishButton } from './PublishButton';
 import { AnalyticsModal } from './AnalyticsModal';
 import { aiOptimizationService } from '@/services/ai-optimization';
 import { toast } from 'react-hot-toast';
-import { Dialog, Transition } from '@headlessui/react';
 import { useToast } from '@/hooks/useToast';
 import { getPublicImageURL } from '@/services/storage';
 import { Fragment } from 'react';
 import { CreditService } from '@/services/creditService';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import Joyride, { Step } from 'react-joyride';
+import { v4 as uuidv4 } from 'uuid';
+import { Loader2 } from 'lucide-react';
 
 const categories = [
   'All',
@@ -153,6 +179,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 }) => {
   const router = useRouter();
   const { subscription, checkFeatureAccess } = useSubscription();
+  const { user } = useAuth();
   
   // Use safe property access with defaults
   const maxBlocks = subscription?.limits || 10; // Default fallback
@@ -210,84 +237,45 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   // Add FeatureRestrictModal component
   const FeatureRestrictModal = () => (
-    <Modal
-      isOpen={showFeatureRestrictModal}
-      onClose={() => setShowFeatureRestrictModal(false)}
-      title="Feature Not Available"
-      className="w-full max-w-md mx-auto"
-    >
-      <div className="p-6">
-        <div className="mb-6">
-          <div className="flex items-center justify-center w-12 h-12 mx-auto bg-indigo-100 rounded-full">
-            <LockClosedIcon className="w-6 h-6 text-indigo-600" />
-          </div>
-          <h3 className="mt-4 text-lg font-medium text-center text-gray-900">
-            Upgrade Required
-          </h3>
-          <p className="mt-2 text-sm text-center text-gray-500">
-            {restrictedFeature?.description || 'This feature requires a higher subscription tier.'}
-          </p>
-        </div>
-        
-        <div className="p-4 bg-gray-50 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">
-            {restrictedFeature?.requiredTier.charAt(0).toUpperCase() + restrictedFeature?.requiredTier.slice(1)} Tier Features:
-          </h4>
-          <ul className="text-sm text-gray-600 space-y-1">
-            {restrictedFeature?.requiredTier === 'starter' && (
-              <>
-                <li>• Access to social media blocks</li>
-                <li>• Video embedding</li>
-                <li>• Testimonial layouts</li>
-                <li>• Featured collections</li>
-              </>
-            )}
-            {restrictedFeature?.requiredTier === 'growth' && (
-              <>
-                <li>• Countdown timers</li>
-                <li>• Product grid layouts</li>
-                <li>• Shopping cart integration</li>
-                <li>• Advanced newsletter signup</li>
-              </>
-            )}
-            {restrictedFeature?.requiredTier === 'pro' && (
-              <>
-                <li>• Custom HTML blocks</li>
-                <li>• Advanced layouts</li>
-                <li>• Custom menu blocks</li>
-                <li>• Priority support</li>
-              </>
-            )}
-          </ul>
-        </div>
-
-        <div className="mt-6 flex justify-end space-x-3">
+    <Dialog open={showFeatureRestrictModal} onOpenChange={() => setShowFeatureRestrictModal(false)}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Feature Not Available</DialogTitle>
+          <DialogDescription>
+            This feature is only available in higher subscription tiers. Please upgrade your plan to access this feature.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4 flex justify-end space-x-2">
           <button
             onClick={() => setShowFeatureRestrictModal(false)}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
           >
             Cancel
           </button>
           <button
             onClick={() => {
               setShowFeatureRestrictModal(false);
-              router.push('/dashboard/subscription');
+              router.push('/dashboard/billing');
             }}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
           >
-            Upgrade Now
+            Upgrade Plan
           </button>
         </div>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 
   const handleFeatureAttempt = (type: BlockType): boolean => {
     const requiredTier = getMinimumTierForBlock(type);
-    // Use consistent feature check method
-    const hasAccess = checkFeatureAccess(requiredTier);
     
-    if (!hasAccess) {
+    // Special handling for free tier blocks - always allow access
+    if (requiredTier === 'free') {
+      return true;
+    }
+    
+    // Check if the user has an active subscription or is in trial period
+    if (!subscription) {
       setRestrictedFeature({
         type,
         requiredTier,
@@ -297,7 +285,40 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
       return false;
     }
 
+    // Free tier users with active trial
+    if (subscription.tier === 'free' && subscription.expiresAt) {
+      // During trial, allow access to all basic and starter features
+      if (requiredTier === 'starter') {
     return true;
+      }
+      
+      // For growth and pro tier features, show upgrade notice
+      setRestrictedFeature({
+        type,
+        requiredTier,
+        description: `This block type requires a ${requiredTier} plan or higher.`
+      });
+      setShowFeatureRestrictModal(true);
+      return false;
+    }
+    
+    // For paid subscriptions, check their actual tier level
+    const tierLevels = { 'free': 0, 'starter': 1, 'growth': 2, 'pro': 3 };
+    const userTierLevel = tierLevels[subscription.tier] || 0;
+    const requiredTierLevel = tierLevels[requiredTier] || 0;
+    
+    if (userTierLevel >= requiredTierLevel) {
+      return true;
+    }
+    
+    // User doesn't have access to this feature
+    setRestrictedFeature({
+      type,
+      requiredTier,
+      description: `This block type requires a ${requiredTier} plan or higher.`
+    });
+    setShowFeatureRestrictModal(true);
+    return false;
   };
 
   // Ensure template is not undefined and has a blocks array
@@ -381,13 +402,9 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   // Update analytics settings type
   const [analyticsSettings, setAnalyticsSettings] = useState({
-    enableTracking: true,
-    trackOpens: true,
-    trackClicks: true,
-    trackConversions: true,
     utmSource: '',
     utmMedium: '',
-    utmCampaign: '',
+    utmCampaign: ''
   });
 
   // Add toolbar buttons
@@ -445,13 +462,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   // Enhancing Personalization Fields
   const PersonalizationModal = () => {
     const { subscription, checkFeatureAccess } = useSubscription();
-    // Use safe property access
     const maxFields = subscription?.maxPersonalizationFields || 3;
-
-    // Logic to limit the number of personalization fields
     const [personalizationFields, setPersonalizationFields] = useState<string[]>([]);
-    
-    // Check if user can add more personalization fields
     const canAddMoreFields = personalizationFields.length < maxFields;
 
     const addPersonalizationField = () => {
@@ -467,12 +479,14 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
     };
 
     return (
-    <Modal
-      isOpen={showPersonalizationModal}
-      onClose={() => setShowPersonalizationModal(false)}
-      title="Personalization Fields"
-      className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto"
-    >
+      <Dialog open={showPersonalizationModal} onOpenChange={() => setShowPersonalizationModal(false)}>
+        <DialogContent className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto">
+          <DialogHeader>
+            <DialogTitle>Personalization Fields</DialogTitle>
+            <DialogDescription>
+              Add personalization fields to make your emails more dynamic
+            </DialogDescription>
+          </DialogHeader>
       <div className="space-y-4 max-h-[80vh] overflow-y-auto px-3 sm:px-6 py-4">
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
           <input
@@ -521,7 +535,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
           ))}
         </div>
       </div>
-    </Modal>
+        </DialogContent>
+      </Dialog>
   );
 };
 
@@ -546,12 +561,14 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   // Automation modal
   const AutomationModal = () => (
-    <Modal
-      isOpen={showAutomationModal}
-      onClose={() => setShowAutomationModal(false)}
-      title="Automation Settings"
-      className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto"
-    >
+    <Dialog open={showAutomationModal} onOpenChange={() => setShowAutomationModal(false)}>
+      <DialogContent className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto">
+        <DialogHeader>
+          <DialogTitle>Automation Settings</DialogTitle>
+          <DialogDescription>
+            Configure automation rules for your email campaign
+          </DialogDescription>
+        </DialogHeader>
       <div className="space-y-6 max-h-[80vh] overflow-y-auto px-3 sm:px-6 py-4">
       <div className="space-y-4">
         <div>
@@ -631,38 +648,32 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
         )}
         </div>
       </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 
   // SMS modal
   const SMSModal = () => {
-    const [smsText, setSmsText] = useState(smsSettings.message || '');
-    const [charactersLeft, setCharactersLeft] = useState(160 - (smsSettings.message?.length || 0));
+    const [smsText, setSmsText] = useState(smsSettings?.message || '');
+    const [charactersLeft, setCharactersLeft] = useState(160 - (smsSettings?.message?.length || 0));
+    const [smsCredits, setSmsCredits] = useState({
+      available: 0,
+      sufficient: false,
+      loading: true
+    });
     const charLimit = 160;
-    
-    // Calculate estimated cost (assuming 1 credit per message)
-    const estimatedCredits = audienceEstimate;
-    const sufficientCredits = smsCredits.available >= estimatedCredits;
-    
-    const handleSmsTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const text = e.target.value;
-      setSmsText(text);
-      setCharactersLeft(charLimit - text.length);
-    };
-    
-    const handleSaveClick = () => {
-                      setSmsSettings({
-                        ...smsSettings,
-        enabled: true,
-        message: smsText
-      });
-      setShowSmsModal(false);
-    };
-    
+
     useEffect(() => {
-      // Fetch SMS credits when modal opens
       const fetchSmsCredits = async () => {
-        if (!user) return;
+        if (!user) {
+          console.log('No user found, skipping SMS credits fetch');
+          setSmsCredits({
+            available: 0,
+            sufficient: false,
+            loading: false
+          });
+          return;
+        }
         
         try {
           setSmsCredits(prev => ({ ...prev, loading: true }));
@@ -670,17 +681,29 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
           // Get available credits
           const availableCredits = await CreditService.getAvailableCredits(user.uid);
           
+          // Get additional credits from subscription tier
+          let additionalCredits = 0;
+          
+          // During trial or for paid subscriptions, add the tier's max SMS credits
+          if (subscription) {
+            if (subscription.tier === 'free' && subscription.expiresAt) {
+              // Trial users get the free tier SMS allowance
+              additionalCredits = subscription.maxSMS; 
+            } else if (subscription.tier !== 'free') {
+              // Paid users get their tier's SMS allowance
+              additionalCredits = subscription.maxSMS;
+            }
+          }
+          
+          const totalAvailableCredits = availableCredits.sms + additionalCredits;
+          
           // Check if user has enough credits based on audience estimate
-          const creditCheck = await CreditService.checkSufficientCredits(
-            user.uid,
-            0, // No email credits needed for SMS check
-            audienceEstimate,
-            0 // No leads needed
-          );
+          const requiredCredits = audienceEstimate || 0;
+          const isSufficient = totalAvailableCredits >= requiredCredits;
           
           setSmsCredits({
-            available: availableCredits.sms,
-            sufficient: creditCheck.sufficient.sms,
+            available: totalAvailableCredits,
+            sufficient: isSufficient,
             loading: false
           });
         } catch (error) {
@@ -690,96 +713,110 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
       };
       
       fetchSmsCredits();
-    }, [user, audienceEstimate]);
-    
+    }, [user, audienceEstimate, subscription]);
+
+    const handleSmsTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const text = e.target.value;
+      setSmsText(text);
+      setCharactersLeft(charLimit - text.length);
+    };
+
+    const handleSaveClick = () => {
+                    setSmsSettings({
+                      ...smsSettings,
+        enabled: true,
+        message: smsText
+      });
+      setShowSmsModal(false);
+    };
+
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50">
-        <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowSmsModal(false)}></div>
-        <div className="relative bg-white w-11/12 md:w-2/3 lg:w-1/2 xl:w-1/3 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Add SMS Message</h3>
-          
-          <textarea
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter your SMS message..."
-            rows={4}
-            value={smsText}
-            onChange={handleSmsTextChange}
-            maxLength={charLimit}
-          ></textarea>
-          
-          <div className="flex justify-between text-sm text-gray-500 mt-2">
-            <span>{charactersLeft} characters left</span>
-            <span>1 message per recipient</span>
-            </div>
-              
+      <Dialog open={showSmsModal} onOpenChange={() => setShowSmsModal(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>SMS Settings</DialogTitle>
+            <DialogDescription>
+              Configure SMS message to be sent with your campaign
+            </DialogDescription>
+          </DialogHeader>
+
           {/* Credits information */}
-          <div className={`mt-4 p-3 rounded-lg ${sufficientCredits ? 'bg-green-50' : 'bg-red-50'}`}>
+          <div className={`mt-4 p-3 rounded-lg ${smsCredits.sufficient ? 'bg-green-50' : 'bg-red-50'}`}>
             <h4 className="text-sm font-medium mb-1">SMS Credits</h4>
             
             {smsCredits.loading ? (
-              <p className="text-sm flex items-center">
-                <ArrowPathIcon className="w-4 h-4 mr-2 animate-spin" />
-                Loading credit information...
-              </p>
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">Checking credits...</span>
+              </div>
             ) : (
               <>
-                <div className="flex justify-between items-center">
-                  <p className="text-sm">
-                    {sufficientCredits
-                      ? `You have ${smsCredits.available.toLocaleString()} credits available`
-                      : `You need ${estimatedCredits.toLocaleString()} credits, but only have ${smsCredits.available.toLocaleString()}`}
-                  </p>
-                  
-                  {!sufficientCredits && (
-                    <a
-                      href="/dashboard/billing"
-                      className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Get More Credits
-                    </a>
-                  )}
-              </div>
-                
-                <p className="text-xs mt-2">
-                  {`Estimated audience: ${audienceEstimate.toLocaleString()} recipients`}
+                <p className="text-sm mb-2">
+                  Available credits: <span className="font-medium">{smsCredits.available}</span>
                 </p>
+                {!smsCredits.sufficient && (
+                  <p className="text-sm text-red-600">
+                    You need more SMS credits to send to your selected audience.
+                    <Button
+                      variant="link"
+                      className="text-red-600 underline ml-1"
+                      onClick={() => router.push('/dashboard/billing')}
+                    >
+                      Purchase credits
+                    </Button>
+                  </p>
+                )}
               </>
             )}
             </div>
             
-          <div className="mt-6 flex justify-end space-x-3">
-                <button 
-              className="px-4 py-2 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          {/* SMS Text Input */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              SMS Message
+            </label>
+            <textarea
+              value={smsText}
+              onChange={handleSmsTextChange}
+              className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Enter your SMS message..."
+              maxLength={charLimit}
+            />
+            <p className="mt-2 text-sm text-gray-500">
+              Characters remaining: {charactersLeft}
+            </p>
+            </div>
+            
+          {/* Save Button */}
+          <div className="mt-6 flex justify-end space-x-2">
+            <Button
+              variant="outline"
               onClick={() => setShowSmsModal(false)}
             >
               Cancel
-                </button>
-                <button 
-              className={`px-4 py-2 text-sm rounded-md text-white 
-                ${sufficientCredits && smsText.trim().length > 0
-                  ? 'bg-blue-600 hover:bg-blue-700'
-                  : 'bg-gray-400 cursor-not-allowed'}`}
+            </Button>
+            <Button
               onClick={handleSaveClick}
-              disabled={!sufficientCredits || smsText.trim().length === 0}
+              disabled={smsText.length === 0 || !smsCredits.sufficient}
             >
-              Save
-                </button>
-              </div>
+              Save SMS Settings
+            </Button>
             </div>
-              </div>
+        </DialogContent>
+      </Dialog>
     );
   };
 
   // Improving UTM Parameters
   const AnalyticsModal = () => (
-    <Modal
-      isOpen={showAnalyticsModal}
-      onClose={() => setShowAnalyticsModal(false)}
-      title="Analytics & Tracking"
-      className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto"
-    >
+    <Dialog open={showAnalyticsModal} onOpenChange={() => setShowAnalyticsModal(false)}>
+      <DialogContent className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto">
+        <DialogHeader>
+          <DialogTitle>Analytics & Tracking</DialogTitle>
+          <DialogDescription>
+            Configure analytics and tracking settings for your campaign
+          </DialogDescription>
+        </DialogHeader>
       <div className="space-y-6 max-h-[80vh] overflow-y-auto px-3 sm:px-6 py-4">
         <div className="flex items-center space-x-3">
           <input
@@ -820,7 +857,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
           Save UTM Parameters
         </button>
       </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 
   // Update preview container with device preview
@@ -1713,34 +1751,40 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
         };
 
   const openAutomationModal = () => {
-    if (checkFeatureAccess('abTesting')) {
+    // Allow trial users to access basic A/B testing features
+    if (subscription?.tier === 'free' && subscription?.expiresAt) {
+      setShowAutomationModal(true);
+    } else if (checkFeatureAccess('abTesting')) {
       setShowAutomationModal(true);
     } else {
-      toast.error('A/B Testing features are available on Growth and Pro plans.');
+      toast.error('A/B Testing features are available on Starter and higher plans.');
     }
   };
 
   const openSmsModal = () => {
-    if (checkFeatureAccess('smsIntegration')) {
+    // Allow trial users to access basic SMS features
+    if (subscription?.tier === 'free' && subscription?.expiresAt) {
+      setShowSmsModal(true);
+    } else if (checkFeatureAccess('smsIntegration')) {
       setShowSmsModal(true);
     } else {
-      toast.error('SMS features are available on Growth and Pro plans.');
+      toast.error('SMS features are available on Starter and higher plans.');
     }
   };
 
   const openAnalyticsModal = () => {
-    if (checkFeatureAccess('analytics')) {
+    // Analytics are available to all users, including free tier
       setShowAnalyticsModal(true);
-    } else {
-      toast.error('Advanced analytics are available on Growth and Pro plans.');
-    }
   };
 
   const openPersonalizationModal = () => {
-    if (checkFeatureAccess('personalization')) {
+    // Allow trial users to access basic personalization features
+    if (subscription?.tier === 'free' && subscription?.expiresAt) {
+      setShowPersonalizationModal(true);
+    } else if (checkFeatureAccess('personalization')) {
       setShowPersonalizationModal(true);
     } else {
-      toast.error('Personalization features are available on Growth and Pro plans.');
+      toast.error('Personalization features are available on Starter and higher plans.');
     }
   };
 
@@ -1803,12 +1847,15 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   // Audience Modal Component
   const AudienceModal = () => (
-    <Modal
-      isOpen={showAudienceModal}
-      onClose={() => setShowAudienceModal(false)}
-      title="Template Audience"
-      className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto"
-    >
+    <Dialog open={showAudienceModal} onOpenChange={() => setShowAudienceModal(false)}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Template Audience</DialogTitle>
+          <DialogDescription>
+            Configure audience settings for your template
+          </DialogDescription>
+        </DialogHeader>
+
       <div className="space-y-6 max-h-[80vh] overflow-y-auto px-3 sm:px-6 py-4">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h3 className="text-sm font-medium text-yellow-800">About Template Audience</h3>
@@ -1829,17 +1876,17 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="border rounded-lg p-4">
               <h5 className="font-medium text-gray-900">Industry</h5>
-              <p className="text-sm text-gray-500 mt-1">{defaultTemplate.category || 'All Industries'}</p>
+                <p className="text-sm text-gray-500 mt-1">{template.category || 'All Industries'}</p>
             </div>
             <div className="border rounded-lg p-4">
               <h5 className="font-medium text-gray-900">Customer Type</h5>
-              <p className="text-sm text-gray-500 mt-1">{defaultTemplate.audienceType || 'All Customers'}</p>
+                <p className="text-sm text-gray-500 mt-1">{template.audienceType || 'All Customers'}</p>
             </div>
           </div>
         </div>
 
         <div className="mt-6">
-          <button
+            <Button
             onClick={async () => {
               try {
                 await handleSaveTemplate();
@@ -1848,13 +1895,14 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 console.error('Error saving template:', error);
               }
             }}
-            className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="w-full"
           >
             Create Campaign with this Template
-          </button>
+            </Button>
         </div>
       </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 
   // Update the main layout with responsive classes
