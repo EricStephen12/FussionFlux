@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url><loc>https://example.com/campaigns/ReviewCampaign</loc><lastmod>2025-03-22T17:44:14.735Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/usageStats</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/login</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/admin/cron-keys</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/analytics</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/billing</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/admin/leads</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/signup</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/contacts</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/credits</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/admin/promotions</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/campaigns/new-template</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/pricing</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/referrals</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/subscription</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/templates/new</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/templates</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/contact</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/docs</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/faq</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/features</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/pricing</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/privacy</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/sentry-example-page</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/referral-terms</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/support</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/unsubscribe</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/terms</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/campaigns/new</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://example.com/dashboard/settings</loc><lastmod>2025-03-22T17:44:14.736Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+</urlset>

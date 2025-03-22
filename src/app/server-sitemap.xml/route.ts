@@ -1,99 +1,62 @@
-import { getServerSideSitemap } from 'next-sitemap';
-import { GetServerSideProps } from 'next';
-import { firestoreService } from '@/services/firestore';
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  limit, 
-  orderBy 
-} from 'firebase/firestore';
+import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
     // Base URL from environment or default
     const baseUrl = process.env.SITE_URL || 'https://dropship-email-platform.com';
     
-    // Arrays to collect different types of dynamic URLs
-    const dynamicPages = [];
+    // Array to collect URLs
     const sitemapFields = [];
-    
-    // Get published templates that should be public (if applicable)
-    try {
-      const templatesRef = collection(firestoreService.db, 'templates');
-      const publicTemplatesQuery = query(
-        templatesRef,
-        where('status', '==', 'published'),
-        where('isPublic', '==', true),
-        limit(1000)
-      );
-      
-      const templatesSnapshot = await getDocs(publicTemplatesQuery);
-      
-      templatesSnapshot.forEach((doc) => {
-        const data = doc.data();
-        dynamicPages.push({
-          loc: `${baseUrl}/templates/${doc.id}`,
-          lastmod: new Date(data.lastModified || Date.now()).toISOString(),
-          changefreq: 'weekly',
-          priority: 0.7,
-        });
-      });
-    } catch (error) {
-      console.error('Error fetching templates for sitemap:', error);
-    }
-    
-    // Get blog posts if you have them
-    try {
-      const blogRef = collection(firestoreService.db, 'blog');
-      const publicBlogQuery = query(
-        blogRef,
-        where('published', '==', true),
-        orderBy('publishDate', 'desc'),
-        limit(1000)
-      );
-      
-      const blogSnapshot = await getDocs(publicBlogQuery);
-      
-      blogSnapshot.forEach((doc) => {
-        const data = doc.data();
-        dynamicPages.push({
-          loc: `${baseUrl}/blog/${doc.id}`,
-          lastmod: new Date(data.updatedAt || data.publishDate || Date.now()).toISOString(),
-          changefreq: 'monthly',
-          priority: 0.6,
-        });
-      });
-    } catch (error) {
-      console.error('Error fetching blog posts for sitemap:', error);
-    }
-    
-    // Add any feature pages you have
-    const featurePages = [
-      { slug: 'email-automation', name: 'Email Automation' },
-      { slug: 'analytics-dashboard', name: 'Analytics Dashboard' },
-      { slug: 'sms-marketing', name: 'SMS Marketing' },
-      { slug: 'a-b-testing', name: 'A/B Testing' },
-      { slug: 'lead-generation', name: 'Lead Generation' }
+
+    // Add static pages
+    const staticPages = [
+      '/',
+      '/features',
+      '/pricing',
+      '/contact',
+      '/about',
+      '/faq',
+      '/privacy',
+      '/terms',
     ];
-    
-    featurePages.forEach(feature => {
-      dynamicPages.push({
-        loc: `${baseUrl}/features/${feature.slug}`,
+
+    // Add static pages to sitemap
+    staticPages.forEach(page => {
+      sitemapFields.push({
+        loc: `${baseUrl}${page}`,
         lastmod: new Date().toISOString(),
-        changefreq: 'weekly',
-        priority: 0.8,
+        changefreq: 'daily',
+        priority: page === '/' ? 1.0 : 0.7,
       });
     });
-    
-    // Combine all dynamic pages
-    sitemapFields.push(...dynamicPages);
-    
-    // Return the sitemap
-    return getServerSideSitemap(sitemapFields);
+
+    // Generate XML
+    const xml = generateSitemapXml(sitemapFields);
+
+    // Return the XML with appropriate headers
+    return new NextResponse(xml, {
+      headers: {
+        'Content-Type': 'application/xml',
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      },
+    });
+
   } catch (error) {
-    console.error('Error generating server sitemap:', error);
-    return new Response('Error generating sitemap', { status: 500 });
+    console.error('Error generating sitemap:', error);
+    return new NextResponse('Error generating sitemap', { status: 500 });
   }
+}
+
+function generateSitemapXml(fields: Array<{ loc: string, lastmod: string, changefreq: string, priority: number }>) {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      ${fields.map(field => `
+        <url>
+          <loc>${field.loc}</loc>
+          <lastmod>${field.lastmod}</lastmod>
+          <changefreq>${field.changefreq}</changefreq>
+          <priority>${field.priority}</priority>
+        </url>
+      `).join('')}
+    </urlset>`;
 } 

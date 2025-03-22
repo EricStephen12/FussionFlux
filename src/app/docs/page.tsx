@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
@@ -131,8 +131,21 @@ const DOCUMENTATION: DocSection[] = [
 
 export default function Documentation() {
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
-    'getting-started': true // Default open the first section
+    'getting-started': true
   });
+  const [isLargeScreen, setIsLargeScreen] = useState(true); // Set default to true for SSR
+
+  useEffect(() => {
+    // Only update isLargeScreen after component mounts
+    setIsLargeScreen(window.innerWidth >= 1024);
+
+    function handleResize() {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    }
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const toggleSection = (id: string) => {
     setExpandedSections(prev => ({
@@ -219,7 +232,7 @@ export default function Documentation() {
                 </div>
 
                 {/* Subsections */}
-                {(expandedSections[section.id] || window.innerWidth >= 1024) && section.subSections && (
+                {(expandedSections[section.id] || isLargeScreen) && section.subSections && (
                   <div className="space-y-8 mt-6">
                     {section.subSections.map(subSection => (
                       <div key={subSection.id} id={subSection.id} className="p-6 bg-gray-50 rounded-lg">

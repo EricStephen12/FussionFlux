@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/utils/firebase-admin';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { getApolloApiKey } from '@/utils/api-keys';
 import axios from 'axios';
 
@@ -17,74 +16,66 @@ export async function GET(request: Request) {
     const limitValue = limitParam ? parseInt(limitParam, 10) : 100;
     
     // Set up the query based on the parameters
-    let contactsQuery = query(
-      collection(db, 'leads'),
-      orderBy('score', 'desc'),
-      limit(limitValue)
-    );
+    const contactsRef = db.collection('contacts');
+    let contactsQuery = contactsRef;
     
-    if (title && title.length > 0 && title[0] !== '') {
-      contactsQuery = query(contactsQuery, where('title', 'array-contains-any', title));
+    if (title && title.length > 0) {
+      contactsQuery = contactsQuery.where('title', 'in', title);
     }
     
-    if (industry && industry.length > 0 && industry[0] !== '') {
-      contactsQuery = query(contactsQuery, where('industry', 'array-contains-any', industry));
+    if (industry && industry.length > 0) {
+      contactsQuery = contactsQuery.where('industry', 'in', industry);
     }
+    
+    contactsQuery = contactsQuery.limit(limitValue);
     
     // Execute the query
-    const snapshot = await getDocs(contactsQuery);
+    const snapshot = await contactsQuery.get();
+    const contacts = [];
     
-    // Format the results
-    const contacts = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    snapshot.forEach((doc) => {
+      contacts.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
     
-    return NextResponse.json(contacts);
+    return NextResponse.json({ contacts });
+    
   } catch (error) {
     console.error('Error searching contacts:', error);
-    return NextResponse.json(
-      { error: 'Failed to search contacts' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to search contacts' }, { status: 500 });
   }
 }
 
-// Handle POST request to enrich a contact
+// Handle POST request to save contacts
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email } = body;
+    const { contacts } = body;
     
-    if (!email) {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      );
+    if (!Array.isArray(contacts)) {
+      return NextResponse.json({ error: 'Invalid contacts data' }, { status: 400 });
     }
     
-    // Get the API key
-    const apiKey = await getApolloApiKey();
+    const batch = db.batch();
+    const contactsRef = db.collection('contacts');
     
-    // Call the Apollo API to enrich the contact
-    const response = await axios.post(`${APOLLO_API_URL}/people/match`, {
-      api_key: apiKey,
-      email
+    contacts.forEach((contact) => {
+      const docRef = contactsRef.doc();
+      batch.set(docRef, {
+        ...contact,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
     });
     
-    if (response.data.person) {
-      return NextResponse.json(response.data.person);
-    } else {
-      return NextResponse.json(
-        { error: 'Contact not found' },
-        { status: 404 }
-      );
-    }
+    await batch.commit();
+    
+    return NextResponse.json({ success: true });
+    
   } catch (error) {
-    console.error('Error enriching contact:', error);
-    return NextResponse.json(
-      { error: 'Failed to enrich contact' },
-      { status: 500 }
-    );
+    console.error('Error saving contacts:', error);
+    return NextResponse.json({ error: 'Failed to save contacts' }, { status: 500 });
   }
 } 
